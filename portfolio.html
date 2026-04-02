@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페이지 님의 포트폴리오</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Poppins 폰트 (스타일리시한 느낌) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // 'class' 속성으로 다크 모드 제어
+            theme: {
+                extend: {
+                    fontFamily: {
+                        // 기본 폰트는 Noto Sans KR, 영문/제목은 Poppins
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        // 커스텀 색상 정의
+                        'primary': '#6366F1', // 인디고
+                        'primary-hover': '#4F46E5',
+                        
+                        // 라이트 모드 색상
+                        'light-bg': '#F9FAFB', // 옅은 회색 배경
+                        'light-card': '#FFFFFF', // 흰색 카드
+                        'light-text': '#111827', // 다크 배경 (어두운 글씨)
+                        'light-subtext': '#4B5563', // 중간 회색 글씨
+
+                        // 다크 모드 색상
+                        'dark-bg': '#111827', // 다크 배경
+                        'dark-card': '#1F2937', // 다크 카드
+                        'dark-text': '#E5E7EB', // 다크 텍스트
+                        'dark-subtext': '#9CA3AF', // 다크 서브텍스트
+                    },
+                    // 다크 모드용 방사형 그라데이션
+                    backgroundImage: {
+                        'radial-dark': 'radial-gradient(circle, #1f2937 0%, #111827 70%)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 
+      [추가된 스크립트]
+      페이지 로드 시 시스템의 다크모드 설정을 확인합니다.
+      localStorage에 'theme' 설정이 없으면 시스템 설정을 따르고,
+      있으면 그 설정을 따릅니다.
+    -->
+    <script>
+        // FOUC(Flash of Unstyled Content) 방지를 위해 <head>에서 바로 실행
+        (function() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        /* [삭제된 스타일]
+          기본 다크 모드 강제 설정을 제거합니다.
+          html { background-color: #111827; } 
+        */
+    </style>
+</head>
+<!-- 
+  [수정된 <body>]
+  기본값으로 'light-bg', 'light-text'를 사용하고,
+  dark: 접두사를 붙여 다크 모드일 때의 스타일을 지정합니다.
+-->
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
+
+    <!-- 1. 헤더 (네비게이션 바) -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 로고/이름 -->
+                <a href="#home" class="text-2xl font-bold font-poppins text-light-text dark:text-white">PAGE's Portfolio</a>
+                
+                <!-- 메뉴 (데스크탑) -->
+                <div class="hidden sm:flex sm:space-x-6 items-center">
+                    <a href="#home" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Home</a>
+                    <a href="#about" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">About</a>
+                    <a href="#projects" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Projects</a>
+                    <a href="#contact" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Contact</a>
+                    <!-- [추가된 링크] - 로그인 페이지로 이동 -->
+                    <a href="login.html" class="ml-4 text-sm bg-primary text-white py-1.5 px-4 rounded-full hover:bg-primary-hover transition duration-200">Admin</a>
+                </div>
+                
+                <!-- 모바일 메뉴 버튼 (간단한 표시) -->
+                <div class="sm:hidden">
+                    <button id="mobile-menu-btn" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 모바일 메뉴 (숨김) -->
+            <div id="mobile-menu" class="hidden sm:hidden pb-3 space-y-1">
+                <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Home</a>
+                <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">About</a>
+                <a href="#projects" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Projects</a>
+                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Contact</a>
+                <!-- [추가된 링크] - 로그인 페이지로 이동 -->
+                <a href="login.html" class="block px-3 py-2 rounded-md text-base font-medium text-primary hover:bg-gray-100 dark:hover:bg-dark-card">Admin Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-16"> <!-- 헤더 높이만큼 패딩 -->
+
+        <!-- 2. 홈 (Hero) 섹션 -->
+        <!-- [수정] 라이트 모드 그라데이션을 inline style로, 다크 모드 그라데이션을 dark:bg-radial-dark 클래스로 제어 -->
+        <section id="home" class="min-h-screen flex items-center justify-center text-center px-4 dark:bg-radial-dark" 
+                 style="background: radial-gradient(circle, #F3F4F6 0%, #FFFFFF 70%);">
+            <div class="max-w-3xl">
+                <span class="text-primary font-semibold font-poppins">안녕하세요!</span>
+                <h1 class="text-4xl sm:text-6xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-6">
+                    저는 <span class="text-primary">페이지</span>입니다.
+                </h1>
+                <p class="text-xl sm:text-2xl text-light-subtext dark:text-dark-subtext mb-10">
+                    창의적인 아이디어를 코드로 구현하는 웹 개발자입니다.
+                </p>
+                <a href="#projects" class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105">
+                    프로젝트 보기
+                </a>
+            </div>
+        </section>
+
+        <!-- 3. About Me 섹션 -->
+        <section id="about" class="py-24 sm:py-32 bg-light-bg dark:bg-dark-bg">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <!-- 이미지 Placeholder -->
+                <div>
+                    <!-- [수정] 라이트 모드용 플레이스홀더 이미지 -->
+                    <img src="https://placehold.co/600x600/FFFFFF/1F2937?text=Profile+Image" 
+                         alt="프로필 이미지" 
+                         class="rounded-lg shadow-2xl object-cover aspect-square">
+                </div>
+                <!-- 소개 글 -->
+                <div class="md:-mt-10">
+                    <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6">About Me</h2>
+                    <p class="text-lg text-light-subtext dark:text-dark-subtext mb-6 leading-relaxed">
+                        저는 3년 차 웹 개발자로, 사용자 중심의 인터랙티브한 웹 애플리케이션을 만드는 데 열정을 가지고 있습니다. 
+                        주로 React와 Node.js를 다루며, 깨끗하고 효율적인 코드를 작성하기 위해 항상 노력합니다.
+                    </p>
+                    <p class="text-lg text-light-subtext dark:text-dark-subtext mb-8 leading-relaxed">
+                        새로운 기술을 배우는 것을 즐기며, 동료들과의 협업을 통해 더 나은 제품을 만들어내는 과정에서 큰 보람을 느낍니다.
+                    </p>
+                    <div class="flex space-x-4">
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">React</span>
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Node.js</span>
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">TypeScript</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Projects 섹션 -->
+        <section id="projects" class="py-24 sm:py-32 bg-gray-50 dark:bg-dark-card">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-16">Projects</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    
+                    <!-- [수정] 모든 프로젝트 카드에 라이트/다크 모드 스타일 적용 -->
+                    <!-- 프로젝트 카드 1: Meatbox -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/6366F1/FFFFFF?text=Meatbox" alt="Meatbox 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Meatbox (팀 스터디)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">Java Servlet/JSP MVC 아키텍처 기반 이커머스 클론. 로그인, 장바구니, 주문 API 구현.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Java</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JSP/Servlet</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">MVC</span>
+                            </div>
+                            <a href="https://github.com/rhkrgusqls/meatbox.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+                    
+                    <!-- 프로젝트 카드 2: Pium -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Pium" alt="Pium 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Pium (해커톤)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">소상공인을 위한 AI 마케팅 웹 서비스. FastAPI 백엔드 구축 및 회원가입 API 구현.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">FastAPI</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">OpenAI</span>
+                            </div>
+                            <a href="https://github.com/Dreaming-Lion/pium._.official.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+                    
+                    <!-- 프로젝트 카드 3: CompanyCore -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/3730A3/FFFFFF?text=CompanyCore" alt="CompanyCore 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">CompanyCore (팀 스터디)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">JavaFX 클라이언트와 Spring Boot 서버로 구성된 그룹웨어. JavaFX 프론트엔드 개발 담당.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JavaFX</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JPA</span>
+                            </div>
+                            <a href="https://github.com/YHW505/CompanyCore.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+
+                    <!-- 프로젝트 카드 4: Onejo Note -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/6366F1/FFFFFF?text=Onejo+Note" alt="Onejo Note 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Onejo Note (팀 스터디)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">Vue.js와 Spring Boot 풀스택 노트 앱. 백엔드 노트 CRUD API 구현 담당.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Vue.js</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JWT</span>
+                            </div>
+                            <a href="https://github.com/i3inni/onejo_note.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+
+                    <!-- 프로젝트 카드 5: Onejo Chat -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Onejo+Chat" alt="Onejo Chat 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Onejo Chat (팀 스터디)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">순수 Java 소켓과 Swing GUI로 구현한 멀티스레딩 채팅 앱. 실시간 메시지, 친구 추가 기능.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Java</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Socket</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Swing</span>
+                            </div>
+                            <a href="https://github.com/KKKIMDG/onejochat.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+
+                    <!-- 프로젝트 카드 6: Chungcheongthon -->
+                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
+                        <img src="https://placehold.co/600x400/3730A3/FFFFFF?text=Chungcheongthon" alt="Chungcheongthon 프로젝트" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">충청톤 (해커톤)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">충청톤 해커톤 출전 프로젝트. (자세한 설명이 필요합니다)</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">...</span>
+                            </div>
+                            <a href="https://github.com/chaechae-04/chungcheongthon-team3.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Contact 섹션 -->
+        <section id="contact" class="py-24 sm:py-32 bg-light-card dark:bg-dark-bg">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6">Contact Me</h2>
+                <p class="text-xl text-light-subtext dark:text-dark-subtext mb-10">
+                    새로운 기회에 대해 이야기하고 싶거나 질문이 있으신가요? <br> 언제든지 편하게 연락주세요!
+                </p>
+                <a href="mailto:email@example.com" class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105 inline-block">
+                    Say Hello
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 6. Footer -->
+    <footer class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+            <p class="text-light-subtext dark:text-dark-subtext mb-4 md:mb-0">
+                &copy; 2025 PAGE's Portfolio. All rights reserved.
+            </p>
+            <!-- 소셜 미디어 아이콘 -->
+            <div class="flex space-x-6">
+                <a href="#" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200" aria-label="Github">
+                    <!-- Github Icon -->
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.026 2.747-1.026.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="#" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200" aria-label="LinkedIn">
+                    <!-- LinkedIn Icon -->
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- 모바일 메뉴 토글 ---
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- 모바일 메뉴 링크 클릭 시 메뉴 닫기 ---
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+    </script>
+
+</body>
+</html>
