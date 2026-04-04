@@ -91,8 +91,6 @@
                     <a href="#about" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">About</a>
                     <a href="#projects" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Projects</a>
                     <a href="#contact" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Contact</a>
-                    <!-- [추가된 링크] - 로그인 페이지로 이동 -->
-                    <a href="login.html" class="ml-4 text-sm bg-primary text-white py-1.5 px-4 rounded-full hover:bg-primary-hover transition duration-200">Admin</a>
                 </div>
                 
                 <!-- 모바일 메뉴 버튼 (간단한 표시) -->
@@ -111,8 +109,6 @@
                 <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">About</a>
                 <a href="#projects" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Projects</a>
                 <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Contact</a>
-                <!-- [추가된 링크] - 로그인 페이지로 이동 -->
-                <a href="login.html" class="block px-3 py-2 rounded-md text-base font-medium text-primary hover:bg-gray-100 dark:hover:bg-dark-card">Admin Login</a>
             </div>
         </nav>
     </header>
@@ -126,10 +122,10 @@
             <div class="max-w-3xl">
                 <span class="text-primary font-semibold font-poppins">안녕하세요!</span>
                 <h1 class="text-4xl sm:text-6xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-6">
-                    저는 <span class="text-primary">페이지</span>입니다.
+                    저는 <span class="text-primary">김다빈</span>입니다.
                 </h1>
                 <p class="text-xl sm:text-2xl text-light-subtext dark:text-dark-subtext mb-10">
-                    창의적인 아이디어를 코드로 구현하는 웹 개발자입니다.
+                    Spring으로 서버를 설계하는 백엔드 개발자입니다.
                 </p>
                 <a href="#projects" class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105">
                     프로젝트 보기
@@ -151,16 +147,17 @@
                 <div class="md:-mt-10">
                     <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6">About Me</h2>
                     <p class="text-lg text-light-subtext dark:text-dark-subtext mb-6 leading-relaxed">
-                        저는 3년 차 웹 개발자로, 사용자 중심의 인터랙티브한 웹 애플리케이션을 만드는 데 열정을 가지고 있습니다. 
-                        주로 React와 Node.js를 다루며, 깨끗하고 효율적인 코드를 작성하기 위해 항상 노력합니다.
+                        현재 대학교 4학년 재학 중인 백엔드 개발자 김다빈입니다.
+                        Spring Boot를 중심으로 안정적이고 확장 가능한 서버를 설계하는 것에 관심이 많습니다.
                     </p>
                     <p class="text-lg text-light-subtext dark:text-dark-subtext mb-8 leading-relaxed">
-                        새로운 기술을 배우는 것을 즐기며, 동료들과의 협업을 통해 더 나은 제품을 만들어내는 과정에서 큰 보람을 느낍니다.
+                        팀 프로젝트와 해커톤을 통해 협업 경험을 쌓아왔으며, 코드 한 줄이 실제 문제를 해결하는 순간에서 가장 큰 보람을 느낍니다.
                     </p>
-                    <div class="flex space-x-4">
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">React</span>
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Node.js</span>
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">TypeScript</span>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Spring Boot</span>
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Java</span>
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">PostgreSQL</span>
+                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">MySQL</span>
                     </div>
                 </div>
             </div>
@@ -172,84 +169,28 @@
                 <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-16">Projects</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    
-                    <!-- [수정] 모든 프로젝트 카드에 라이트/다크 모드 스타일 적용 -->
-                    <!-- 프로젝트 카드 1: Meatbox -->
+
+                    <!-- 프로젝트 카드: RunBoo -->
                     <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/6366F1/FFFFFF?text=Meatbox" alt="Meatbox 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Meatbox (팀 스터디)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">Java Servlet/JSP MVC 아키텍처 기반 이커머스 클론. 로그인, 장바구니, 주문 API 구현.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Java</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JSP/Servlet</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">MVC</span>
-                            </div>
-                            <a href="https://github.com/rhkrgusqls/meatbox.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                        <div class="w-full h-48 bg-black flex items-center justify-center">
+                            <img src="image.png" alt="RunBoo 로고" class="h-32 w-32 object-contain rounded-2xl">
                         </div>
-                    </div>
-                    
-                    <!-- 프로젝트 카드 2: Pium -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Pium" alt="Pium 프로젝트" class="w-full h-48 object-cover">
                         <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Pium (해커톤)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">소상공인을 위한 AI 마케팅 웹 서비스. FastAPI 백엔드 구축 및 회원가입 API 구현.</p>
+                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">RunBoo (팀 프로젝트)</h3>
+                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">게임화 요소를 접목한 런닝 앱. 티어 시스템·도전과제 백엔드 구현 및 프론트 연동 담당.</p>
                             <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
                                 <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">FastAPI</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">OpenAI</span>
+                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">TypeScript</span>
                             </div>
-                            <a href="https://github.com/Dreaming-Lion/pium._.official.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                        </div>
-                    </div>
-                    
-                    <!-- 프로젝트 카드 3: CompanyCore -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/3730A3/FFFFFF?text=CompanyCore" alt="CompanyCore 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">CompanyCore (팀 스터디)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">JavaFX 클라이언트와 Spring Boot 서버로 구성된 그룹웨어. JavaFX 프론트엔드 개발 담당.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JavaFX</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JPA</span>
+                            <div class="flex gap-4">
+                                <a href="https://github.com/i3inni/runboo" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                                <a href="runboo.html" class="text-light-subtext dark:text-dark-subtext hover:underline font-medium">내가 한 것 &rarr;</a>
                             </div>
-                            <a href="https://github.com/YHW505/CompanyCore.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
                         </div>
                     </div>
 
-                    <!-- 프로젝트 카드 4: Onejo Note -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/6366F1/FFFFFF?text=Onejo+Note" alt="Onejo Note 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Onejo Note (팀 스터디)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">Vue.js와 Spring Boot 풀스택 노트 앱. 백엔드 노트 CRUD API 구현 담당.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Vue.js</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JWT</span>
-                            </div>
-                            <a href="https://github.com/i3inni/onejo_note.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                        </div>
-                    </div>
-
-                    <!-- 프로젝트 카드 5: Onejo Chat -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Onejo+Chat" alt="Onejo Chat 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Onejo Chat (팀 스터디)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4 h-24 overflow-hidden">순수 Java 소켓과 Swing GUI로 구현한 멀티스레딩 채팅 앱. 실시간 메시지, 친구 추가 기능.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Java</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Socket</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Swing</span>
-                            </div>
-                            <a href="https://github.com/KKKIMDG/onejochat.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                        </div>
-                    </div>
-
-                    <!-- 프로젝트 카드 6: Chungcheongthon -->
+                    <!-- 프로젝트 카드: Chungcheongthon -->
                     <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
                         <img src="https://placehold.co/600x400/3730A3/FFFFFF?text=Chungcheongthon" alt="Chungcheongthon 프로젝트" class="w-full h-48 object-cover">
                         <div class="p-6">
@@ -259,7 +200,10 @@
                                 <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React</span>
                                 <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">...</span>
                             </div>
-                            <a href="https://github.com/chaechae-04/chungcheongthon-team3.git" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                            <div class="flex gap-4">
+                                <a href="https://github.com/i3inni/chungcheongthon-team3" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
+                                <a href="chungcheongthon.html" class="text-light-subtext dark:text-dark-subtext hover:underline font-medium">내가 한 것 &rarr;</a>
+                            </div>
                         </div>
                     </div>
 

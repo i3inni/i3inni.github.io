@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunBoo - 프로젝트 소개</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366F1',
+                        'primary-hover': '#4F46E5',
+                        'light-bg': '#F9FAFB',
+                        'light-card': '#FFFFFF',
+                        'light-text': '#111827',
+                        'light-subtext': '#4B5563',
+                        'dark-bg': '#111827',
+                        'dark-card': '#1F2937',
+                        'dark-text': '#E5E7EB',
+                        'dark-subtext': '#9CA3AF',
+                    },
+                }
+            }
+        }
+    </script>
+    <script>
+        (function() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
+
+    <!-- 헤더 -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="text-2xl font-bold font-poppins text-light-text dark:text-white">← Back</a>
+                <span class="text-light-subtext dark:text-dark-subtext font-poppins font-semibold">RunBoo</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-16">
+
+        <!-- Hero -->
+        <section class="py-24 px-4 text-center bg-light-bg dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-3xl mx-auto">
+                <span class="text-primary font-semibold font-poppins text-sm uppercase tracking-widest">Team Project</span>
+                <h1 class="text-4xl sm:text-5xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-4">
+                    <span class="text-primary">RunBoo</span>
+                </h1>
+                <p class="text-lg text-light-subtext dark:text-dark-subtext mb-2">
+                    가장 트렌디한 런닝 앱 · 티어 시스템 & 도전과제 백엔드 + 프론트 연동 담당
+                </p>
+                <p class="text-sm text-light-subtext dark:text-dark-subtext mb-8">
+                    팀원: 김동건 · 김다빈 · 김희곤 · 이차원
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Spring Boot</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Java</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">React</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">TypeScript</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">PostgreSQL</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Supabase</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Docker</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-16">
+
+            <!-- 프로젝트 개요 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">프로젝트 개요</h2>
+                <p class="text-light-subtext dark:text-dark-subtext leading-relaxed text-lg">
+                    RunBoo는 런닝을 단순한 운동이 아닌 <strong class="text-light-text dark:text-dark-text">게임처럼 즐길 수 있도록 설계한 런닝 앱</strong>입니다.
+                    5km·10km 기록을 기반으로 티어를 부여하고, 도전과제 클리어를 통해 뱃지를 획득하는 게임화(Gamification) 요소를 통해
+                    런닝 지속성을 높이는 것이 핵심 목표입니다. 고스트 모드, 주변 러너 탐색, AI 분석 리포트 등의 기능도 제공합니다.
+                </p>
+            </section>
+
+            <!-- 내가 담당한 것 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">내가 담당한 것</h2>
+                <div class="space-y-10">
+
+                    <!-- ① 티어 시스템 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
+                        <div class="flex items-center gap-3 mb-5">
+                            <span class="text-2xl">🏅</span>
+                            <h3 class="text-xl font-bold text-light-text dark:text-white">티어 시스템 — 백엔드</h3>
+                        </div>
+
+                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-6">
+                            5km · 10km 런닝 기록을 기반으로 사용자에게 티어를 부여하는 시스템을 설계하고 구현했습니다.
+                            거리 종류(DistanceType)별로 티어를 독립적으로 관리하며, 기록이 이미 있으면 업데이트하고 없으면 새로 저장하는
+                            <strong class="text-light-text dark:text-dark-text">Upsert 패턴</strong>을 단일 메서드 안에 담았습니다.
+                        </p>
+
+                        <!-- API 목록 -->
+                        <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-4 mb-6 font-mono text-sm space-y-2">
+                            <p class="text-xs text-gray-400 mb-3 font-sans">API Endpoints</p>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-green-600 dark:text-green-400 font-bold">POST</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/user-tier/save</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">런닝 완료 후 tierId · distanceType을 받아 티어를 저장/갱신. 동일 거리 타입의 기록이 있으면 UPDATE, 없으면 INSERT (Upsert)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/user-tier/</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">인증된 사용자의 모든 거리 타입별 티어 ID 목록 반환. 프론트에서 현재 티어 뱃지 렌더링에 사용</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 핵심 구현 포인트 -->
+                        <p class="text-sm font-semibold text-light-text dark:text-white mb-3">핵심 구현 포인트</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">DistanceType Enum</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">KM_5</code> / <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">KM_10</code> 두 타입으로 티어를 분리 관리.
+                                    JSON 직렬화 시 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@JsonProperty("5k")</code>로 프론트와 값 매핑
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">JPA Dirty Checking Upsert</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@Transactional</code> 내에서 기존 엔티티를 조회 후
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">updateTier()</code> 호출 시 별도 save 없이 변경 감지로 자동 UPDATE
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">Optional 기반 분기</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">findByUserAndDistanceType()</code>의 결과가
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">isPresent()</code>이면 update, 아니면 신규 생성·저장
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">Stream으로 ID 추출</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    사용자 티어 목록에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">stream().map(ut → ut.getTier().getTierId())</code>로
+                                    ID만 추출해 경량 응답 반환
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ② 도전과제 시스템 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
+                        <div class="flex items-center gap-3 mb-5">
+                            <span class="text-2xl">🎯</span>
+                            <h3 class="text-xl font-bold text-light-text dark:text-white">도전과제 시스템 — 백엔드</h3>
+                        </div>
+
+                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-6">
+                            시즌 단위로 동작하는 단계적 도전과제 시스템을 설계하고 구현했습니다.
+                            레벨 1~30까지 순차적으로 잠금 해제되는 구조로, 완료 시 뱃지 보상 지급 + 푸시 알림 발송까지 한 트랜잭션 안에 처리됩니다.
+                        </p>
+
+                        <!-- 상태 전이 다이어그램 -->
+                        <div class="flex items-center justify-center gap-2 mb-6 flex-wrap">
+                            <span class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-4 py-2 rounded-full">LOCKED</span>
+                            <span class="text-light-subtext dark:text-dark-subtext text-lg">→</span>
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold px-4 py-2 rounded-full">IN_PROGRESS</span>
+                            <span class="text-light-subtext dark:text-dark-subtext text-lg">→</span>
+                            <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-bold px-4 py-2 rounded-full">COMPLETED</span>
+                        </div>
+
+                        <!-- API 목록 -->
+                        <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-4 mb-6 font-mono text-sm space-y-3">
+                            <p class="text-xs text-gray-400 mb-3 font-sans">API Endpoints</p>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-green-600 dark:text-green-400 font-bold">POST</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/challenges/initialize</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">신규 가입 또는 새 시즌 진입 시 호출. 현재 시즌의 레벨 1~3을 자동 생성하고 레벨 1만 IN_PROGRESS로 활성화. 이미 참여 중이면 멱등성 보장(early return)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/challenges/active</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">현재 진행 중 1개 + 다음 대기 중 2개를 묶어서 반환. 뱃지 정보(id·name·iconUrl)를 DTO에 포함해 프론트에서 별도 요청 없이 바로 렌더링 가능</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-yellow-600 dark:text-yellow-400 font-bold">PATCH</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/challenges/progress</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">런닝 데이터(type, value)를 받아 진행도를 누적. 목표값 도달 시 자동으로 COMPLETED 처리 → 뱃지 지급 → 다음 레벨 활성화 → 알림 발송까지 연쇄 실행. 응답으로 최신 챌린지 상태 3개를 즉시 반환</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
+                                <div>
+                                    <span class="text-light-text dark:text-dark-text">/api/challenges/completed</span>
+                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">완료된 전체 도전과제를 완료 시간 최신순으로 조회. Join Fetch로 N+1 문제 방지</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 핵심 구현 포인트 -->
+                        <p class="text-sm font-semibold text-light-text dark:text-white mb-3">핵심 구현 포인트</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">멱등성 보장 (initialize)</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    이미 시즌에 참여 중인 유저가 다시 호출해도 중복 생성 없이 early return.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">existsByUserIdAndChallenge_Season()</code>으로 사전 체크
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">addProgress — 오버플로 방지</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.min(progressValue + value, targetValue)</code>로
+                                    진행도가 목표를 초과하지 않게 cap 처리 후 boolean 반환으로 완료 여부 전달
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">미래 레벨 지연 생성</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    완료 시점에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">ensureFutureLevelExists(level+3)</code>을 호출해
+                                    다다음 레벨을 미리 LOCKED 상태로 생성. 30레벨 상한 처리 포함
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">뱃지 중복 지급 방지</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">existsByUserIdAndBadgeId()</code>로
+                                    이미 보유한 뱃지는 재지급하지 않음. 챌린지에 뱃지가 없는 경우도 null 체크로 안전 처리
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">KST 시간대 처리</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">LocalDateTime.now(ZoneId.of("Asia/Seoul"))</code>에
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">truncatedTo(ChronoUnit.SECONDS)</code>로 나노초 제거 후 저장
+                                </p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">완료 후 즉시 응답</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    PATCH /progress 호출 한 번으로 진행도 업데이트 → 완료 처리 → 다음 레벨 오픈까지 완료하고
+                                    최신 챌린지 상태 3개를 바로 반환해 프론트 추가 요청 최소화
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ③ 프론트엔드 연동 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
+                        <div class="flex items-center gap-3 mb-5">
+                            <span class="text-2xl">🔗</span>
+                            <h3 class="text-xl font-bold text-light-text dark:text-white">프론트엔드 연동 — React + TypeScript</h3>
+                        </div>
+                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-5">
+                            백엔드 API와 React(TypeScript) 프론트엔드를 연동했습니다.
+                            중앙 디자인 시스템(<code class="bg-gray-100 dark:bg-dark-bg text-primary px-1.5 py-0.5 rounded text-sm">theme.ts</code>)을 기반으로
+                            컴포넌트별 스타일 파일에서 <code class="bg-gray-100 dark:bg-dark-bg text-primary px-1.5 py-0.5 rounded text-sm">getStyles(colorScheme)</code> 패턴으로
+                            티어 및 도전과제 UI를 구현하고 API와 연결했습니다.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">API 호출 연동</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">티어 저장·조회, 도전과제 초기화·진행도 업데이트·조회 API를 프론트 화면과 연결</p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">테마 시스템 적용</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed"><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useColorScheme()</code> 훅으로 라이트/다크 모드 자동 감지 후 동적 스타일 적용</p>
+                            </div>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <p class="text-sm font-semibold text-primary mb-1">컴포넌트 분리</p>
+                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed"><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">[Component].tsx</code> + <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">[Component].styles.ts</code> 구조로 관심사 분리</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 링크 모음 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">관련 링크</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a href="https://github.com/i3inni/runboo" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-4 bg-light-card dark:bg-dark-card rounded-lg p-5 shadow-md hover:shadow-lg transition duration-200 group">
+                        <span class="text-3xl">💻</span>
+                        <div>
+                            <p class="font-bold text-light-text dark:text-white group-hover:text-primary transition duration-200">GitHub</p>
+                            <p class="text-sm text-light-subtext dark:text-dark-subtext">소스 코드 보기</p>
+                        </div>
+                    </a>
+                    <a href="https://www.figma.com/design/ILI4jn6ZnmW8lhx72cUvPB/%EB%9F%AC%EB%8B%9D-%EC%99%80%EC%9D%B4%EC%96%B4%ED%94%84%EB%A0%88%EC%9E%84?node-id=0-1&t=tz4adljju3gdaLia-1" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-4 bg-light-card dark:bg-dark-card rounded-lg p-5 shadow-md hover:shadow-lg transition duration-200 group">
+                        <span class="text-3xl">🎨</span>
+                        <div>
+                            <p class="font-bold text-light-text dark:text-white group-hover:text-primary transition duration-200">Figma 와이어프레임</p>
+                            <p class="text-sm text-light-subtext dark:text-dark-subtext">UI 설계 문서</p>
+                        </div>
+                    </a>
+                    <a href="https://www.erdcloud.com/d/BJ5zNp3cEE6mkqQYj" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-4 bg-light-card dark:bg-dark-card rounded-lg p-5 shadow-md hover:shadow-lg transition duration-200 group">
+                        <span class="text-3xl">🗄️</span>
+                        <div>
+                            <p class="font-bold text-light-text dark:text-white group-hover:text-primary transition duration-200">ERD Cloud</p>
+                            <p class="text-sm text-light-subtext dark:text-dark-subtext">데이터베이스 설계</p>
+                        </div>
+                    </a>
+                    <a href="https://www.canva.com/design/DAG_BELSm9c/Kf9BBz7G0pCHZUiY1BiCPA/edit?utm_content=DAG_BELSm9c&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-4 bg-light-card dark:bg-dark-card rounded-lg p-5 shadow-md hover:shadow-lg transition duration-200 group">
+                        <span class="text-3xl">📊</span>
+                        <div>
+                            <p class="font-bold text-light-text dark:text-white group-hover:text-primary transition duration-200">발표 자료</p>
+                            <p class="text-sm text-light-subtext dark:text-dark-subtext">Canva 프레젠테이션</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 py-8 text-center">
+        <p class="text-light-subtext dark:text-dark-subtext text-sm">&copy; 2025 김다빈's Portfolio</p>
+    </footer>
+
+</body>
+</html>

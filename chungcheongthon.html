@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>충청톤 - 프로젝트 소개</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366F1',
+                        'primary-hover': '#4F46E5',
+                        'light-bg': '#F9FAFB',
+                        'light-card': '#FFFFFF',
+                        'light-text': '#111827',
+                        'light-subtext': '#4B5563',
+                        'dark-bg': '#111827',
+                        'dark-card': '#1F2937',
+                        'dark-text': '#E5E7EB',
+                        'dark-subtext': '#9CA3AF',
+                    },
+                }
+            }
+        }
+    </script>
+    <script>
+        (function() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
+
+    <!-- 헤더 -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="text-2xl font-bold font-poppins text-light-text dark:text-white">← Back</a>
+                <span class="text-light-subtext dark:text-dark-subtext font-poppins font-semibold">충청톤 (해커톤)</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-16">
+
+        <!-- Hero -->
+        <section class="py-24 px-4 text-center bg-light-bg dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-3xl mx-auto">
+                <span class="text-primary font-semibold font-poppins text-sm uppercase tracking-widest">Hackathon Project</span>
+                <h1 class="text-4xl sm:text-5xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-4">
+                    충청톤 팀3 — <span class="text-primary">KNUT</span>
+                </h1>
+                <p class="text-lg text-light-subtext dark:text-dark-subtext mb-8">
+                    AI 기반 협력 일정 관리 플랫폼 · 백엔드 개발 담당
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Spring Boot 3.5.3</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Java 21</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">MySQL</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">JWT</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Google Gemini API</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Docker</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-16">
+
+            <!-- 프로젝트 개요 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">프로젝트 개요</h2>
+                <p class="text-light-subtext dark:text-dark-subtext leading-relaxed text-lg">
+                    KNUT는 충청톤 해커톤에서 개발한 <strong class="text-light-text dark:text-dark-text">AI 기반 협력 일정 관리 플랫폼</strong>입니다.
+                    사용자가 일정을 등록하면 Google Gemini AI가 일정 데이터를 분석해 실행 가능한 인사이트와 리포트를 제공합니다.
+                    친구 관계 기능을 통해 팀원과의 협력도 지원합니다.
+                </p>
+            </section>
+
+            <!-- 내가 한 것 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">내가 담당한 것</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">🔐</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">JWT 인증 시스템</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            Spring Security와 JJWT 라이브러리를 활용해 로그인/회원가입 API와 JWT 토큰 발급·검증 로직을 구현했습니다. 토큰 유효기간은 24시간으로 설정했습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">📅</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">일정 CRUD API</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            일정 생성, 조회(날짜/범위별), 우선순위 수정, 완료 처리, 삭제 등 일정 관련 전체 REST API를 설계하고 구현했습니다. JPA를 사용해 데이터베이스와 연동했습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">🤖</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">AI 일정 분석 (Gemini API)</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            Google Gemini 2.0 Flash 모델을 연동해 사용자의 일정 데이터를 분석하고 3가지 실행 가능한 인사이트를 제공하는 기능을 구현했습니다. API 실패 시 통계 기반 폴백 응답도 처리했습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">👥</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">사용자·친구 관계 API</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            회원가입, 이메일 중복 확인, 프로필 조회·수정, 계정 삭제 API와 사용자 간 친구 관계 관리 기능을 구현했습니다. Google OAuth 소셜 로그인도 지원했습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">🐳</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">Docker 배포 환경 구성</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            OpenJDK 21 기반 Dockerfile을 작성하고, Docker 환경용 application-docker.yml을 별도 구성해 개발과 배포 환경을 분리했습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-card dark:bg-dark-card rounded-lg p-6 shadow-md">
+                        <div class="text-primary text-2xl mb-3">🏗️</div>
+                        <h3 class="font-bold text-light-text dark:text-white mb-2">레이어드 아키텍처 설계</h3>
+                        <p class="text-light-subtext dark:text-dark-subtext text-sm leading-relaxed">
+                            Controller - Service(인터페이스/구현 분리) - Repository 레이어드 아키텍처로 프로젝트 구조를 설계해 유지보수성과 확장성을 고려했습니다.
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 주요 API -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">주요 API 목록</h2>
+                <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-md overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 dark:bg-dark-bg">
+                            <tr>
+                                <th class="text-left px-4 py-3 text-light-subtext dark:text-dark-subtext font-semibold w-24">Method</th>
+                                <th class="text-left px-4 py-3 text-light-subtext dark:text-dark-subtext font-semibold">Endpoint</th>
+                                <th class="text-left px-4 py-3 text-light-subtext dark:text-dark-subtext font-semibold hidden sm:table-cell">설명</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            <tr><td class="px-4 py-3"><span class="text-green-600 dark:text-green-400 font-bold">POST</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">일정 생성</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">사용자 일정 전체 조회</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/date</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">날짜별 일정 조회</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/range</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">기간별 일정 조회</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-yellow-600 dark:text-yellow-400 font-bold">PATCH</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/{id}/complete</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">일정 완료 처리</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-yellow-600 dark:text-yellow-400 font-bold">PATCH</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/{id}/priority</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">우선순위 수정</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-red-600 dark:text-red-400 font-bold">DELETE</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/{id}</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">일정 삭제</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/schedules/analysis</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">AI 일정 분석</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/ai/schedule-report</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">AI 리포트 생성</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-green-600 dark:text-green-400 font-bold">POST</span></td><td class="px-4 py-3 font-mono text-xs">/api/users</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">회원가입</td></tr>
+                            <tr><td class="px-4 py-3"><span class="text-blue-600 dark:text-blue-400 font-bold">GET</span></td><td class="px-4 py-3 font-mono text-xs">/api/users/me</td><td class="px-4 py-3 text-light-subtext dark:text-dark-subtext hidden sm:table-cell">내 프로필 조회 (인증 필요)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- GitHub 링크 -->
+            <section class="text-center">
+                <a href="https://github.com/i3inni/chungcheongthon-team3" target="_blank" rel="noopener noreferrer"
+                   class="inline-block bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105">
+                    Github에서 코드 보기 →
+                </a>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 py-8 text-center">
+        <p class="text-light-subtext dark:text-dark-subtext text-sm">&copy; 2025 김다빈's Portfolio</p>
+    </footer>
+
+</body>
+</html>
