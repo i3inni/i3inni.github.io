@@ -97,201 +97,196 @@
 
             <!-- 내가 담당한 것 -->
             <section>
-                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">내가 담당한 것</h2>
-                <div class="space-y-10">
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-8 pb-2 border-b border-gray-200 dark:border-gray-700">내가 해결한 것들</h2>
+                <div class="space-y-8">
 
-                    <!-- ① 티어 시스템 -->
-                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-2xl">🏅</span>
-                            <h3 class="text-xl font-bold text-light-text dark:text-white">티어 시스템 — 백엔드</h3>
+                    <!-- #1 티어 시스템 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#1 티어 시스템 — 백엔드</h3>
                         </div>
-
-                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-6">
-                            5km · 10km 런닝 기록을 기반으로 사용자에게 티어를 부여하는 시스템을 설계하고 구현했습니다.
-                            거리 종류(DistanceType)별로 티어를 독립적으로 관리하며, 기록이 이미 있으면 업데이트하고 없으면 새로 저장하는
-                            <strong class="text-light-text dark:text-dark-text">Upsert 패턴</strong>을 단일 메서드 안에 담았습니다.
-                        </p>
-
-                        <!-- API 목록 -->
-                        <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-4 mb-6 font-mono text-sm space-y-2">
-                            <p class="text-xs text-gray-400 mb-3 font-sans">API Endpoints</p>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-green-600 dark:text-green-400 font-bold">POST</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/user-tier/save</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">런닝 완료 후 tierId · distanceType을 받아 티어를 저장/갱신. 동일 거리 타입의 기록이 있으면 UPDATE, 없으면 INSERT (Upsert)</p>
+                        <div class="px-6 py-5 space-y-5">
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    5km·10km 기록 기반으로 티어를 부여해야 하는데, 두 거리 타입의 티어를 독립적으로 관리해야 했다.
+                                    같은 사용자가 거리 타입별로 처음 기록하면 INSERT, 이후 갱신하면 UPDATE가 필요한데
+                                    이를 클라이언트에서 분기하면 복잡해지고 오류 가능성이 높았다.
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 클라이언트가 INSERT/UPDATE를 구분해 다른 API 호출</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">클라이언트 복잡도 증가, 상태 판단 오류 가능성</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. 서버 단일 API에서 Upsert 처리 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">서버가 기존 기록 여부를 판단해 UPDATE/INSERT 자동 분기</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/user-tier/</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">인증된 사용자의 모든 거리 타입별 티어 ID 목록 반환. 프론트에서 현재 티어 뱃지 렌더링에 사용</p>
-                                </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    클라이언트는 단순히 "티어 저장" 요청만 보내고, 서버가 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">findByUserAndDistanceType()</code>으로
+                                    기존 기록을 조회해 있으면 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">updateTier()</code>, 없으면 신규 저장하도록 구현했다.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@Transactional</code> + JPA Dirty Checking 덕분에 UPDATE 시 별도 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">save()</code> 호출 없이
+                                    트랜잭션 커밋 시점에 변경이 자동 반영된다.
+                                </p>
                             </div>
-                        </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>클라이언트는 항상 단일 엔드포인트만 호출 — 분기 로직 불필요</li>
+                                    <li>5km·10km 티어 독립 관리로 각 거리별 정확한 등급 표시</li>
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@JsonProperty("5k")</code>로 프론트 값 형식과 정확히 매핑</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>JPA Dirty Checking — 트랜잭션 내 엔티티 필드 변경 시 자동 UPDATE 발생 원리</li>
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@Enumerated(EnumType.STRING)</code>과 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@JsonProperty</code>를 조합해 DB 저장 값과 JSON 응답 값을 각각 제어하는 방법</li>
+                                </ul>
+                            </div>
 
-                        <!-- 핵심 구현 포인트 -->
-                        <p class="text-sm font-semibold text-light-text dark:text-white mb-3">핵심 구현 포인트</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">DistanceType Enum</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">KM_5</code> / <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">KM_10</code> 두 타입으로 티어를 분리 관리.
-                                    JSON 직렬화 시 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@JsonProperty("5k")</code>로 프론트와 값 매핑
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">JPA Dirty Checking Upsert</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@Transactional</code> 내에서 기존 엔티티를 조회 후
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">updateTier()</code> 호출 시 별도 save 없이 변경 감지로 자동 UPDATE
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">Optional 기반 분기</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">findByUserAndDistanceType()</code>의 결과가
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">isPresent()</code>이면 update, 아니면 신규 생성·저장
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">Stream으로 ID 추출</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    사용자 티어 목록에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">stream().map(ut → ut.getTier().getTierId())</code>로
-                                    ID만 추출해 경량 응답 반환
-                                </p>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💭 아쉬운 점</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>티어 변경 이력을 별도 테이블에 기록하지 않아 "언제 Bronze에서 Silver로 올랐는가" 같은 히스토리 추적이 불가</li>
+                                    <li>배치 처리 없이 기록마다 즉시 티어를 업데이트하므로, 다수 사용자가 동시에 기록을 제출하면 DB 쓰기 부하 집중 가능성 있음</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ② 도전과제 시스템 -->
-                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-2xl">🎯</span>
-                            <h3 class="text-xl font-bold text-light-text dark:text-white">도전과제 시스템 — 백엔드</h3>
+                    <!-- #2 도전과제 시스템 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#2 도전과제 시스템 — 백엔드</h3>
                         </div>
-
-                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-6">
-                            시즌 단위로 동작하는 단계적 도전과제 시스템을 설계하고 구현했습니다.
-                            레벨 1~30까지 순차적으로 잠금 해제되는 구조로, 완료 시 뱃지 보상 지급 + 푸시 알림 발송까지 한 트랜잭션 안에 처리됩니다.
-                        </p>
-
-                        <!-- 상태 전이 다이어그램 -->
-                        <div class="flex items-center justify-center gap-2 mb-6 flex-wrap">
-                            <span class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-4 py-2 rounded-full">LOCKED</span>
-                            <span class="text-light-subtext dark:text-dark-subtext text-lg">→</span>
-                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold px-4 py-2 rounded-full">IN_PROGRESS</span>
-                            <span class="text-light-subtext dark:text-dark-subtext text-lg">→</span>
-                            <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-bold px-4 py-2 rounded-full">COMPLETED</span>
-                        </div>
-
-                        <!-- API 목록 -->
-                        <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-4 mb-6 font-mono text-sm space-y-3">
-                            <p class="text-xs text-gray-400 mb-3 font-sans">API Endpoints</p>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-green-600 dark:text-green-400 font-bold">POST</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/challenges/initialize</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">신규 가입 또는 새 시즌 진입 시 호출. 현재 시즌의 레벨 1~3을 자동 생성하고 레벨 1만 IN_PROGRESS로 활성화. 이미 참여 중이면 멱등성 보장(early return)</p>
+                        <div class="px-6 py-5 space-y-5">
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    게임처럼 레벨이 순차적으로 잠금 해제되는 도전과제 시스템이 필요했다.
+                                    레벨을 한꺼번에 생성하면 DB 공간 낭비가 크고, 완료 시 뱃지 지급·알림·다음 레벨 오픈이
+                                    각각 별도 API로 나뉘면 프론트에서 여러 번 요청해야 하는 문제가 있었다.
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 모든 레벨(1~30) 처음부터 생성 후 상태로 제어</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">DB에 30개 레코드 선생성, 불필요한 공간 낭비</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. 필요 시점에 지연 생성 + 상태 머신 + 단일 PATCH로 연쇄 처리 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">초기 1~3레벨만 생성, 완료 시점에 미래 레벨 추가 생성</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/challenges/active</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">현재 진행 중 1개 + 다음 대기 중 2개를 묶어서 반환. 뱃지 정보(id·name·iconUrl)를 DTO에 포함해 프론트에서 별도 요청 없이 바로 렌더링 가능</p>
-                                </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    초기화 시 1~3레벨만 생성하고 완료 시점에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">ensureFutureLevelExists(level+3)</code>으로
+                                    다다음 레벨을 LOCKED 상태로 추가 생성한다. 30레벨 상한도 처리했다.
+                                    PATCH /progress 한 번으로 진행도 업데이트 → 완료 처리 → 뱃지 지급 → 레벨 오픈 → 알림까지
+                                    한 트랜잭션에서 연쇄 처리해 프론트 추가 요청을 없앴다.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.min(progress + value, target)</code>으로 진행도 오버플로도 방지했다.
+                                </p>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-yellow-600 dark:text-yellow-400 font-bold">PATCH</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/challenges/progress</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">런닝 데이터(type, value)를 받아 진행도를 누적. 목표값 도달 시 자동으로 COMPLETED 처리 → 뱃지 지급 → 다음 레벨 활성화 → 알림 발송까지 연쇄 실행. 응답으로 최신 챌린지 상태 3개를 즉시 반환</p>
-                                </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>레벨 지연 생성으로 DB 레코드 최소화</li>
+                                    <li>단일 PATCH로 완료·뱃지·레벨오픈·알림 연쇄 처리 → 프론트 추가 요청 0건</li>
+                                    <li>멱등성 보장 — 중복 초기화 호출 시 early return으로 데이터 무결성 유지</li>
+                                    <li>Join Fetch로 완료 목록 조회 시 N+1 문제 방지</li>
+                                </ul>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <span class="shrink-0 text-blue-600 dark:text-blue-400 font-bold">GET</span>
-                                <div>
-                                    <span class="text-light-text dark:text-dark-text">/api/challenges/completed</span>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext font-sans mt-0.5">완료된 전체 도전과제를 완료 시간 최신순으로 조회. Join Fetch로 N+1 문제 방지</p>
-                                </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>상태 머신 패턴(LOCKED → IN_PROGRESS → COMPLETED)으로 엔티티 라이프사이클 제어하는 방법</li>
+                                    <li>멱등성(Idempotency) 설계 — 같은 요청을 여러 번 해도 결과가 동일하도록 보장하는 원칙</li>
+                                    <li>Join Fetch vs Lazy Loading의 차이와 N+1 문제 해결 방법</li>
+                                </ul>
                             </div>
-                        </div>
 
-                        <!-- 핵심 구현 포인트 -->
-                        <p class="text-sm font-semibold text-light-text dark:text-white mb-3">핵심 구현 포인트</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">멱등성 보장 (initialize)</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    이미 시즌에 참여 중인 유저가 다시 호출해도 중복 생성 없이 early return.
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">existsByUserIdAndChallenge_Season()</code>으로 사전 체크
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">addProgress — 오버플로 방지</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.min(progressValue + value, targetValue)</code>로
-                                    진행도가 목표를 초과하지 않게 cap 처리 후 boolean 반환으로 완료 여부 전달
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">미래 레벨 지연 생성</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    완료 시점에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">ensureFutureLevelExists(level+3)</code>을 호출해
-                                    다다음 레벨을 미리 LOCKED 상태로 생성. 30레벨 상한 처리 포함
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">뱃지 중복 지급 방지</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">existsByUserIdAndBadgeId()</code>로
-                                    이미 보유한 뱃지는 재지급하지 않음. 챌린지에 뱃지가 없는 경우도 null 체크로 안전 처리
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">KST 시간대 처리</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">LocalDateTime.now(ZoneId.of("Asia/Seoul"))</code>에
-                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">truncatedTo(ChronoUnit.SECONDS)</code>로 나노초 제거 후 저장
-                                </p>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">완료 후 즉시 응답</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">
-                                    PATCH /progress 호출 한 번으로 진행도 업데이트 → 완료 처리 → 다음 레벨 오픈까지 완료하고
-                                    최신 챌린지 상태 3개를 바로 반환해 프론트 추가 요청 최소화
-                                </p>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💭 아쉬운 점</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>도전과제 유형(거리, 횟수 등)이 DB가 아닌 코드에 하드코딩되어 있어, 신규 유형 추가 시 재배포가 필요</li>
+                                    <li>진행도·뱃지 지급·레벨 오픈이 하나의 트랜잭션에 묶여 있어 중간 단계 실패 시 전체가 롤백 — 부분 성공 처리 불가</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ③ 프론트엔드 연동 -->
-                    <div class="bg-light-card dark:bg-dark-card rounded-xl p-7 shadow-md">
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-2xl">🔗</span>
-                            <h3 class="text-xl font-bold text-light-text dark:text-white">프론트엔드 연동 — React + TypeScript</h3>
+                    <!-- #3 프론트 연동 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#3 프론트엔드 연동 — React + TypeScript</h3>
                         </div>
-                        <p class="text-light-subtext dark:text-dark-subtext leading-relaxed mb-5">
-                            백엔드 API와 React(TypeScript) 프론트엔드를 연동했습니다.
-                            중앙 디자인 시스템(<code class="bg-gray-100 dark:bg-dark-bg text-primary px-1.5 py-0.5 rounded text-sm">theme.ts</code>)을 기반으로
-                            컴포넌트별 스타일 파일에서 <code class="bg-gray-100 dark:bg-dark-bg text-primary px-1.5 py-0.5 rounded text-sm">getStyles(colorScheme)</code> 패턴으로
-                            티어 및 도전과제 UI를 구현하고 API와 연결했습니다.
-                        </p>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">API 호출 연동</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed">티어 저장·조회, 도전과제 초기화·진행도 업데이트·조회 API를 프론트 화면과 연결</p>
+                        <div class="px-6 py-5 space-y-5">
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    티어·도전과제 화면은 라이트/다크 모드를 모두 지원해야 했고,
+                                    컴포넌트마다 스타일이 흩어지면 유지보수가 어려워지는 문제가 있었다.
+                                </p>
                             </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">테마 시스템 적용</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed"><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useColorScheme()</code> 훅으로 라이트/다크 모드 자동 감지 후 동적 스타일 적용</p>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 컴포넌트 내부에 스타일 인라인 작성</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">빠르지만 색상·간격 값이 각 파일에 분산되어 일관성 깨짐</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. 중앙 theme.ts + getStyles(colorScheme) 패턴 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">색상·간격을 theme.ts 한 곳에서 관리, 컴포넌트는 getStyles()로 조회</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <p class="text-sm font-semibold text-primary mb-1">컴포넌트 분리</p>
-                                <p class="text-xs text-light-subtext dark:text-dark-subtext leading-relaxed"><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">[Component].tsx</code> + <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">[Component].styles.ts</code> 구조로 관심사 분리</p>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">theme.ts</code>를 단일 진실 공급원(SSOT)으로 두고,
+                                    각 컴포넌트는 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">getStyles(colorScheme)</code>를 호출해 테마에 맞는 스타일을 받아 쓴다.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useColorScheme()</code> 훅으로 시스템 다크모드를 자동 감지하므로
+                                    별도 상태 관리 없이 라이트/다크 전환이 이뤄진다.
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>색상·간격 변경 시 theme.ts 한 곳만 수정하면 전체 반영</li>
+                                    <li>라이트/다크 모드 자동 전환 — 별도 토글 로직 불필요</li>
+                                    <li>[Component].tsx + [Component].styles.ts 분리로 UI 로직과 스타일 관심사 분리</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>단일 진실 공급원(SSOT) 패턴 — 상수를 한 곳에서 관리해 일관성 보장</li>
+                                    <li>React Native <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useColorScheme()</code> 훅의 동작 방식과 StyleSheet 동적 생성 패턴</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💭 아쉬운 점</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>theme.ts에 색상 값이 리터럴로 하드코딩되어 있어, 브랜드 색상 변경 시 여러 상수를 일일이 수정해야 함</li>
+                                    <li>TypeScript 타입 정의 일부를 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">any</code>로 처리한 부분이 남아 있어 컴파일 타임 오류 감지가 불완전함</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
