@@ -5,44 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RunBoo - 프로젝트 소개</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Noto Sans KR', 'sans-serif'],
-                        poppins: ['Poppins', 'sans-serif'],
-                    },
-                    colors: {
-                        'primary': '#6366F1',
-                        'primary-hover': '#4F46E5',
-                        'light-bg': '#F9FAFB',
-                        'light-card': '#FFFFFF',
-                        'light-text': '#111827',
-                        'light-subtext': '#4B5563',
-                        'dark-bg': '#111827',
-                        'dark-card': '#1F2937',
-                        'dark-text': '#E5E7EB',
-                        'dark-subtext': '#9CA3AF',
-                    },
-                }
-            }
-        }
-    </script>
-    <script>
-        (function() {
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        })();
-    </script>
+    <link rel="stylesheet" href="css/global.css">
+    <script src="js/tailwind.config.js"></script>
+    <script src="js/theme-init.js"></script>
 </head>
 <body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
 
