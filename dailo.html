@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dailo - 프로젝트 소개</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366F1',
+                        'primary-hover': '#4F46E5',
+                        'light-bg': '#F9FAFB',
+                        'light-card': '#FFFFFF',
+                        'light-text': '#111827',
+                        'light-subtext': '#4B5563',
+                        'dark-bg': '#111827',
+                        'dark-card': '#1F2937',
+                        'dark-text': '#E5E7EB',
+                        'dark-subtext': '#9CA3AF',
+                    },
+                }
+            }
+        }
+    </script>
+    <script>
+        (function() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
+
+    <!-- 헤더 -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="text-2xl font-bold font-poppins text-light-text dark:text-white">← Back</a>
+                <span class="text-light-subtext dark:text-dark-subtext font-poppins font-semibold">Dailo</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-16">
+
+        <!-- Hero -->
+        <section class="py-24 px-4 text-center bg-light-bg dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-3xl mx-auto">
+                <span class="text-primary font-semibold font-poppins text-sm uppercase tracking-widest">Team Project · 중간 투입</span>
+                <h1 class="text-4xl sm:text-5xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-4">
+                    <span class="text-primary">Dailo</span>
+                </h1>
+                <p class="text-lg text-light-subtext dark:text-dark-subtext mb-2">
+                    위치 기반 대학 축제 플랫폼 · 풀스택 디버깅 및 기능 추가 담당
+                </p>
+                <p class="text-sm text-light-subtext dark:text-dark-subtext mb-8">
+                    팀원으로 중간 투입 — 버그 수정 9건 + 신규 기능 개발
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Spring Boot</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">Java</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">TypeScript</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">React Native</span>
+                    <span class="text-xs bg-gray-200 text-gray-700 dark:bg-dark-card dark:text-dark-subtext py-1.5 px-4 rounded-full">JPA</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-6">
+
+            <!-- 프로젝트 개요 -->
+            <section class="mb-10">
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">프로젝트 개요</h2>
+                <p class="text-light-subtext dark:text-dark-subtext leading-relaxed text-lg">
+                    Dailo는 대학 축제 같은 대규모 오프라인 현장에서 <strong class="text-light-text dark:text-dark-text">지오펜싱 기반 실시간 위치 인증</strong>과
+                    커뮤니티(게시판·채팅) 기능을 결합한 위치 기반 축제 플랫폼입니다.
+                    기존 팀에 중간 투입되어 누적된 버그를 수정하고 채팅·지도·게시판 관련 신규 기능을 풀스택으로 추가했습니다.
+                </p>
+            </section>
+
+            <!-- 작업 목록 -->
+            <section>
+                <h2 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-8 pb-2 border-b border-gray-200 dark:border-gray-700">내가 해결한 것들</h2>
+                <div class="space-y-8">
+
+                    <!-- #1 댓글 좋아요 상태 유지 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full">BUG</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#1 댓글 좋아요 상태 유지 & 카운트 중복 증가</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    게시글을 나갔다가 다시 들어오면 내가 좋아요한 댓글의 하트가 초기화되고,
+                                    좋아요를 누를 때마다 카운트가 1이 아닌 2씩 증가했다.
+                                    두 버그가 동시에 발생해 UX가 심각하게 훼손된 상태였다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 댓글 조회 API 재호출로 서버 상태 최신화</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">좋아요 토글 후 매번 전체 댓글을 서버에서 다시 받아오는 방식</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. 백엔드에서 isLiked 포함 응답 + 프론트 낙관적 업데이트 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">서버가 isLiked 상태를 직접 응답하고, 프론트는 해당 댓글만 로컬 업데이트</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    A안은 좋아요 한 번에 전체 댓글을 재조회하므로 불필요한 DB 쿼리와 네트워크 비용이 발생한다.
+                                    B안은 서버에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">isLiked</code>를 응답에 포함시켜 초기화 문제를 근본 해결하고,
+                                    프론트는 해당 댓글만 로컬 업데이트(<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">updateCommentLike()</code>)해서
+                                    서버 재호출 없이 즉각 반응하게 만든다. 또한 Lombok의 boolean 필드 setter 네이밍 문제(<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">isLiked</code> → <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">setLiked()</code>)를
+                                    직접 필드 세팅 방식으로 우회하는 게 더 안정적이었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>좋아요 토글 시 댓글 전체 재조회 API 호출 제거 → 네트워크 요청 수 감소</li>
+                                    <li>하트 상태가 페이지 재진입 후에도 정확히 유지됨</li>
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@PreUpdate</code> 제거로 좋아요 시 "수정됨" 표시 버그도 동시 해결</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>Lombok의 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">isXxx</code> 필드에 대한 setter 네이밍 규칙 (<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">setXxx()</code> 생성, prefix 제거)</li>
+                                    <li>JPA <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@PreUpdate</code>의 동작 범위 — 연관 엔티티 변경도 트리거할 수 있음</li>
+                                    <li>낙관적 업데이트(Optimistic Update) 패턴의 적용 기준과 롤백 처리 필요성</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #2 댓글 수 대댓글 포함 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full">BUG</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#2 게시글 목록 댓글 수 — 대댓글 미포함 오류</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    게시판 목록의 댓글 수와 실제 상세 페이지의 댓글 수가 달랐다.
+                                    목록에서는 대댓글을 제외한 루트 댓글만 카운트하고 있었으며,
+                                    삭제된 댓글도 카운트에 포함되는 문제가 있었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 게시글 조회 시 매번 댓글 수 서브쿼리 포함</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">각 게시글마다 COUNT 서브쿼리 → N+1 가능성</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. postIds 배치 쿼리로 한 번에 카운트 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">IN 절로 전체 게시글 ID를 한 번에 조회 후 Map으로 매핑</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    목록 API는 다수의 게시글을 한꺼번에 반환한다. A안처럼 게시글마다 서브쿼리를 실행하면
+                                    게시글 N개 → 쿼리 N+1번이라는 전형적인 N+1 문제가 발생한다.
+                                    B안은 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">countNonDeletedCommentsByPostIds()</code>를 배치 쿼리로 만들어
+                                    한 번의 IN 쿼리로 전체 결과를 가져오고 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Map&lt;Long, Long&gt;</code>으로 매핑하므로 쿼리 횟수가 1회로 고정된다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>게시글 목록 API의 댓글 수 관련 쿼리가 N번 → 1번으로 감소</li>
+                                    <li>전체/카테고리/후기 등 모든 목록 API에 일괄 적용해 일관성 확보</li>
+                                    <li>대댓글 포함, 삭제 댓글 제외 카운트로 정확도 개선</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>N+1 문제의 발생 원인과 배치 쿼리(IN절) + Map 매핑 패턴을 통한 해결 방법</li>
+                                    <li>Spring Data JPA에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">@Query</code>로 집계 쿼리 작성 시 결과를 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">List&lt;Object[]&gt;</code>로 받아 Map 변환하는 패턴</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #3 지도 확대 버튼 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full">BUG</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#3 지도 확대 버튼 단계별 동작 불량</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    + 버튼이 첫 번째 클릭만 작동하고 이후엔 눌러도 지도가 확대되지 않았다.
+                                    원인은 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">onCameraIdle</code>에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">latitudeDelta</code>를 이용해 zoom 레벨을 역산할 때
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.round()</code> 오차로 인해 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">lastCameraRef</code>가 잘못된 값으로 덮어써져
+                                    이후 zoom 변경이 감지되지 않는 것이었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. Math.round 대신 소수점 허용 역산 보정</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">역산 공식을 정밀하게 수정해 오차 최소화</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. onCameraIdle에서 params.zoom 직접 사용 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">역산 자체를 제거하고 카메라 이벤트가 내려주는 zoom 값을 그대로 사용</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    역산 자체가 근본적으로 오차를 유발하는 구조이므로, 정밀도를 높여도 동일한 문제가 재발할 수 있다.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">onCameraIdle</code> 타입에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">zoom?: number</code>를 추가해 SDK가 제공하는 정확한 zoom 값을 그대로 쓰는 게
+                                    가장 단순하고 안정적인 해결책이었다. + 버튼도 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.min(18, currentZoom + 1)</code>로 단순화해 최대 줌 상한까지 처리했다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>확대 버튼이 클릭할 때마다 정확히 1단계씩 확대됨</li>
+                                    <li>불필요한 역산 로직 제거로 코드 단순화</li>
+                                    <li>최대 줌(18) 상한 처리로 범위 초과 오류 방지</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>지도 SDK의 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">latitudeDelta</code>와 zoom 레벨 간 변환 공식의 부정확성</li>
+                                    <li>부동소수점 오차(<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Math.round</code>)가 상태 비교에 미치는 영향</li>
+                                    <li>SDK 이벤트 콜백이 제공하는 값을 신뢰하는 것이 역산보다 안전하다는 원칙</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #4 축제 목록 → 지도 포커스 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#4 축제 목록에서 선택 시 지도 포커스 이동</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    축제 목록에서 항목을 선택해도 지도가 해당 위치로 이동하지 않아 사용자가 직접 지도를 드래그해야 했다.
+                                    지도와 목록이 연동되지 않아 UX가 단절되는 문제였다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 선택 시 지도 탭으로 화면 전환 후 좌표 전달</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">화면 이동이 발생해 현재 목록 컨텍스트를 잃음</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. mapRef로 지도 직접 제어 — animateCameraTo() ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">화면 전환 없이 지도만 해당 좌표로 부드럽게 이동</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    목록과 지도가 같은 화면에 공존하는 구조이므로 화면 전환 없이 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">mapRef.current.animateCameraTo()</code>로
+                                    지도만 부드럽게 이동시키는 것이 가장 자연스럽다.
+                                    zoom 15로 고정해 축제 위치가 명확하게 보이도록 했다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>목록 선택 → 지도 자동 이동으로 UX 연속성 확보</li>
+                                    <li>사용자가 직접 지도를 탐색하는 단계 제거</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useRef</code>를 통한 지도 인스턴스 직접 제어 패턴</li>
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">animateCameraTo()</code>의 애니메이션 카메라 이동과 즉시 이동(<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">moveCamera()</code>)의 차이</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #5 지도 사이드메뉴 탭 복귀 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full">BUG</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#5 지도 사이드메뉴 — 뒤로가기 시 탭·스택 꼬임</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    지도 사이드메뉴에서 "저장한 축제", "앱 설정" 등을 누르면 마이페이지 탭으로 이동하는데,
+                                    뒤로가기를 해도 마이페이지에 그대로 머물고 지도 탭으로 돌아오지 않았다.
+                                    이후 마이페이지 탭을 다시 누르면 이전에 진입했던 화면이 스택에 남아 중첩되는 문제도 있었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. StackActions.popToTop() + 탭 전환</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">popToTop 실행 시 일부 환경에서 에러 발생</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. from 파라미터 감지 → router.replace로 마이페이지 루트 초기화 후 지도 탭 전환 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">스택을 replace로 초기화해 잔류 없이 지도 탭으로 전환</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">popToTop</code>은 Expo Router 환경에서 에러가 발생하는 케이스가 있었다.
+                                    대신 각 화면에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">from: 'map'</code> 파라미터를 전달해 진입 경로를 식별하고,
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">router.replace</code>로 마이페이지 스택을 루트로 초기화한 후 지도 탭으로 전환하면
+                                    스택 잔류 없이 깔끔하게 원래 자리로 돌아올 수 있었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>사이드메뉴 → 화면 → 뒤로가기 시 지도 탭으로 정확히 복귀</li>
+                                    <li>마이페이지 탭 재진입 시 스택 중첩 문제 완전 제거</li>
+                                    <li>미사용 import 제거로 코드 정리</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>Expo Router의 탭 기반 네비게이션과 스택 네비게이션의 상호작용 구조</li>
+                                    <li><code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">router.push</code> vs <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">router.replace</code>의 스택 처리 차이</li>
+                                    <li>진입 경로 파라미터(<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">from</code>)를 활용한 조건부 뒤로가기 처리 패턴</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #6 좋아요 애니메이션 & 낙관적 업데이트 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#6 좋아요 하트 애니메이션 & 낙관적 업데이트</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    게시글·댓글 좋아요를 누를 때 서버 응답을 기다린 후 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">refetchPost()</code>를 호출해서
+                                    화면이 깜빡이고 응답 지연이 체감됐다. 인터랙션 피드백도 없어 눌렸는지 확인하기 어려웠다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 서버 응답 후 전체 데이터 재조회 유지</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">항상 서버 기준 최신 상태이나, 응답 전까지 화면 지연</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. localLikeCount 낙관적 업데이트 + Spring 애니메이션 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">클릭 즉시 로컬 상태 업데이트 + 하트 scale 애니메이션</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    좋아요는 실패 가능성이 낮고 롤백이 필요한 경우가 드문 작업이다.
+                                    낙관적 업데이트로 클릭 즉시 UI를 반영하고, Spring 애니메이션으로 하트가 튀는 피드백을 주면
+                                    서버 지연과 무관하게 사용자가 즉각적인 반응을 느낄 수 있다.
+                                    게시글 전체 리패치는 불필요한 렌더링을 유발하므로 제거했다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>좋아요 클릭 즉시 반응 — 서버 응답 대기 시간 체감 제거</li>
+                                    <li>전체 게시글 리패치 제거로 불필요한 렌더링 차단</li>
+                                    <li>하트 scale 애니메이션으로 인터랙션 피드백 제공</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>낙관적 업데이트(Optimistic Update)의 적용 기준 — 실패 가능성이 낮고 즉각 피드백이 중요한 인터랙션에 적합</li>
+                                    <li>React Native Reanimated의 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">spring</code> 애니메이션과 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">withSequence</code>를 활용한 scale 효과</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #7 채팅 날짜 구분선 동적화 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#7 채팅 날짜 구분선 동적화</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    채팅 내역의 날짜 구분선이 "오늘"로 하드코딩되어 있어
+                                    어제 또는 더 이전 메시지에도 "오늘"이 표시됐다. 실제 메시지 시간 기반의 구분선이 필요했다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 해결 및 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">Message</code> 타입에 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">createdAt</code> 필드를 추가하고,
+                                    메시지 목록을 렌더링할 때 이전 메시지와 날짜가 다르면 구분선을 삽입하는 방식으로 동적화했다.
+                                    오늘/어제는 상대적 표현으로, 그 이전은 "N년 N월 N일" 형식으로 출력해 가독성을 높였다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>날짜 구분선이 실제 메시지 날짜 기준으로 정확하게 표시</li>
+                                    <li>오랜 채팅 히스토리도 날짜별로 구분되어 가독성 향상</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>리스트 렌더링 시 이전 아이템과 비교해 구분선을 조건부 삽입하는 패턴</li>
+                                    <li>날짜 포맷팅 — 오늘/어제 판단 로직과 절대 날짜 표기 분기 처리</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #8 조회수 중복 카운트 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs font-bold px-2.5 py-1 rounded-full">BUG</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#8 행사 상세 조회수 중복 카운트 제거</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    행사 상세 페이지 진입 시 조회수가 2씩 증가했다.
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useEventDetail</code> 훅과 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">EventDetailHeader</code> 컴포넌트 두 곳에서 각각 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">logClick()</code>을 호출하고 있었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 해결 및 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">EventDetailHeader</code>에서 이미 호출 중이므로
+                                    <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">useEventDetail</code> 훅의 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">logClick</code> 호출을 주석 처리해 단일 호출로 정리했다.
+                                    호출 책임을 UI 컴포넌트(Header)에 두는 것이 데이터 훅과의 관심사 분리 원칙에도 부합한다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>훅과 컴포넌트 간 사이드이펙트 호출의 중복 방지 — 관심사 분리 원칙 적용</li>
+                                    <li>중간 투입 시 코드 중복·사이드이펙트 탐지 방법</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- #9 채팅 기능 개선 -->
+                    <div class="bg-light-card dark:bg-dark-card rounded-xl shadow-md overflow-hidden">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full">FEAT</span>
+                            <h3 class="font-bold text-light-text dark:text-white">#9 채팅 기능 개선 — 나가기 · 미읽음 · 이름 표시</h3>
+                        </div>
+                        <div class="px-6 py-5 space-y-5">
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">🔍 문제 인식</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    채팅방을 나가도 재진입 시 같은 방이 재사용되어 "새 채팅방 생성" 흐름이 깨졌고,
+                                    나간 상대와 채팅 중인 경우 입력창이 그대로 노출됐다.
+                                    미읽음 카운트에 내가 보낸 메시지도 포함되는 문제, 나간 상대의 이름이 비어있는 문제도 있었다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">💡 해결방안 선택지 (나가기 흐름)</p>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 dark:bg-dark-bg rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">A. 나가기 시 방 즉시 삭제</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">상대방도 히스토리를 잃게 됨</p>
+                                    </div>
+                                    <div class="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
+                                        <p class="font-semibold text-light-text dark:text-white mb-1">B. directRoomKey 초기화 + 둘 다 나갔을 때만 영구 삭제 ✅ 선택</p>
+                                        <p class="text-light-subtext dark:text-dark-subtext text-xs">한 명이 나가도 상대방 히스토리 유지, 둘 다 나가면 완전 삭제</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">✅ 선택 이유</p>
+                                <p class="text-sm text-light-subtext dark:text-dark-subtext leading-relaxed">
+                                    나가기 시 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">directRoomKey</code>를 null로 초기화하면,
+                                    이후 재채팅 시 기존 방을 찾지 못해 항상 새 방이 생성된다.
+                                    한 명만 나간 경우 상대방 히스토리를 보호하고,
+                                    둘 다 나간 경우에만 메시지·멤버·방을 영구 삭제해 DB 공간도 확보했다.
+                                    미읽음 카운트는 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">countByRoomAndCreatedAtAfterAndSenderIdNot</code> 쿼리로 발신자를 제외해 정확도를 높였다.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📈 얻은 효과</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>나가기 후 재채팅 시 항상 새 방 생성 — 이전 히스토리 오염 없음</li>
+                                    <li>상대가 나간 경우 입력창 대신 안내 메시지 표시로 UX 명확화</li>
+                                    <li>미읽음 카운트에서 내가 보낸 메시지 제외 — 정확한 미읽음 뱃지</li>
+                                    <li>둘 다 나간 방 자동 정리로 불필요한 데이터 제거</li>
+                                    <li>나간 상대 이름 "알 수 없음" 처리로 빈 값 노출 방지</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">📚 알게 된 개념</p>
+                                <ul class="text-sm text-light-subtext dark:text-dark-subtext space-y-1 list-disc list-inside">
+                                    <li>채팅방 상태 관리 — <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">directRoomKey</code>를 활용한 방 중복 생성 방지 패턴</li>
+                                    <li>소프트 삭제(leftAt 기록)와 하드 삭제(영구 제거) 기준 설계</li>
+                                    <li>Spring Data JPA 메서드 네이밍으로 복합 조건 쿼리 생성 (<code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">countByRoomAndCreatedAtAfterAndSenderIdNot</code>)</li>
+                                    <li>프론트에서 <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">leftAt</code> 필드로 상대방 퇴장 상태를 감지해 UI를 조건부 렌더링하는 패턴</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- GitHub 링크 -->
+            <section class="text-center pt-4">
+                <a href="https://github.com/Team-Dailo/Dailo-Project" target="_blank" rel="noopener noreferrer"
+                   class="inline-block bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105">
+                    Github에서 코드 보기 →
+                </a>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700 py-8 text-center">
+        <p class="text-light-subtext dark:text-dark-subtext text-sm">&copy; 2025 김다빈's Portfolio</p>
+    </footer>
+
+</body>
+</html>
