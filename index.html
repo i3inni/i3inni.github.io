@@ -1,441 +1,930 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>김다빈's Portfolio</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/global.css">
-    
+    <link rel="stylesheet" href="css/global.css" />
+
     <script src="js/tailwind.config.js"></script>
     <script src="js/theme-init.js"></script>
-</head>
-<!-- 
+  </head>
+  <!-- 
   [수정된 <body>]
   기본값으로 'light-bg', 'light-text'를 사용하고,
   dark: 접두사를 붙여 다크 모드일 때의 스타일을 지정합니다.
 -->
-<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300">
-
+  <body
+    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300"
+  >
     <!-- 1. 헤더 (네비게이션 바) -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- 로고/이름 -->
-                <a href="#home" class="text-2xl font-bold font-poppins text-light-text dark:text-white">김다빈's Portfolio</a>
-                
-                <!-- 메뉴 (데스크탑) -->
-                <div class="hidden sm:flex sm:space-x-6 items-center">
-                    <a href="#home" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Home</a>
-                    <a href="#about" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">About</a>
-                    <a href="#projects" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Projects</a>
-                    <a href="#contact" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Contact</a>
-                    <a href="#study" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Study</a>
-                    <a href="timer.html" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200">Timer</a>
-                </div>
-                
-                <!-- 모바일 메뉴 버튼 (간단한 표시) -->
-                <div class="sm:hidden">
-                    <button id="mobile-menu-btn" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white">
-                        <svg class="w-6 h-6" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M4 6h16M4 12h16m-7 6h7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 모바일 메뉴 (숨김) -->
-            <div id="mobile-menu" class="hidden sm:hidden pb-3 space-y-1">
-                <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Home</a>
-                <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">About</a>
-                <a href="#projects" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Projects</a>
-                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Contact</a>
-                <a href="timer.html" class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card">Timer</a>
-            </div>
-        </nav>
+    <header
+      class="fixed top-0 left-0 right-0 z-50 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
+    >
+      <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- 로고/이름 -->
+          <a
+            href="#home"
+            class="text-2xl font-bold font-poppins text-light-text dark:text-white"
+            >김다빈's Portfolio</a
+          >
+
+          <!-- 메뉴 (데스크탑) -->
+          <div class="hidden sm:flex sm:space-x-6 items-center">
+            <a
+              href="#home"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+              >Home</a
+            >
+            <a
+              href="#about"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+              >About</a
+            >
+            <a
+              href="#projects"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+              >Projects</a
+            >
+            <a
+              href="#contact"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+              >Contact</a
+            >
+            <a
+              href="#study"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+              >Study</a
+            >
+          </div>
+
+          <!-- 모바일 메뉴 버튼 (간단한 표시) -->
+          <div class="sm:hidden">
+            <button
+              id="mobile-menu-btn"
+              class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M4 6h16M4 12h16m-7 6h7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 모바일 메뉴 (숨김) -->
+        <div id="mobile-menu" class="hidden sm:hidden pb-3 space-y-1">
+          <a
+            href="#home"
+            class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card"
+            >Home</a
+          >
+          <a
+            href="#about"
+            class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card"
+            >About</a
+          >
+          <a
+            href="#projects"
+            class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card"
+            >Projects</a
+          >
+          <a
+            href="#contact"
+            class="block px-3 py-2 rounded-md text-base font-medium text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-card"
+            >Contact</a
+          >
+        </div>
+      </nav>
     </header>
 
-    <main class="pt-16"> <!-- 헤더 높이만큼 패딩 -->
+    <main class="pt-16">
+      <!-- 헤더 높이만큼 패딩 -->
 
-        <!-- 2. 홈 (Hero) 섹션 -->
-        <!-- [수정] 라이트 모드 그라데이션을 inline style로, 다크 모드 그라데이션을 dark:bg-radial-dark 클래스로 제어 -->
-        <section id="home" class="min-h-screen flex items-center justify-center text-center px-4 dark:bg-radial-dark" 
-                 style="background: radial-gradient(circle, #F3F4F6 0%, #FFFFFF 70%);">
-            <div class="max-w-3xl">
-                <span class="text-primary font-semibold font-poppins">안녕하세요!</span>
-                <h1 class="text-4xl sm:text-6xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-6">
-                    저는 <span class="text-primary">김다빈</span>입니다.
-                </h1>
-                <p class="text-xl sm:text-2xl text-light-subtext dark:text-dark-subtext mb-10">
-                    Spring으로 서버를 설계하는 백엔드 개발자입니다.
+      <!-- 2. 홈 (Hero) 섹션 -->
+      <!-- [수정] 라이트 모드 그라데이션을 inline style로, 다크 모드 그라데이션을 dark:bg-radial-dark 클래스로 제어 -->
+      <section
+        id="home"
+        class="min-h-screen flex items-center justify-center text-center px-4 dark:bg-radial-dark"
+        style="background: radial-gradient(circle, #f3f4f6 0%, #ffffff 70%)"
+      >
+        <div class="max-w-3xl">
+          <span class="text-primary font-semibold font-poppins"
+            >안녕하세요!</span
+          >
+          <h1
+            class="text-4xl sm:text-6xl font-bold font-poppins text-light-text dark:text-white mt-4 mb-6"
+          >
+            저는 <span class="text-primary">김다빈</span>입니다.
+          </h1>
+          <p
+            class="text-xl sm:text-2xl text-light-subtext dark:text-dark-subtext mb-10"
+          >
+            Spring으로 서버를 설계하는 백엔드 개발자입니다.
+          </p>
+          <a
+            href="#projects"
+            class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105"
+          >
+            프로젝트 보기
+          </a>
+        </div>
+      </section>
+
+      <!-- 3. About Me 섹션 -->
+      <section id="about" class="py-24 sm:py-32 bg-light-bg dark:bg-dark-bg">
+        <div
+          class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
+        >
+          <!-- 이미지 Placeholder -->
+          <div>
+            <!-- [수정] 라이트 모드용 플레이스홀더 이미지 -->
+            <img
+              src="https://placehold.co/600x600/FFFFFF/1F2937?text=Profile+Image"
+              alt="프로필 이미지"
+              class="rounded-lg shadow-2xl object-cover aspect-square"
+            />
+          </div>
+          <!-- 소개 글 -->
+          <div class="md:-mt-10">
+            <h2
+              class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6"
+            >
+              About Me
+            </h2>
+            <p
+              class="text-lg text-light-subtext dark:text-dark-subtext mb-6 leading-relaxed"
+            >
+              현재 대학교 4학년 재학 중인 백엔드 개발자 김다빈입니다. Spring
+              Boot를 중심으로 안정적이고 확장 가능한 서버를 설계하는 것에 관심이
+              많습니다.
+            </p>
+            <p
+              class="text-lg text-light-subtext dark:text-dark-subtext mb-8 leading-relaxed"
+            >
+              팀 프로젝트와 해커톤을 통해 협업 경험을 쌓아왔으며, 코드 한 줄이
+              실제 문제를 해결하는 순간에서 가장 큰 보람을 느낍니다.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <span
+                class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full"
+                >Spring Boot</span
+              >
+              <span
+                class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full"
+                >Java</span
+              >
+              <span
+                class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full"
+                >PostgreSQL</span
+              >
+              <span
+                class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full"
+                >MySQL</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Projects 섹션 -->
+      <section
+        id="projects"
+        class="py-24 sm:py-32 bg-gray-50 dark:bg-dark-card"
+      >
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2
+            class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-16"
+          >
+            Projects
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <!-- 프로젝트 카드: Dailo -->
+            <div
+              class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300"
+            >
+              <img
+                src="https://placehold.co/600x400/111827/6366F1?text=Dailo"
+                alt="Dailo 프로젝트"
+                class="w-full h-48 object-cover"
+              />
+              <div class="p-6">
+                <h3
+                  class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3"
+                >
+                  Dailo (팀 프로젝트 · 중간 투입)
+                </h3>
+                <p class="text-light-subtext dark:text-dark-subtext mb-4">
+                  축제 현장 정보가 분산돼 탐색이 어렵다는 문제를 해결. 지도 기반
+                  부스 탐색과 실시간 채팅·게시판으로 소통을 한곳에 모은 플랫폼.
+                  중간 투입 후 버그 9건 수정 및 주요 기능 풀스택 개발.
                 </p>
-                <a href="#projects" class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105">
-                    프로젝트 보기
-                </a>
-            </div>
-        </section>
-
-        <!-- 3. About Me 섹션 -->
-        <section id="about" class="py-24 sm:py-32 bg-light-bg dark:bg-dark-bg">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <!-- 이미지 Placeholder -->
-                <div>
-                    <!-- [수정] 라이트 모드용 플레이스홀더 이미지 -->
-                    <img src="https://placehold.co/600x600/FFFFFF/1F2937?text=Profile+Image" 
-                         alt="프로필 이미지" 
-                         class="rounded-lg shadow-2xl object-cover aspect-square">
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >Spring Boot</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >React Native</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >TypeScript</span
+                  >
                 </div>
-                <!-- 소개 글 -->
-                <div class="md:-mt-10">
-                    <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6">About Me</h2>
-                    <p class="text-lg text-light-subtext dark:text-dark-subtext mb-6 leading-relaxed">
-                        현재 대학교 4학년 재학 중인 백엔드 개발자 김다빈입니다.
-                        Spring Boot를 중심으로 안정적이고 확장 가능한 서버를 설계하는 것에 관심이 많습니다.
-                    </p>
-                    <p class="text-lg text-light-subtext dark:text-dark-subtext mb-8 leading-relaxed">
-                        팀 프로젝트와 해커톤을 통해 협업 경험을 쌓아왔으며, 코드 한 줄이 실제 문제를 해결하는 순간에서 가장 큰 보람을 느낍니다.
-                    </p>
-                    <div class="flex flex-wrap gap-3">
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Spring Boot</span>
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">Java</span>
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">PostgreSQL</span>
-                        <span class="bg-gray-100 dark:bg-dark-card text-primary font-medium py-2 px-4 rounded-full">MySQL</span>
-                    </div>
+                <div class="flex gap-4">
+                  <a
+                    href="https://github.com/Team-Dailo/Dailo-Project"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary hover:underline font-medium"
+                    >Github &rarr;</a
+                  >
+                  <a
+                    href="dailo.html"
+                    class="text-light-subtext dark:text-dark-subtext hover:underline font-medium"
+                    >내가 한 것 &rarr;</a
+                  >
                 </div>
+              </div>
             </div>
-        </section>
 
-        <!-- 4. Projects 섹션 -->
-        <section id="projects" class="py-24 sm:py-32 bg-gray-50 dark:bg-dark-card">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-16">Projects</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-
-                    <!-- 프로젝트 카드: Dailo -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/111827/6366F1?text=Dailo" alt="Dailo 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">Dailo (팀 프로젝트 · 중간 투입)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4">축제 현장 정보가 분산돼 탐색이 어렵다는 문제를 해결. 지도 기반 부스 탐색과 실시간 채팅·게시판으로 소통을 한곳에 모은 플랫폼. 중간 투입 후 버그 9건 수정 및 주요 기능 풀스택 개발.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React Native</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">TypeScript</span>
-                            </div>
-                            <div class="flex gap-4">
-                                <a href="https://github.com/Team-Dailo/Dailo-Project" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                                <a href="dailo.html" class="text-light-subtext dark:text-dark-subtext hover:underline font-medium">내가 한 것 &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 프로젝트 카드: RunBoo -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <div class="w-full h-48 bg-black flex items-center justify-center">
-                            <img src="image.png" alt="RunBoo 로고" class="h-32 w-32 object-contain rounded-2xl">
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">RunBoo (팀 프로젝트)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4">혼자 달리기는 동기부여를 유지하기 어렵다는 문제를 해결. 게임의 티어·도전과제·고스트 시스템을 런닝에 접목해 지속적인 운동 습관 형성을 돕는 앱. 티어 산정·도전과제 백엔드 구현 담당.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">React Native</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Supabase</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">TypeScript</span>
-                            </div>
-                            <div class="flex gap-4">
-                                <a href="https://github.com/i3inni/runboo" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                                <a href="runboo.html" class="text-light-subtext dark:text-dark-subtext hover:underline font-medium">내가 한 것 &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 프로젝트 카드: Chungcheongthon -->
-                    <div class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300">
-                        <img src="https://placehold.co/600x400/3730A3/FFFFFF?text=Chungcheongthon" alt="Chungcheongthon 프로젝트" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3">충청톤 (해커톤)</h3>
-                            <p class="text-light-subtext dark:text-dark-subtext mb-4">개인 일정을 체계적으로 관리하기 어렵다는 문제를 해결. Gemini AI가 일정을 분석해 최적화된 계획을 제안하는 플랫폼. 해커톤에서 백엔드 전담 — JWT 인증, 일정 CRUD, AI 연동, Docker 배포.</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">Spring Boot</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">MySQL</span>
-                                <span class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full">JWT</span>
-                            </div>
-                            <div class="flex gap-4">
-                                <a href="https://github.com/i3inni/chungcheongthon-team3" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">Github &rarr;</a>
-                                <a href="chungcheongthon.html" class="text-light-subtext dark:text-dark-subtext hover:underline font-medium">내가 한 것 &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. Study 섹션 -->
-        <section id="study" class="py-24 sm:py-32 bg-light-card dark:bg-dark-bg">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-4">Study</h2>
-                <p class="text-center text-light-subtext dark:text-dark-subtext mb-16">개인적으로 공부하며 정리한 기술 노트들</p>
-
-                <div class="space-y-12">
-
-                    <!-- Java -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">☕</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">Java</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">3</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/Optional-3211851bf2d4815f85dffd3168599b26" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔷</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Optional 자바 타입</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Java · Null Safety</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/stream-map-builder-3211851bf2d48141b11cd55c77a1cd0a" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🌊</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">.stream(), .map(), .builder()</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Java · Stream API · Builder 패턴</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/32d1851bf2d48082a923c3049e066304" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">⚡</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">비동기 처리</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Java · 비동기 · @Async</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Spring & JPA -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">🍃</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">Spring & JPA</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">4</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/MVC-JdbcTemplate-3211851bf2d4814583bfefc0a3419cb9" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">📋</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">MVC 게시판 (JdbcTemplate)</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Spring MVC · JdbcTemplate</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/MyBatis-3211851bf2d481878e9dc7143cd77464" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🗄️</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">MyBatis 정리</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">MyBatis · SQL Mapper</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/Transactional-3211851bf2d48115ae24f01da0752092" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔄</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">@Transactional</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Spring · 트랜잭션 관리</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/JoinColumn-3211851bf2d4810abd17da055dcd6bbb" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔗</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">@JoinColumn</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">JPA · 연관관계 매핑</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 인증 & 보안 -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">🔐</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">인증 & 보안</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">4</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/JWT-Acsses-Token-Refresh-Token-3211851bf2d4815ba7e1ef3508351e2f" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔑</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">JWT (Access · Refresh Token)</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Spring Security · 인증</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/3211851bf2d481bab57ae1fb0e1a6366" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">📧</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">회원가입 · 이메일 · 휴대폰 인증</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Spring · 인증 플로우</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/Refresh-Token-3211851bf2d481759230ce5c08716d98" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔁</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Refresh Token 자동 로그인</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">JWT · 토큰 갱신 전략</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/KG-API-3211851bf2d4814ba356eb79d52afe55" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🪪</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">KG 이니시스 본인인증 API 연동</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">외부 API · 본인인증</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 데이터베이스 & 캐시 -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">🗃️</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">데이터베이스 & 캐시</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">3</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/Supabase-PostgreSQL-3211851bf2d4812c9a69e781de38d8f8" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🐘</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Supabase PostgreSQL 연결</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Supabase · PostgreSQL</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/Redis-3211851bf2d480c8946ecf433dfe17f0" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔴</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Redis 자료구조</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Redis · 캐싱 · 자료구조</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/Spring-3211851bf2d480b3bc80f82c4d6294a7" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔴</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Spring에서 Redis 활용 방법</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Spring · Redis 연동</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 배포 & 인프라 -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">🚀</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">배포 & 인프라</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">3</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/aws-EC2-3271851bf2d480c6bf76e2c6654a075f" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">☁️</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">AWS EC2 스프링 서버 배포</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">AWS EC2 · 배포</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/docker-EC2-3271851bf2d48066ad62f60e012d032d" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🐳</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Docker로 EC2에 서버 실행</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Docker · EC2 · 배포</p>
-                                </div>
-                            </a>
-                            <a href="https://www.notion.so/swagger-UI-3211851bf2d4811ba6cfc78e900955c0" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">📄</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">Swagger UI 서버 로그 주소</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">Swagger · API 문서화</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 트러블슈팅 -->
-                    <div>
-                        <div class="flex items-center gap-3 mb-5">
-                            <span class="text-lg">🚨</span>
-                            <h3 class="text-lg font-bold text-light-text dark:text-white">트러블슈팅</h3>
-                            <span class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">1</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="https://www.notion.so/3281851bf2d4804c95bbcdd9c138f732" target="_blank" rel="noopener noreferrer"
-                               class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group">
-                                <span class="text-2xl shrink-0">🔎</span>
-                                <div>
-                                    <p class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm">사고 대응 & 기록 [다일로 기반]</p>
-                                    <p class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5">트러블슈팅 · 장애 대응</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. Contact 섹션 -->
-        <section id="contact" class="py-24 sm:py-32 bg-light-card dark:bg-dark-bg">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6">Contact Me</h2>
-                <p class="text-xl text-light-subtext dark:text-dark-subtext mb-10">
-                    새로운 기회에 대해 이야기하고 싶거나 질문이 있으신가요? <br> 언제든지 편하게 연락주세요!
+            <!-- 프로젝트 카드: RunBoo -->
+            <div
+              class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300"
+            >
+              <div
+                class="w-full h-48 bg-black flex items-center justify-center"
+              >
+                <img
+                  src="image.png"
+                  alt="RunBoo 로고"
+                  class="h-32 w-32 object-contain rounded-2xl"
+                />
+              </div>
+              <div class="p-6">
+                <h3
+                  class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3"
+                >
+                  RunBoo (팀 프로젝트)
+                </h3>
+                <p class="text-light-subtext dark:text-dark-subtext mb-4">
+                  혼자 달리기는 동기부여를 유지하기 어렵다는 문제를 해결. 게임의
+                  티어·도전과제·고스트 시스템을 런닝에 접목해 지속적인 운동 습관
+                  형성을 돕는 앱. 티어 산정·도전과제 백엔드 구현 담당.
                 </p>
-                <a href="mailto:fkdl4862@naver.com" class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105 inline-block">
-                    Say Hello
-                </a>
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >Spring Boot</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >React Native</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >Supabase</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >TypeScript</span
+                  >
+                </div>
+                <div class="flex gap-4">
+                  <a
+                    href="https://github.com/i3inni/runboo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary hover:underline font-medium"
+                    >Github &rarr;</a
+                  >
+                  <a
+                    href="runboo.html"
+                    class="text-light-subtext dark:text-dark-subtext hover:underline font-medium"
+                    >내가 한 것 &rarr;</a
+                  >
+                </div>
+              </div>
             </div>
-        </section>
 
+            <!-- 프로젝트 카드: Chungcheongthon -->
+            <div
+              class="bg-light-card dark:bg-dark-bg rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition duration-300"
+            >
+              <img
+                src="https://placehold.co/600x400/3730A3/FFFFFF?text=Chungcheongthon"
+                alt="Chungcheongthon 프로젝트"
+                class="w-full h-48 object-cover"
+              />
+              <div class="p-6">
+                <h3
+                  class="text-2xl font-bold font-poppins text-light-text dark:text-white mb-3"
+                >
+                  충청톤 (해커톤)
+                </h3>
+                <p class="text-light-subtext dark:text-dark-subtext mb-4">
+                  개인 일정을 체계적으로 관리하기 어렵다는 문제를 해결. Gemini
+                  AI가 일정을 분석해 최적화된 계획을 제안하는 플랫폼. 해커톤에서
+                  백엔드 전담 — JWT 인증, 일정 CRUD, AI 연동, Docker 배포.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >Spring Boot</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >MySQL</span
+                  >
+                  <span
+                    class="text-xs bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-dark-subtext py-1 px-3 rounded-full"
+                    >JWT</span
+                  >
+                </div>
+                <div class="flex gap-4">
+                  <a
+                    href="https://github.com/i3inni/chungcheongthon-team3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary hover:underline font-medium"
+                    >Github &rarr;</a
+                  >
+                  <a
+                    href="chungcheongthon.html"
+                    class="text-light-subtext dark:text-dark-subtext hover:underline font-medium"
+                    >내가 한 것 &rarr;</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Study 섹션 -->
+      <section id="study" class="py-24 sm:py-32 bg-light-card dark:bg-dark-bg">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2
+            class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white text-center mb-4"
+          >
+            Study
+          </h2>
+          <p
+            class="text-center text-light-subtext dark:text-dark-subtext mb-16"
+          >
+            개인적으로 공부하며 정리한 기술 노트들
+          </p>
+
+          <div class="space-y-12">
+            <!-- Java -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">☕</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  Java
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >3</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/Optional-3211851bf2d4815f85dffd3168599b26"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔷</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Optional 자바 타입
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Java · Null Safety
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/stream-map-builder-3211851bf2d48141b11cd55c77a1cd0a"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🌊</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      .stream(), .map(), .builder()
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Java · Stream API · Builder 패턴
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/32d1851bf2d48082a923c3049e066304"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">⚡</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      비동기 처리
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Java · 비동기 · @Async
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- Spring & JPA -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">🍃</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  Spring & JPA
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >4</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/MVC-JdbcTemplate-3211851bf2d4814583bfefc0a3419cb9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">📋</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      MVC 게시판 (JdbcTemplate)
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Spring MVC · JdbcTemplate
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/MyBatis-3211851bf2d481878e9dc7143cd77464"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🗄️</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      MyBatis 정리
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      MyBatis · SQL Mapper
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/Transactional-3211851bf2d48115ae24f01da0752092"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔄</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      @Transactional
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Spring · 트랜잭션 관리
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/JoinColumn-3211851bf2d4810abd17da055dcd6bbb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔗</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      @JoinColumn
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      JPA · 연관관계 매핑
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- 인증 & 보안 -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">🔐</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  인증 & 보안
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >4</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/JWT-Acsses-Token-Refresh-Token-3211851bf2d4815ba7e1ef3508351e2f"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔑</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      JWT (Access · Refresh Token)
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Spring Security · 인증
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/3211851bf2d481bab57ae1fb0e1a6366"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">📧</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      회원가입 · 이메일 · 휴대폰 인증
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Spring · 인증 플로우
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/Refresh-Token-3211851bf2d481759230ce5c08716d98"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔁</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Refresh Token 자동 로그인
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      JWT · 토큰 갱신 전략
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/KG-API-3211851bf2d4814ba356eb79d52afe55"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🪪</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      KG 이니시스 본인인증 API 연동
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      외부 API · 본인인증
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- 데이터베이스 & 캐시 -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">🗃️</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  데이터베이스 & 캐시
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >3</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/Supabase-PostgreSQL-3211851bf2d4812c9a69e781de38d8f8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🐘</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Supabase PostgreSQL 연결
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Supabase · PostgreSQL
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/Redis-3211851bf2d480c8946ecf433dfe17f0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔴</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Redis 자료구조
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Redis · 캐싱 · 자료구조
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/Spring-3211851bf2d480b3bc80f82c4d6294a7"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔴</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Spring에서 Redis 활용 방법
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Spring · Redis 연동
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- 배포 & 인프라 -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">🚀</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  배포 & 인프라
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >3</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/aws-EC2-3271851bf2d480c6bf76e2c6654a075f"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">☁️</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      AWS EC2 스프링 서버 배포
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      AWS EC2 · 배포
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/docker-EC2-3271851bf2d48066ad62f60e012d032d"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🐳</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Docker로 EC2에 서버 실행
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Docker · EC2 · 배포
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://www.notion.so/swagger-UI-3211851bf2d4811ba6cfc78e900955c0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">📄</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      Swagger UI 서버 로그 주소
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      Swagger · API 문서화
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- 트러블슈팅 -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <span class="text-lg">🚨</span>
+                <h3 class="text-lg font-bold text-light-text dark:text-white">
+                  트러블슈팅
+                </h3>
+                <span
+                  class="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full"
+                  >1</span
+                >
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a
+                  href="https://www.notion.so/3281851bf2d4804c95bbcdd9c138f732"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-4 bg-gray-50 dark:bg-dark-card rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition duration-200 group"
+                >
+                  <span class="text-2xl shrink-0">🔎</span>
+                  <div>
+                    <p
+                      class="font-semibold text-light-text dark:text-white group-hover:text-primary transition duration-200 text-sm"
+                    >
+                      사고 대응 & 기록 [다일로 기반]
+                    </p>
+                    <p
+                      class="text-xs text-light-subtext dark:text-dark-subtext mt-0.5"
+                    >
+                      트러블슈팅 · 장애 대응
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Contact 섹션 -->
+      <section
+        id="contact"
+        class="py-24 sm:py-32 bg-light-card dark:bg-dark-bg"
+      >
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2
+            class="text-3xl sm:text-4xl font-bold font-poppins text-light-text dark:text-white mb-6"
+          >
+            Contact Me
+          </h2>
+          <p class="text-xl text-light-subtext dark:text-dark-subtext mb-10">
+            새로운 기회에 대해 이야기하고 싶거나 질문이 있으신가요? <br />
+            언제든지 편하게 연락주세요!
+          </p>
+          <a
+            href="mailto:fkdl4862@naver.com"
+            class="bg-primary text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-primary-hover transition duration-300 transform hover:scale-105 inline-block"
+          >
+            Say Hello
+          </a>
+        </div>
+      </section>
     </main>
 
     <!-- 6. Footer -->
-    <footer class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-            <p class="text-light-subtext dark:text-dark-subtext mb-4 md:mb-0">
-                &copy; 2025 김다빈's Portfolio. All rights reserved.
-            </p>
-            <!-- 소셜 미디어 아이콘 -->
-            <div class="flex space-x-6">
-                <a href="https://github.com/i3inni" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200" aria-label="Github">
-                    <!-- Github Icon -->
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.026 2.747-1.026.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
-                    </svg>
-                </a>
-                <a href="#" class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200" aria-label="LinkedIn">
-                    <!-- LinkedIn Icon -->
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                    </svg>
-                </a>
-            </div>
+    <footer
+      class="bg-gray-50 dark:bg-dark-card border-t border-gray-200 dark:border-gray-700"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row justify-between items-center text-center md:text-left"
+      >
+        <p class="text-light-subtext dark:text-dark-subtext mb-4 md:mb-0">
+          &copy; 2025 김다빈's Portfolio. All rights reserved.
+        </p>
+        <!-- 소셜 미디어 아이콘 -->
+        <div class="flex space-x-6">
+          <a
+            href="https://github.com/i3inni"
+            class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+            aria-label="Github"
+          >
+            <!-- Github Icon -->
+            <svg
+              class="w-6 h-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.026 2.747-1.026.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </a>
+          <a
+            href="#"
+            class="text-light-subtext dark:text-dark-subtext hover:text-light-text dark:hover:text-white transition duration-200"
+            aria-label="LinkedIn"
+          >
+            <!-- LinkedIn Icon -->
+            <svg
+              class="w-6 h-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+              />
+            </svg>
+          </a>
         </div>
+      </div>
     </footer>
 
     <script src="js/main.js"></script>
-
-</body>
+  </body>
 </html>
