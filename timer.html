@@ -59,6 +59,25 @@
         transition: color 0.8s ease;
       }
 
+      #history-panel {
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      #history-panel.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-6px);
+      }
+
+      #history-panel:not(.hidden) {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      #history-list {
+        scrollbar-width: none;
+      }
+
       ::-webkit-scrollbar {
         display: none;
       }
@@ -66,15 +85,35 @@
   </head>
   <body class="bg-slate-200/50">
     <div
-      class="widget-card rounded-[40px] p-6 w-[380px] aspect-square text-center flex flex-col items-center justify-between"
+      class="widget-card relative rounded-[40px] p-6 w-[380px] aspect-square text-center flex flex-col items-center justify-between"
     >
-      <header class="w-full flex justify-between items-center px-2">
+      <header class="w-full flex justify-between items-center px-2 z-10">
         <span
           class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
           >Silent Timer</span
         >
-        <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
+        <div class="flex items-center gap-2">
+          <button
+            id="cycleBtn"
+            class="text-xs font-semibold text-slate-400 tabular-nums hover:text-slate-600 transition-colors"
+          >0 사이클</button>
+          <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
+        </div>
       </header>
+
+      <!-- History Panel -->
+      <div
+        id="history-panel"
+        class="hidden absolute left-6 right-6 z-20 rounded-2xl overflow-hidden"
+        style="top: 56px; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 4px 24px rgba(0,0,0,0.1);"
+      >
+        <div id="history-list" class="overflow-y-auto max-h-48 px-4 py-3 space-y-1">
+          <!-- items injected by JS -->
+        </div>
+        <div class="border-t border-slate-100 px-4 py-2 flex justify-end">
+          <button id="clearBtn" class="text-xs text-slate-400 hover:text-red-400 transition-colors">초기화</button>
+        </div>
+      </div>
 
       <!-- Timer Circle -->
       <div class="relative flex items-center justify-center">
@@ -164,17 +203,88 @@
       let timerId = null;
       let isRunning = false;
       let wakeLock = null;
+      let history = JSON.parse(localStorage.getItem("timerHistory") || "[]");
 
       const display = document.getElementById("display");
       const progressBar = document.getElementById("progress-bar");
       const startPauseBtn = document.getElementById("startPauseBtn");
       const resetBtn = document.getElementById("resetBtn");
+      const cycleBtn = document.getElementById("cycleBtn");
+      const historyPanel = document.getElementById("history-panel");
+      const historyList = document.getElementById("history-list");
+      const clearBtn = document.getElementById("clearBtn");
       const statusDot = document.getElementById("status-dot");
       const gaugeDot = document.getElementById("gauge-dot");
       const tipDot = document.getElementById("tip-dot");
 
-      // r=108 → circumference = 2π×108 ≈ 678.58
       const CIRCUMFERENCE = 2 * Math.PI * 108;
+
+      // ----- History -----
+      function formatTime(isoString) {
+        const date = new Date(isoString);
+        const now = new Date();
+        const isToday =
+          date.getFullYear() === now.getFullYear() &&
+          date.getMonth() === now.getMonth() &&
+          date.getDate() === now.getDate();
+
+        const timeStr = date.toLocaleTimeString("ko-KR", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+
+        if (isToday) return timeStr;
+
+        const dateStr = date.toLocaleDateString("ko-KR", {
+          month: "long",
+          day: "numeric",
+        });
+        return `${dateStr} ${timeStr}`;
+      }
+
+      function renderHistory() {
+        cycleBtn.textContent = `${history.length} 사이클`;
+
+        if (history.length === 0) {
+          historyList.innerHTML =
+            '<p class="text-xs text-slate-400 text-center py-3">완료된 사이클이 없어요</p>';
+          return;
+        }
+
+        historyList.innerHTML = [...history]
+          .reverse()
+          .map(
+            (ts, i) => `
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-xs font-semibold text-slate-400 w-6 text-right">${history.length - i}</span>
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-300 mx-3 shrink-0"></div>
+            <span class="text-xs text-slate-600 flex-1 text-left">${formatTime(ts)}</span>
+          </div>`,
+          )
+          .join("");
+      }
+
+      function togglePanel() {
+        historyPanel.classList.toggle("hidden");
+      }
+
+      cycleBtn.addEventListener("click", togglePanel);
+
+      clearBtn.addEventListener("click", () => {
+        history = [];
+        localStorage.setItem("timerHistory", "[]");
+        renderHistory();
+      });
+
+      // Close panel when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!historyPanel.contains(e.target) && e.target !== cycleBtn) {
+          historyPanel.classList.add("hidden");
+        }
+      });
+
+      renderHistory();
 
       // ----- Color helpers -----
       function lerpColor(a, b, t) {
@@ -192,11 +302,9 @@
         return `#${rr.toString(16).padStart(2, "0")}${rg.toString(16).padStart(2, "0")}${rb.toString(16).padStart(2, "0")}`;
       }
 
-      // Progress 1.0 (full) → 0.0 (empty)
-      // Zones: 1.0→0.6 blue, 0.6→0.3 amber, 0.3→0.1 orange, 0.1→0.0 red
       function gaugeColor(progress) {
         if (progress >= 0.6) {
-          const t = (1 - progress) / 0.4; // 0→1 as progress goes 1→0.6
+          const t = (1 - progress) / 0.4;
           return lerpColor("#3b82f6", "#f59e0b", t);
         } else if (progress >= 0.3) {
           const t = (0.6 - progress) / 0.3;
@@ -212,7 +320,7 @@
       function shadowFor(color, alpha) {
         return `0 8px 20px ${color}${Math.round(alpha * 255)
           .toString(16)
-          .padStart(2, "0")}`;
+          .padStart(2, "00")}`;
       }
 
       // ----- Wake lock -----
@@ -240,7 +348,6 @@
         display.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
         const progress = timeLeft / INITIAL_TIME;
-        // Gauge drains: arc length shrinks from the tail end
         const arcLength = CIRCUMFERENCE * progress;
         progressBar.setAttribute(
           "stroke-dasharray",
@@ -252,8 +359,6 @@
         gaugeDot.setAttribute("fill", color);
         display.style.color = color;
 
-        // Move tip dot to the draining end of the arc
-        // Arc starts at -90° (12 o'clock) and the tip is at -90° + progress*360°
         const angle = -Math.PI / 2 + progress * 2 * Math.PI;
         const tipX = 128 + 108 * Math.cos(angle);
         const tipY = 128 + 108 * Math.sin(angle);
@@ -261,20 +366,14 @@
         tipDot.setAttribute("cy", tipY);
         tipDot.setAttribute("stroke", color);
 
-        // Pulse when <= 10%
         if (progress <= 0.1 && isRunning) {
           progressBar.classList.add("gauge-pulse");
         } else {
           progressBar.classList.remove("gauge-pulse");
         }
 
-        // Status dot color
         if (isRunning) {
           statusDot.style.backgroundColor = color;
-        }
-
-        // Button color
-        if (isRunning) {
           startPauseBtn.style.backgroundColor = color;
           startPauseBtn.style.boxShadow = shadowFor(color, 0.35);
         }
@@ -304,6 +403,9 @@
             if (timeLeft <= 0) {
               clearInterval(timerId);
               isRunning = false;
+              history.push(new Date().toISOString());
+              localStorage.setItem("timerHistory", JSON.stringify(history));
+              renderHistory();
               startPauseBtn.textContent = "완료";
               startPauseBtn.style.backgroundColor = "#22c55e";
               startPauseBtn.style.boxShadow = "0 8px 20px rgba(34,197,94,0.35)";
