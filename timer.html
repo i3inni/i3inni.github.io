@@ -42,19 +42,6 @@
           background: rgba(20, 30, 48, 0.97) !important;
           border-color: rgba(255, 255, 255, 0.08) !important;
         }
-        #sound-menu {
-          background: rgba(20, 30, 48, 0.97) !important;
-          border-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        .sound-menu-item {
-          color: #cbd5e1 !important;
-        }
-        .sound-menu-item:hover {
-          background: rgba(255, 255, 255, 0.07) !important;
-        }
-        .sound-menu-icon {
-          background: rgba(255, 255, 255, 0.07) !important;
-        }
         #cycleBtn {
           background: rgba(255, 255, 255, 0.1) !important;
           border-color: rgba(255, 255, 255, 0.08) !important;
@@ -90,36 +77,49 @@
         }
       }
 
-      html {
-        background: transparent !important;
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
       }
 
       body {
         font-family:
           -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-        background: transparent !important;
-        margin: 0;
-        overflow: hidden;
-        width: 340px;
-        height: 410px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #dce8f5 0%, #e8f2fb 50%, #d4e8f8 100%);
         color: var(--text-main);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(135deg, #080d18 0%, #0c1525 50%, #08111f 100%) !important;
+        }
       }
 
       .widget-card {
         position: relative;
-        width: 340px;
-        height: 410px;
+        width: 360px;
+        height: 440px;
         background: linear-gradient(
           180deg,
           var(--sky-top) 0%,
           var(--sky-bottom) 100%
         );
         border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 36px;
+        border-radius: 40px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         padding: 0;
+        box-shadow:
+          0 32px 80px rgba(0, 80, 180, 0.15),
+          0 8px 24px rgba(0, 0, 0, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
       }
 
       /* 눈 내리는 애니메이션 */
@@ -271,13 +271,14 @@
 
       /* 타이머 */
       #display {
-        font-size: 36px;
+        font-size: 52px;
         font-weight: 700;
-        letter-spacing: -1.5px;
+        letter-spacing: -2px;
         font-variant-numeric: tabular-nums;
         color: var(--text-main);
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        text-shadow: 0 0 28px rgba(255, 255, 255, 0.6);
         z-index: 20;
+        line-height: 1;
       }
 
       .btn-system {
@@ -326,66 +327,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
-      /* 소리 선택 메뉴 */
-      #sound-menu {
-        position: absolute;
-        top: 52px;
-        right: 28px;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        border-radius: 18px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        z-index: 60;
-        overflow: hidden;
-        transition:
-          opacity 0.15s ease,
-          transform 0.15s ease;
-      }
-      #sound-menu.hidden {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(-6px) scale(0.97);
-      }
-      #sound-menu:not(.hidden) {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-      .sound-menu-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 11px 18px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 600;
-        color: #334155;
-        transition: background 0.12s ease;
-        white-space: nowrap;
-      }
-      .sound-menu-item:hover {
-        background: rgba(0, 122, 255, 0.07);
-      }
-      .sound-menu-item.selected {
-        color: var(--accent-blue);
-      }
-      .sound-menu-item + .sound-menu-item {
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
-      }
-      .sound-menu-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        background: rgba(0, 0, 0, 0.04);
-      }
-      .sound-menu-item.selected .sound-menu-icon {
-        background: rgba(0, 122, 255, 0.1);
-      }
 
       /* 골인 오버레이 */
       #goal-overlay {
@@ -446,8 +387,8 @@
       }
       #game-canvas {
         display: block;
-        width: 340px;
-        height: 410px;
+        width: 360px;
+        height: 440px;
       }
       .game-hud {
         position: absolute;
@@ -504,7 +445,7 @@
   </head>
   <body>
     <div class="widget-card" id="snow-container">
-      <div class="relative z-10 w-full h-full flex flex-col p-7 gap-5">
+      <div class="relative z-10 w-full h-full flex flex-col px-8 pt-7 pb-8 gap-4">
         <header class="flex justify-between items-center px-1">
           <div class="flex items-center gap-2">
             <div
@@ -519,7 +460,7 @@
             <button
               id="audioToggleBtn"
               class="btn-audio flex items-center gap-1"
-              title="배경음 선택"
+              title="모닥불 소리 켜기/끄기"
             >
               <svg
                 id="audio-icon"
@@ -536,10 +477,6 @@
                 <line x1="23" y1="9" x2="17" y2="15" />
                 <line x1="17" y1="9" x2="23" y2="15" />
               </svg>
-              <span
-                id="audio-mode-label"
-                class="hidden text-[11px] font-bold leading-none"
-              ></span>
             </button>
             <button
               id="cycleBtn"
@@ -552,8 +489,8 @@
 
         <div
           id="history-panel"
-          class="hidden absolute left-7 right-7 rounded-[28px] p-6"
-          style="top: 85px"
+          class="hidden absolute left-8 right-8 rounded-[28px] p-6"
+          style="top: 88px"
         >
           <h3
             class="text-[12px] font-black text-slate-400 mb-3 uppercase tracking-wider"
@@ -572,25 +509,6 @@
           </button>
         </div>
 
-        <!-- 소리 선택 메뉴 -->
-        <div id="sound-menu" class="hidden">
-          <div class="sound-menu-item" data-mode="0">
-            <span class="sound-menu-icon">🔇</span>
-            <span>끄기</span>
-          </div>
-          <div class="sound-menu-item" data-mode="1">
-            <span class="sound-menu-icon">🔥</span>
-            <span>모닥불</span>
-          </div>
-          <div class="sound-menu-item" data-mode="2">
-            <span class="sound-menu-icon">🌧️</span>
-            <span>빗소리</span>
-          </div>
-          <div class="sound-menu-item" data-mode="3">
-            <span class="sound-menu-icon">🌊</span>
-            <span>파도소리</span>
-          </div>
-        </div>
 
         <div class="flex-1 relative flex items-end mb-4">
           <div
@@ -619,27 +537,27 @@
           <div id="goal-overlay">골인! 수고했어요</div>
         </div>
 
-        <div class="flex items-center justify-center">
+        <div class="flex items-center justify-center py-1">
           <div id="display">50:00</div>
         </div>
 
         <div class="flex gap-4">
           <button
             id="startPauseBtn"
-            class="btn-system flex-1 py-6 rounded-[28px]"
+            class="btn-system flex-1 py-5 rounded-[26px]"
           >
             시작
           </button>
           <button
             id="restBtn"
-            class="hidden btn-secondary flex-1 py-6 rounded-[28px] font-bold"
+            class="hidden btn-secondary flex-1 py-5 rounded-[26px] font-bold"
             style="font-size: 15px"
           >
             🎮 휴식
           </button>
           <button
             id="resetBtn"
-            class="btn-secondary p-6 rounded-[28px] active:scale-90 transition-transform"
+            class="btn-secondary p-5 rounded-[26px] active:scale-90 transition-transform"
           >
             <svg
               width="28"
@@ -664,7 +582,7 @@
         class="hidden absolute inset-0 rounded-[36px] overflow-hidden"
         style="z-index: 100"
       >
-        <canvas id="game-canvas" width="340" height="410"></canvas>
+        <canvas id="game-canvas" width="360" height="440"></canvas>
 
         <!-- HUD: 타이머 -->
         <div class="game-hud" style="top: 22px; left: 26px">
@@ -834,15 +752,12 @@
       const historyPanel = document.getElementById("history-panel");
       const historyList = document.getElementById("history-list");
 
-      // ----- 배경음 (Web Audio API 절차적 생성 — 끊김 없는 루프) -----
+      // ----- 배경음 (모닥불 토글) -----
       const audioToggleBtn = document.getElementById("audioToggleBtn");
       const audioIcon = document.getElementById("audio-icon");
-      const audioModeLabel = document.getElementById("audio-mode-label");
-      const soundMenu = document.getElementById("sound-menu");
-      const SOUND_MODES = ["", "🔥", "🌧️", "🌊"];
-      let soundMode = 0; // 0=off 1=fire 2=rain 3=ocean
+      let fireOn = false;
       let audioCtx = null;
-      let soundNodes = []; // 현재 재생 중인 노드 목록
+      let soundNodes = [];
 
       function getCtx() {
         if (!audioCtx) audioCtx = new AudioContext();
@@ -850,70 +765,30 @@
       }
 
       function stopSoundNodes() {
-        soundNodes.forEach((n) => {
-          try {
-            n.stop();
-          } catch (e) {}
-        });
+        soundNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
         soundNodes = [];
       }
 
-      // ── 노이즈 버퍼 헬퍼 (빗소리/파도용) ──
-      function makePinkBuffer(ctx, sec = 10) {
-        const buf = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        let b0 = 0,
-          b1 = 0,
-          b2 = 0,
-          b3 = 0,
-          b4 = 0,
-          b5 = 0,
-          b6 = 0;
-        for (let i = 0; i < d.length; i++) {
-          const w = Math.random() * 2 - 1;
-          b0 = 0.99886 * b0 + w * 0.0555179;
-          b1 = 0.99332 * b1 + w * 0.0750759;
-          b2 = 0.969 * b2 + w * 0.153852;
-          b3 = 0.8665 * b3 + w * 0.3104856;
-          b4 = 0.55 * b4 + w * 0.5329522;
-          b5 = -0.7616 * b5 - w * 0.016898;
-          d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
-          b6 = w * 0.115926;
-        }
-        return buf;
-      }
+      const SVG_MUTE = `<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
+      const SVG_ON = `<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
 
-      function makeWhiteBuffer(ctx, sec = 10) {
-        const buf = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-        return buf;
-      }
-
-      // ── 🔥 모닥불: campfire-1.mp3 로드 + 끝 무음 자동 제거 ──
-      async function playFire(ctx) {
+      async function playFire() {
+        const ctx = getCtx();
+        if (ctx.state === "suspended") ctx.resume();
         try {
           const res = await fetch("assets/campfire-1.mp3");
           const arr = await res.arrayBuffer();
           const audioBuf = await ctx.decodeAudioData(arr);
-
-          // 끝에서부터 스캔해 무음 시작점 찾기
           const ch = audioBuf.getChannelData(0);
           let loopEndSample = ch.length - 1;
           for (let i = ch.length - 1; i >= 0; i--) {
-            if (Math.abs(ch[i]) > 0.002) {
-              loopEndSample = i;
-              break;
-            }
+            if (Math.abs(ch[i]) > 0.002) { loopEndSample = i; break; }
           }
-          const loopEnd = loopEndSample / audioBuf.sampleRate;
-
           const src = ctx.createBufferSource();
           src.buffer = audioBuf;
           src.loop = true;
           src.loopStart = 0;
-          src.loopEnd = loopEnd;
-
+          src.loopEnd = loopEndSample / audioBuf.sampleRate;
           const gain = ctx.createGain();
           gain.gain.value = 0.25;
           src.connect(gain);
@@ -925,133 +800,17 @@
         }
       }
 
-      // ── 🌧️ 빗소리 ──
-      function playRain(ctx) {
-        const dest = ctx.destination;
-        const rainSrc = ctx.createBufferSource();
-        rainSrc.buffer = makeWhiteBuffer(ctx, 12);
-        rainSrc.loop = true;
-        const bp = ctx.createBiquadFilter();
-        bp.type = "bandpass";
-        bp.frequency.value = 1800;
-        bp.Q.value = 0.3;
-        const gain = ctx.createGain();
-        gain.gain.value = 0.06;
-        rainSrc.connect(bp);
-        bp.connect(gain);
-        gain.connect(dest);
-        rainSrc.start();
-
-        const lowSrc = ctx.createBufferSource();
-        lowSrc.buffer = makePinkBuffer(ctx, 10);
-        lowSrc.loop = true;
-        const lp = ctx.createBiquadFilter();
-        lp.type = "lowpass";
-        lp.frequency.value = 180;
-        const lowGain = ctx.createGain();
-        lowGain.gain.value = 0.03;
-        lowSrc.connect(lp);
-        lp.connect(lowGain);
-        lowGain.connect(dest);
-        lowSrc.start();
-
-        soundNodes.push(rainSrc, lowSrc);
-      }
-
-      // ── 🌊 파도소리 ──
-      function playOcean(ctx) {
-        const dest = ctx.destination;
-        const waveSrc = ctx.createBufferSource();
-        waveSrc.buffer = makePinkBuffer(ctx, 12);
-        waveSrc.loop = true;
-        const lp = ctx.createBiquadFilter();
-        lp.type = "lowpass";
-        lp.frequency.value = 600;
-        const waveGain = ctx.createGain();
-        waveGain.gain.value = 0.05;
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.value = 0.1;
-        lfoGain.gain.value = 0.03;
-        lfo.connect(lfoGain);
-        lfoGain.connect(waveGain.gain);
-        lfo.start();
-        waveSrc.connect(lp);
-        lp.connect(waveGain);
-        waveGain.connect(dest);
-        waveSrc.start();
-
-        const foamSrc = ctx.createBufferSource();
-        foamSrc.buffer = makeWhiteBuffer(ctx, 10);
-        foamSrc.loop = true;
-        const hp = ctx.createBiquadFilter();
-        hp.type = "highpass";
-        hp.frequency.value = 2000;
-        const lp2 = ctx.createBiquadFilter();
-        lp2.type = "lowpass";
-        lp2.frequency.value = 6000;
-        const foamGain = ctx.createGain();
-        foamGain.gain.value = 0.02;
-        foamSrc.connect(hp);
-        hp.connect(lp2);
-        lp2.connect(foamGain);
-        foamGain.connect(dest);
-        foamSrc.start();
-
-        soundNodes.push(waveSrc, lfo, foamSrc);
-      }
-
-      // SVG 경로: 음소거 vs 재생 중
-      const SVG_MUTE = `<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
-      const SVG_ON = `<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
-
-      async function applySound() {
-        const ctx = getCtx();
-        if (ctx.state === "suspended") ctx.resume();
-        stopSoundNodes();
-        if (soundMode === 1) await playFire(ctx);
-        else if (soundMode === 2) playRain(ctx);
-        else if (soundMode === 3) playOcean(ctx);
-
-        if (soundMode === 0) {
-          audioIcon.innerHTML = SVG_MUTE;
-          audioModeLabel.classList.add("hidden");
-          audioToggleBtn.classList.remove("active");
-        } else {
+      audioToggleBtn.addEventListener("click", async () => {
+        fireOn = !fireOn;
+        if (fireOn) {
+          await playFire();
           audioIcon.innerHTML = SVG_ON;
-          audioModeLabel.textContent = SOUND_MODES[soundMode];
-          audioModeLabel.classList.remove("hidden");
           audioToggleBtn.classList.add("active");
+        } else {
+          stopSoundNodes();
+          audioIcon.innerHTML = SVG_MUTE;
+          audioToggleBtn.classList.remove("active");
         }
-      }
-
-      function updateMenuSelection() {
-        document.querySelectorAll(".sound-menu-item").forEach((el) => {
-          el.classList.toggle(
-            "selected",
-            Number(el.dataset.mode) === soundMode,
-          );
-        });
-      }
-
-      function closeSoundMenu() {
-        soundMenu.classList.add("hidden");
-      }
-
-      audioToggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        soundMenu.classList.toggle("hidden");
-        updateMenuSelection();
-      });
-
-      document.querySelectorAll(".sound-menu-item").forEach((el) => {
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          soundMode = Number(el.dataset.mode);
-          applySound();
-          updateMenuSelection();
-          closeSoundMenu();
-        });
       });
       // ----- 눈 생성 -----
       for (let i = 0; i < 28; i++) {
@@ -1145,13 +904,9 @@
       document.addEventListener("click", (e) => {
         if (
           !historyPanel.contains(e.target) &&
-          e.target !== cycleBtn &&
-          !audioToggleBtn.contains(e.target)
+          e.target !== cycleBtn
         )
           historyPanel.classList.add("hidden");
-
-        if (!soundMenu.contains(e.target) && !audioToggleBtn.contains(e.target))
-          closeSoundMenu();
       });
 
       // ----- 타이머 제어 -----
@@ -1369,8 +1124,8 @@
       const gameOverScr = document.getElementById("game-over-screen");
       const breakDoneScr = document.getElementById("break-complete-screen");
 
-      const GW = 340,
-        GH = 410;
+      const GW = 360,
+        GH = 440;
       const GROUND_Y = 345;
       const PW = 36,
         PH = 46; // 펭귄 너비/높이
