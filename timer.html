@@ -17,15 +17,16 @@
         --surface: #ffffff;
         --surface-2: #f7f8fc;
         --border: #e2e5ef;
-        --hover: rgba(0,0,0,0.04);
+        --hover: rgba(0, 0, 0, 0.04);
         --text: #1a1c2e;
         --text-2: #5c6080;
         --text-3: #9fa3be;
         --radius-lg: 16px;
         --radius-md: 12px;
         --radius-sm: 8px;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-        --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+        --shadow-sm:
+          0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
       }
 
       @media (prefers-color-scheme: dark) {
@@ -35,15 +36,15 @@
           --accent-light: #1e2040;
           --accent-2: #a78bfa;
           --bg: #0a0b10;
-          --surface: #0d0e18;    /* editor canvas */
-          --surface-2: #0e0f18;  /* sidebar & right panel — darker/recessed */
+          --surface: #0d0e18; /* editor canvas */
+          --surface-2: #0e0f18; /* sidebar & right panel — darker/recessed */
           --border: #22253a;
-          --hover: rgba(255,255,255,0.05);
+          --hover: rgba(255, 255, 255, 0.05);
           --text: #e2e5f5;
           --text-2: #636680;
           --text-3: #383b52;
-          --shadow-sm: 0 1px 4px rgba(0,0,0,0.4);
-          --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
+          --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
+          --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
       }
 
@@ -154,13 +155,17 @@
       .sb-logo {
         width: 28px;
         height: 28px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(88,101,242,0.35);
+        box-shadow: 0 2px 8px rgba(88, 101, 242, 0.35);
       }
       .sb-title {
         font-size: 14px;
@@ -278,7 +283,11 @@
       .sb-new-btn {
         margin: 10px 12px;
         padding: 9px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         color: white;
         border: none;
         border-radius: var(--radius-sm);
@@ -289,8 +298,10 @@
         align-items: center;
         justify-content: center;
         gap: 5px;
-        transition: opacity 0.15s, transform 0.1s;
-        box-shadow: 0 2px 8px rgba(88,101,242,0.3);
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+        box-shadow: 0 2px 8px rgba(88, 101, 242, 0.3);
       }
       .sb-new-btn:hover {
         opacity: 0.9;
@@ -333,7 +344,7 @@
       }
       .note-card:hover {
         border-color: var(--accent);
-        box-shadow: 0 4px 20px rgba(88,101,242,0.12);
+        box-shadow: 0 4px 20px rgba(88, 101, 242, 0.12);
         transform: translateY(-2px);
       }
       .note-card-title {
@@ -441,7 +452,8 @@
 
       #editor-body {
         flex: 1;
-        overflow: hidden;
+        overflow-y: auto;   /* 페이지 전체가 스크롤 — 노션처럼 */
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
         background: var(--surface);
@@ -451,14 +463,21 @@
       /* ── WYSIWYG Editor ── */
       #wysiwyg-editor {
         flex: 1;
-        padding: 28px 32px;
-        overflow-y: auto;
+        min-height: calc(100vh - 120px); /* 항상 아래 빈 공간 확보 */
+        padding: 28px 32px 120px 64px;   /* 하단 여유 공간으로 클릭 편하게 */
         outline: none;
         font-size: 15px;
         line-height: 1.75;
         color: var(--text);
         caret-color: var(--accent);
         word-break: break-word;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Reset browser UA styles that stack inside contenteditable */
+      #wysiwyg-editor * {
+        font-family: inherit;
+        box-sizing: border-box;
       }
       #wysiwyg-editor:empty::before {
         content: attr(data-placeholder);
@@ -466,13 +485,44 @@
         pointer-events: none;
       }
       /* block styles inside editor */
-      #wysiwyg-editor h1 { font-size: 28px; font-weight: 800; margin: 4px 0 10px; letter-spacing: -0.4px; line-height: 1.25; }
-      #wysiwyg-editor h2 { font-size: 21px; font-weight: 700; margin: 22px 0 8px; }
-      #wysiwyg-editor h3 { font-size: 16px; font-weight: 700; margin: 16px 0 6px; }
-      #wysiwyg-editor p { margin: 0 0 4px; min-height: 1.75em; }
-      #wysiwyg-editor ul, #wysiwyg-editor ol { margin: 0 0 8px; padding-left: 22px; }
-      #wysiwyg-editor li { margin: 2px 0; line-height: 1.7; }
-      #wysiwyg-editor li input[type="checkbox"] { margin-right: 6px; accent-color: var(--accent); }
+      #wysiwyg-editor h1 {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--text);
+        margin: 6px 0 10px;
+        letter-spacing: -0.3px;
+        line-height: 1.3;
+      }
+      #wysiwyg-editor h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        margin: 20px 0 8px;
+        letter-spacing: -0.2px;
+      }
+      #wysiwyg-editor h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 16px 0 6px;
+      }
+      #wysiwyg-editor p {
+        margin: 0 0 4px;
+        min-height: 1.75em;
+      }
+      #wysiwyg-editor ul,
+      #wysiwyg-editor ol {
+        margin: 0 0 8px;
+        padding-left: 22px;
+      }
+      #wysiwyg-editor li {
+        margin: 2px 0;
+        line-height: 1.7;
+      }
+      #wysiwyg-editor li input[type="checkbox"] {
+        margin-right: 6px;
+        accent-color: var(--accent);
+      }
       #wysiwyg-editor blockquote {
         border-left: 3px solid var(--accent);
         padding: 6px 16px;
@@ -500,19 +550,172 @@
         font-size: 12.5px;
         font-family: "SF Mono", "Fira Code", monospace;
       }
-      #wysiwyg-editor pre code { background: none; padding: 0; color: inherit; }
-      #wysiwyg-editor hr { border: none; border-top: 2px solid var(--border); margin: 18px 0; }
-      #wysiwyg-editor strong { font-weight: 700; }
-      #wysiwyg-editor em { font-style: italic; }
-      #wysiwyg-editor del { text-decoration: line-through; color: var(--text-3); }
-      #wysiwyg-editor a { color: var(--accent); text-decoration: none; }
-      #wysiwyg-editor a:hover { text-decoration: underline; }
-      #wysiwyg-editor .todo-item {
-        display: flex; align-items: flex-start; gap: 8px; margin: 3px 0; padding: 2px 0;
+      #wysiwyg-editor pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
       }
-      #wysiwyg-editor .todo-item input { flex-shrink: 0; margin-top: 4px; width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
-      #wysiwyg-editor .todo-item span { flex: 1; outline: none; }
-      #wysiwyg-editor .todo-item.done span { text-decoration: line-through; color: var(--text-3); }
+      #wysiwyg-editor hr {
+        border: none;
+        border-top: 2px solid var(--border);
+        margin: 18px 0;
+      }
+      #wysiwyg-editor strong {
+        font-weight: 700;
+      }
+      #wysiwyg-editor em {
+        font-style: italic;
+      }
+      #wysiwyg-editor del {
+        text-decoration: line-through;
+        color: var(--text-3);
+      }
+      #wysiwyg-editor a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      #wysiwyg-editor a:hover {
+        text-decoration: underline;
+      }
+      #wysiwyg-editor .todo-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 3px 0;
+        padding: 2px 0;
+      }
+      #wysiwyg-editor .todo-item input {
+        flex-shrink: 0;
+        margin-top: 4px;
+        width: 15px;
+        height: 15px;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+      #wysiwyg-editor .todo-item span {
+        flex: 1;
+        outline: none;
+      }
+      #wysiwyg-editor .todo-item.done span {
+        text-decoration: line-through;
+        color: var(--text-3);
+      }
+
+      /* ── Block Handle ── */
+      #block-handle {
+        position: fixed;
+        display: none;
+        z-index: 90;
+        pointer-events: all;
+      }
+      #block-handle.show { display: flex; }
+      .bh-btn {
+        width: 24px;
+        height: 24px;
+        border: none;
+        background: none;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
+        transition: background 0.1s, color 0.1s;
+      }
+      .bh-btn:hover { background: var(--border); color: var(--text-2); }
+
+      /* ── Block Context Menu ── */
+      #block-ctx-menu {
+        position: fixed;
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
+        min-width: 240px;
+        background: #1c1e2e;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        padding: 6px 0 6px;
+        overflow: hidden;
+      }
+      #block-ctx-menu.show { display: flex; }
+      #bctx-search {
+        margin: 0 8px 6px;
+        padding: 6px 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 13px;
+        outline: none;
+      }
+      #bctx-search::placeholder { color: var(--text-3); }
+      .bctx-section {
+        padding: 4px 12px 2px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .bctx-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px;
+        border: none;
+        background: none;
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        transition: background 0.1s;
+        white-space: nowrap;
+      }
+      .bctx-item:hover, .bctx-item.active { background: var(--accent-light); }
+      .bctx-item.danger { color: #f87171; }
+      .bctx-item.danger:hover { background: rgba(248,113,113,0.12); }
+      .bctx-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 15px;
+        flex-shrink: 0;
+        opacity: 0.8;
+      }
+      .bctx-label { flex: 1; }
+      .bctx-arrow { color: var(--text-3); font-size: 12px; margin-left: auto; }
+      .bctx-sep {
+        height: 1px;
+        background: var(--border);
+        margin: 4px 0;
+      }
+      /* Transform submenu */
+      #block-transform-menu {
+        position: fixed;
+        z-index: 10001;
+        display: none;
+        flex-direction: column;
+        min-width: 200px;
+        background: #1c1e2e;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        padding: 6px 0;
+        overflow: hidden;
+      }
+      #block-transform-menu.show { display: flex; }
+      .bctx-section-label {
+        padding: 4px 12px 2px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
       /* ── Floating Toolbar ── */
       #float-toolbar {
@@ -524,11 +727,13 @@
         padding: 5px 7px;
         background: #1e2433;
         border-radius: 10px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
         user-select: none;
         pointer-events: all;
       }
-      #float-toolbar.show { display: flex; }
+      #float-toolbar.show {
+        display: flex;
+      }
       .ft-btn {
         padding: 4px 7px;
         background: none;
@@ -542,9 +747,20 @@
         transition: background 0.1s;
         white-space: nowrap;
       }
-      .ft-btn:hover { background: rgba(255,255,255,0.12); }
-      .ft-btn.on { color: #60a5fa; background: rgba(96,165,250,0.15); }
-      .ft-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.18); margin: 0 2px; flex-shrink: 0; }
+      .ft-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .ft-btn.on {
+        color: #60a5fa;
+        background: rgba(96, 165, 250, 0.15);
+      }
+      .ft-sep {
+        width: 1px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.18);
+        margin: 0 2px;
+        flex-shrink: 0;
+      }
 
       /* ── Slash Menu ── */
       #slash-menu {
@@ -556,12 +772,14 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
         overflow: hidden;
         padding: 6px;
         gap: 2px;
       }
-      #slash-menu.show { display: flex; }
+      #slash-menu.show {
+        display: flex;
+      }
       .sm-item {
         display: flex;
         align-items: center;
@@ -573,11 +791,24 @@
         color: var(--text);
         transition: background 0.1s;
       }
-      .sm-item:hover, .sm-item.focused { background: var(--hover); }
-      .sm-icon { font-size: 16px; width: 26px; text-align: center; flex-shrink: 0; }
-      .sm-label { font-weight: 600; }
-      .sm-desc { font-size: 11px; color: var(--text-3); margin-top: 1px; }
-
+      .sm-item:hover,
+      .sm-item.focused {
+        background: var(--hover);
+      }
+      .sm-icon {
+        font-size: 16px;
+        width: 26px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .sm-label {
+        font-weight: 600;
+      }
+      .sm-desc {
+        font-size: 11px;
+        color: var(--text-3);
+        margin-top: 1px;
+      }
 
       /* Markdown styles */
       .md h1 {
@@ -910,15 +1141,21 @@
       #tw-main-btn {
         flex: 1;
         padding: 11px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         color: white;
         border: none;
         border-radius: var(--radius-md);
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        transition: opacity 0.15s, transform 0.1s;
-        box-shadow: 0 2px 10px rgba(88,101,242,0.3);
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+        box-shadow: 0 2px 10px rgba(88, 101, 242, 0.3);
       }
       #tw-main-btn:hover {
         opacity: 0.9;
@@ -927,15 +1164,21 @@
 
       #draw-mode-btn {
         padding: 6px 14px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         color: white;
         border: none;
         border-radius: var(--radius-md);
         font-size: 12.5px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 10px rgba(88,101,242,0.3);
-        transition: opacity 0.15s, transform 0.1s;
+        box-shadow: 0 2px 10px rgba(88, 101, 242, 0.3);
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
         white-space: nowrap;
       }
       #draw-mode-btn:hover {
@@ -943,7 +1186,7 @@
         transform: translateY(-1px);
       }
       #draw-mode-btn.on {
-        box-shadow: 0 2px 14px rgba(167,139,250,0.45);
+        box-shadow: 0 2px 14px rgba(167, 139, 250, 0.45);
       }
 
       #tw-reset-btn {
@@ -1016,7 +1259,7 @@
       .ai-btn-summary {
         background: var(--accent-light);
         color: var(--accent);
-        border: 1px solid rgba(88,101,242,0.2);
+        border: 1px solid rgba(88, 101, 242, 0.2);
       }
       .ai-btn-summary:hover:not(:disabled) {
         background: var(--accent);
@@ -1024,9 +1267,9 @@
         filter: none;
       }
       .ai-btn-quiz {
-        background: rgba(124,58,237,0.1);
+        background: rgba(124, 58, 237, 0.1);
         color: var(--accent-2);
-        border: 1px solid rgba(124,58,237,0.2);
+        border: 1px solid rgba(124, 58, 237, 0.2);
       }
       .ai-btn-quiz:hover:not(:disabled) {
         background: var(--accent-2);
@@ -1035,7 +1278,7 @@
       }
       @media (prefers-color-scheme: dark) {
         .ai-btn-quiz {
-          background: rgba(167,139,250,0.1);
+          background: rgba(167, 139, 250, 0.1);
           color: var(--accent-2);
         }
       }
@@ -1096,7 +1339,9 @@
         justify-content: center;
         flex-shrink: 0;
       }
-      #ai-split-close:hover { background: var(--border); }
+      #ai-split-close:hover {
+        background: var(--border);
+      }
       #ai-split-body {
         flex: 1;
         overflow-y: auto;
@@ -1159,10 +1404,15 @@
         min-width: 14px;
         font-size: 11px;
       }
-      #qz-submit, #qz-submit-split {
+      #qz-submit,
+      #qz-submit-split {
         width: 100%;
         padding: 10px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         color: white;
         border: none;
         border-radius: var(--radius-md);
@@ -1171,10 +1421,13 @@
         cursor: pointer;
         margin-top: 10px;
         display: none;
-        box-shadow: 0 2px 8px rgba(88,101,242,0.25);
+        box-shadow: 0 2px 8px rgba(88, 101, 242, 0.25);
         transition: opacity 0.15s;
       }
-      #qz-submit:hover, #qz-submit-split:hover { opacity: 0.9; }
+      #qz-submit:hover,
+      #qz-submit-split:hover {
+        opacity: 0.9;
+      }
       #qz-score {
         text-align: center;
         padding: 16px;
@@ -1185,8 +1438,8 @@
       #fire-row {
         margin: 12px 12px 14px;
         padding: 11px 14px;
-        background: rgba(251,191,36,0.08);
-        border: 1px solid rgba(251,191,36,0.25);
+        background: rgba(251, 191, 36, 0.08);
+        border: 1px solid rgba(251, 191, 36, 0.25);
         border-radius: var(--radius-md);
         display: flex;
         align-items: center;
@@ -1194,8 +1447,8 @@
       }
       @media (prefers-color-scheme: dark) {
         #fire-row {
-          background: rgba(251,191,36,0.06);
-          border-color: rgba(251,191,36,0.15);
+          background: rgba(251, 191, 36, 0.06);
+          border-color: rgba(251, 191, 36, 0.15);
         }
       }
       #fire-toggle {
@@ -1237,7 +1490,7 @@
         max-width: 92vw;
         box-shadow: 0 24px 72px rgba(0, 0, 0, 0.25);
         transform: scale(0.96) translateY(8px);
-        transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       .modal-overlay.open .modal-card {
         transform: scale(1) translateY(0);
@@ -1270,17 +1523,23 @@
       .modal-btn-primary {
         flex: 1;
         padding: 11px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--accent) 0%,
+          var(--accent-2) 100%
+        );
         color: white;
         border: none;
         border-radius: var(--radius-md);
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(88,101,242,0.3);
+        box-shadow: 0 2px 8px rgba(88, 101, 242, 0.3);
         transition: opacity 0.15s;
       }
-      .modal-btn-primary:hover { opacity: 0.9; }
+      .modal-btn-primary:hover {
+        opacity: 0.9;
+      }
       .modal-btn-secondary {
         padding: 11px 18px;
         background: var(--bg);
@@ -1484,8 +1743,23 @@
                 <span id="save-indicator"></span>
               </div>
 
-              <div id="editor-header-tools" style="display:flex;align-items:center;justify-content:flex-end;padding:6px 16px 0;gap:6px;">
-                <button id="draw-mode-btn" onclick="toggleDrawMode()" title="손글씨 모드">✏️ 손글씨</button>
+              <div
+                id="editor-header-tools"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-end;
+                  padding: 6px 16px 0;
+                  gap: 6px;
+                "
+              >
+                <button
+                  id="draw-mode-btn"
+                  onclick="toggleDrawMode()"
+                  title="손글씨 모드"
+                >
+                  ✏️ 손글씨
+                </button>
               </div>
 
               <div id="editor-body">
@@ -1497,16 +1771,67 @@
                 ></div>
                 <canvas id="drawing-canvas"></canvas>
                 <div id="draw-controls">
-                  <button class="dc-btn on" id="dc-pen" onclick="setDrawTool('pen')" title="펜">🖊 펜</button>
-                  <button class="dc-btn" id="dc-hl" onclick="setDrawTool('highlight')" title="형광펜">🖍 형광펜</button>
-                  <button class="dc-btn" id="dc-erase" onclick="setDrawTool('erase')" title="지우개">🧹 지우개</button>
+                  <button
+                    class="dc-btn on"
+                    id="dc-pen"
+                    onclick="setDrawTool('pen')"
+                    title="펜"
+                  >
+                    🖊 펜
+                  </button>
+                  <button
+                    class="dc-btn"
+                    id="dc-hl"
+                    onclick="setDrawTool('highlight')"
+                    title="형광펜"
+                  >
+                    🖍 형광펜
+                  </button>
+                  <button
+                    class="dc-btn"
+                    id="dc-erase"
+                    onclick="setDrawTool('erase')"
+                    title="지우개"
+                  >
+                    🧹 지우개
+                  </button>
                   <div class="ft-sep"></div>
-                  <div class="dc-color on" id="dc-c1" style="background:#1e293b" onclick="setDrawColor('#1e293b')" title="검정"></div>
-                  <div class="dc-color" id="dc-c2" style="background:#2563eb" onclick="setDrawColor('#2563eb')" title="파랑"></div>
-                  <div class="dc-color" id="dc-c3" style="background:#16a34a" onclick="setDrawColor('#16a34a')" title="초록"></div>
-                  <div class="dc-color" id="dc-c4" style="background:#dc2626" onclick="setDrawColor('#dc2626')" title="빨강"></div>
+                  <div
+                    class="dc-color on"
+                    id="dc-c1"
+                    style="background: #1e293b"
+                    onclick="setDrawColor('#1e293b')"
+                    title="검정"
+                  ></div>
+                  <div
+                    class="dc-color"
+                    id="dc-c2"
+                    style="background: #2563eb"
+                    onclick="setDrawColor('#2563eb')"
+                    title="파랑"
+                  ></div>
+                  <div
+                    class="dc-color"
+                    id="dc-c3"
+                    style="background: #16a34a"
+                    onclick="setDrawColor('#16a34a')"
+                    title="초록"
+                  ></div>
+                  <div
+                    class="dc-color"
+                    id="dc-c4"
+                    style="background: #dc2626"
+                    onclick="setDrawColor('#dc2626')"
+                    title="빨강"
+                  ></div>
                   <div class="ft-sep"></div>
-                  <button class="dc-btn" onclick="clearDrawing()" title="전체 지우기">🗑</button>
+                  <button
+                    class="dc-btn"
+                    onclick="clearDrawing()"
+                    title="전체 지우기"
+                  >
+                    🗑
+                  </button>
                 </div>
               </div>
             </div>
@@ -1515,13 +1840,33 @@
             <div id="ai-split-pane">
               <div id="ai-split-header">
                 <span id="ai-split-title">🤖 AI 결과</span>
-                <button id="ai-split-close" onclick="exitSplitMode()" title="닫기">✕</button>
+                <button
+                  id="ai-split-close"
+                  onclick="exitSplitMode()"
+                  title="닫기"
+                >
+                  ✕
+                </button>
               </div>
               <div id="ai-split-body" class="md"></div>
               <!-- Quiz (split) -->
-              <div id="quiz-wrap-split" style="display:none; padding: 0 20px 20px; overflow-y: auto; flex: 1">
+              <div
+                id="quiz-wrap-split"
+                style="
+                  display: none;
+                  padding: 0 20px 20px;
+                  overflow-y: auto;
+                  flex: 1;
+                "
+              >
                 <div id="quiz-content-split"></div>
-                <button id="qz-submit-split" onclick="submitQuizSplit()" style="margin-top:8px">채점하기</button>
+                <button
+                  id="qz-submit-split"
+                  onclick="submitQuizSplit()"
+                  style="margin-top: 8px"
+                >
+                  채점하기
+                </button>
                 <div id="qz-score-split"></div>
               </div>
             </div>
@@ -1735,34 +2080,249 @@
     </div>
     <!-- /app -->
 
+    <!-- ═══ BLOCK HANDLE ═══ -->
+    <div id="block-handle">
+      <button class="bh-btn" id="bh-drag" title="블록 메뉴" onmousedown="event.preventDefault();toggleBlockCtxMenu()">⠿</button>
+    </div>
+
+    <!-- ═══ BLOCK CONTEXT MENU ═══ -->
+    <div id="block-ctx-menu">
+      <input type="text" id="bctx-search" placeholder="작업을 검색하세요" oninput="filterBctxItems(this.value)">
+      <div class="bctx-section" id="bctx-type-label">텍스트</div>
+      <button class="bctx-item" id="bctx-transform-btn" onmousedown="event.preventDefault();showTransformMenu()">
+        <span class="bctx-icon">↺</span><span class="bctx-label">전환</span><span class="bctx-arrow">›</span>
+      </button>
+      <div class="bctx-sep"></div>
+      <button class="bctx-item" data-action="duplicate" onmousedown="event.preventDefault();bctxAction('duplicate')">
+        <span class="bctx-icon">⊕</span><span class="bctx-label">복제</span>
+      </button>
+      <button class="bctx-item danger" data-action="delete" onmousedown="event.preventDefault();bctxAction('delete')">
+        <span class="bctx-icon">🗑</span><span class="bctx-label">삭제</span>
+      </button>
+    </div>
+
+    <!-- ═══ BLOCK TRANSFORM MENU ═══ -->
+    <div id="block-transform-menu">
+      <div class="bctx-section-label">전환</div>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('p')"><span class="bctx-icon">¶</span><span class="bctx-label">텍스트</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('h1')"><span class="bctx-icon" style="font-weight:800;font-size:13px">H1</span><span class="bctx-label">대제목</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('h2')"><span class="bctx-icon" style="font-weight:700;font-size:13px">H2</span><span class="bctx-label">중제목</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('h3')"><span class="bctx-icon" style="font-size:13px">H3</span><span class="bctx-label">소제목</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('ul')"><span class="bctx-icon">•</span><span class="bctx-label">글머리 목록</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('ol')"><span class="bctx-icon">1.</span><span class="bctx-label">번호 목록</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('blockquote')"><span class="bctx-icon">❝</span><span class="bctx-label">인용</span></button>
+      <button class="bctx-item" onmousedown="event.preventDefault();bctxTransform('pre')"><span class="bctx-icon" style="font-family:monospace">{}</span><span class="bctx-label">코드</span></button>
+    </div>
+
     <!-- ═══ FLOATING TOOLBAR ═══ -->
     <div id="float-toolbar">
-      <button class="ft-btn" onmousedown="event.preventDefault();ftFmt('bold')" title="굵게"><b>B</b></button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftFmt('italic')" title="기울임"><i>I</i></button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftFmt('strikeThrough')" title="취소선"><s style="text-decoration:line-through">S</s></button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftInlineCode()" title="인라인 코드"><code style="font-size:11px">{ }</code></button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftFmt('bold');
+        "
+        title="굵게"
+      >
+        <b>B</b>
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftFmt('italic');
+        "
+        title="기울임"
+      >
+        <i>I</i>
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftFmt('strikeThrough');
+        "
+        title="취소선"
+      >
+        <s style="text-decoration: line-through">S</s>
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftInlineCode();
+        "
+        title="인라인 코드"
+      >
+        <code style="font-size: 11px">{ }</code>
+      </button>
       <div class="ft-sep"></div>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftBlock('H1')">H1</button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftBlock('H2')">H2</button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftBlock('H3')">H3</button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftBlock('H1');
+        "
+      >
+        H1
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftBlock('H2');
+        "
+      >
+        H2
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftBlock('H3');
+        "
+      >
+        H3
+      </button>
       <div class="ft-sep"></div>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftFmt('insertUnorderedList')">• 목록</button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftFmt('insertOrderedList')">1. 목록</button>
-      <button class="ft-btn" onmousedown="event.preventDefault();ftBlock('BLOCKQUOTE')">❝</button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftFmt('insertUnorderedList');
+        "
+      >
+        • 목록
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftFmt('insertOrderedList');
+        "
+      >
+        1. 목록
+      </button>
+      <button
+        class="ft-btn"
+        onmousedown="
+          event.preventDefault();
+          ftBlock('BLOCKQUOTE');
+        "
+      >
+        ❝
+      </button>
     </div>
 
     <!-- ═══ SLASH MENU ═══ -->
     <div id="slash-menu">
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('p')"><span class="sm-icon">¶</span><div><div class="sm-label">텍스트</div><div class="sm-desc">일반 단락</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('h1')"><span class="sm-icon" style="font-weight:800;font-size:18px">H1</span><div><div class="sm-label">대제목</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('h2')"><span class="sm-icon" style="font-weight:700;font-size:15px">H2</span><div><div class="sm-label">중제목</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('h3')"><span class="sm-icon" style="font-size:13px">H3</span><div><div class="sm-label">소제목</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('ul')"><span class="sm-icon">•</span><div><div class="sm-label">글머리 기호</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('ol')"><span class="sm-icon">1.</span><div><div class="sm-label">번호 목록</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('todo')"><span class="sm-icon">☐</span><div><div class="sm-label">할 일 목록</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('blockquote')"><span class="sm-icon">❝</span><div><div class="sm-label">인용</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('pre')"><span class="sm-icon" style="font-family:monospace">{}</span><div><div class="sm-label">코드 블록</div></div></div>
-      <div class="sm-item" onmousedown="event.preventDefault();slashInsert('hr')"><span class="sm-icon">—</span><div><div class="sm-label">구분선</div></div></div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('p');
+        "
+      >
+        <span class="sm-icon">¶</span>
+        <div>
+          <div class="sm-label">텍스트</div>
+          <div class="sm-desc">일반 단락</div>
+        </div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('h1');
+        "
+      >
+        <span class="sm-icon" style="font-weight: 800; font-size: 18px"
+          >H1</span
+        >
+        <div><div class="sm-label">대제목</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('h2');
+        "
+      >
+        <span class="sm-icon" style="font-weight: 700; font-size: 15px"
+          >H2</span
+        >
+        <div><div class="sm-label">중제목</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('h3');
+        "
+      >
+        <span class="sm-icon" style="font-size: 13px">H3</span>
+        <div><div class="sm-label">소제목</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('ul');
+        "
+      >
+        <span class="sm-icon">•</span>
+        <div><div class="sm-label">글머리 기호</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('ol');
+        "
+      >
+        <span class="sm-icon">1.</span>
+        <div><div class="sm-label">번호 목록</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('todo');
+        "
+      >
+        <span class="sm-icon">☐</span>
+        <div><div class="sm-label">할 일 목록</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('blockquote');
+        "
+      >
+        <span class="sm-icon">❝</span>
+        <div><div class="sm-label">인용</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('pre');
+        "
+      >
+        <span class="sm-icon" style="font-family: monospace">{}</span>
+        <div><div class="sm-label">코드 블록</div></div>
+      </div>
+      <div
+        class="sm-item"
+        onmousedown="
+          event.preventDefault();
+          slashInsert('hr');
+        "
+      >
+        <span class="sm-icon">—</span>
+        <div><div class="sm-label">구분선</div></div>
+      </div>
     </div>
 
     <!-- ═══ MODALS ═══ -->
@@ -1789,11 +2349,40 @@
           type="password"
           placeholder="API 키 입력..."
         />
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size: 11.5px; font-weight: 600; color: var(--text-2)">사용할 모델</span>
-          <button onclick="fetchModels()" id="fetch-models-btn" style="font-size:11px;padding:3px 10px;background:var(--accent-light);color:var(--accent);border:none;border-radius:6px;cursor:pointer;font-weight:700">목록 불러오기</button>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+          "
+        >
+          <span
+            style="font-size: 11.5px; font-weight: 600; color: var(--text-2)"
+            >사용할 모델</span
+          >
+          <button
+            onclick="fetchModels()"
+            id="fetch-models-btn"
+            style="
+              font-size: 11px;
+              padding: 3px 10px;
+              background: var(--accent-light);
+              color: var(--accent);
+              border: none;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 700;
+            "
+          >
+            목록 불러오기
+          </button>
         </div>
-        <select id="apimodel-select" class="modal-input" style="margin-bottom:8px;cursor:pointer;display:none"></select>
+        <select
+          id="apimodel-select"
+          class="modal-input"
+          style="margin-bottom: 8px; cursor: pointer; display: none"
+        ></select>
         <input
           id="apimodel-input"
           class="modal-input"
@@ -1881,8 +2470,8 @@
       // ════════════════════════════════════════════════════
       let notes = JSON.parse(localStorage.getItem("ss_notes") || "[]");
       let groups = JSON.parse(localStorage.getItem("ss_groups") || "[]");
-      let apiKey   = localStorage.getItem("ss_apikey")    || "";
-      let apiModel = localStorage.getItem("ss_apimodel")  || "gpt-4o-mini";
+      let apiKey = localStorage.getItem("ss_apikey") || "";
+      let apiModel = localStorage.getItem("ss_apimodel") || "gpt-4o-mini";
 
       // ════════════════════════════════════════════════════
       // STATE
@@ -1955,10 +2544,15 @@
         if (/<[a-z][\s\S]*?>/i.test(s)) {
           const tmp = document.createElement("div");
           tmp.innerHTML = s;
-          return (tmp.innerText || tmp.textContent || "").replace(/\n/g, " ").trim();
+          return (tmp.innerText || tmp.textContent || "")
+            .replace(/\n/g, " ")
+            .trim();
         }
         // Legacy markdown
-        return s.replace(/[#*`>\-\[\]_~]/g, "").replace(/\n/g, " ").trim();
+        return s
+          .replace(/[#*`>\-\[\]_~]/g, "")
+          .replace(/\n/g, " ")
+          .trim();
       };
 
       let _saveDebounce;
@@ -2209,9 +2803,15 @@
       // ════════════════════════════════════════════════════
       let wysiwygReady = false;
       let slashRange = null;
-      let drawMode = false, drawTool = "pen", drawColor = "#1e293b", drawSize = 2.5;
-      let drawCtx = null, drawCanvas = null, isDrawing = false, lastX = 0, lastY = 0;
-
+      let drawMode = false,
+        drawTool = "pen",
+        drawColor = "#1e293b",
+        drawSize = 2.5;
+      let drawCtx = null,
+        drawCanvas = null,
+        isDrawing = false,
+        lastX = 0,
+        lastY = 0;
       function initWysiwyg() {
         if (wysiwygReady) return;
         wysiwygReady = true;
@@ -2219,9 +2819,11 @@
         ed.addEventListener("input", onEditorInput);
         ed.addEventListener("keydown", onEditorKeyDown);
         document.addEventListener("selectionchange", onSelectionChange);
-        document.addEventListener("click", function(e) {
-          if (!document.getElementById("slash-menu").contains(e.target)) hideSlashMenu();
-          if (!document.getElementById("float-toolbar").contains(e.target)) hideFloatToolbar();
+        document.addEventListener("click", function (e) {
+          if (!document.getElementById("slash-menu").contains(e.target))
+            hideSlashMenu();
+          if (!document.getElementById("float-toolbar").contains(e.target))
+            hideFloatToolbar();
         });
         initDrawingCanvas();
       }
@@ -2233,37 +2835,127 @@
       }
 
       function onEditorKeyDown(e) {
+        const ed = document.getElementById("wysiwyg-editor");
+
+        // Escape — close menus
         if (e.key === "Escape") { hideSlashMenu(); hideFloatToolbar(); return; }
+
+        // Slash menu navigation
         const sm = document.getElementById("slash-menu");
         if (sm.classList.contains("show")) {
-          const items = sm.querySelectorAll(".sm-item:not([style*='none'])");
-          const focused = sm.querySelector(".sm-item.focused");
-          let idx = Array.from(items).indexOf(focused);
-          if (e.key === "ArrowDown") { e.preventDefault(); items[Math.min(idx+1,items.length-1)]?.classList.add("focused"); focused?.classList.remove("focused"); return; }
-          if (e.key === "ArrowUp")   { e.preventDefault(); items[Math.max(idx-1,0)]?.classList.add("focused"); focused?.classList.remove("focused"); return; }
-          if (e.key === "Enter" && focused) { e.preventDefault(); focused.dispatchEvent(new MouseEvent("mousedown")); return; }
+          const items = [...sm.querySelectorAll(".sm-item")].filter(i => i.style.display !== "none");
+          let idx = items.indexOf(sm.querySelector(".sm-item.focused"));
+          if (e.key === "ArrowDown") { e.preventDefault(); items.forEach(i=>i.classList.remove("focused")); items[Math.min(idx+1,items.length-1)]?.classList.add("focused"); return; }
+          if (e.key === "ArrowUp")   { e.preventDefault(); items.forEach(i=>i.classList.remove("focused")); items[Math.max(idx-1,0)]?.classList.add("focused"); return; }
+          if (e.key === "Enter") { e.preventDefault(); sm.querySelector(".sm-item.focused")?.dispatchEvent(new MouseEvent("mousedown")); return; }
         }
+
+        // Tab
+        if (e.key === "Tab") { e.preventDefault(); document.execCommand("insertText", false, "  "); return; }
+
+        // Enter
         if (e.key === "Enter" && !e.shiftKey) {
           const sel = window.getSelection();
-          if (sel?.anchorNode) {
-            const block = getBlock(sel.anchorNode);
-            if (block && (block.tagName === "PRE" || block.tagName === "BLOCKQUOTE")) return; // allow default
-            if (block && (block.tagName === "H1" || block.tagName === "H2" || block.tagName === "H3")) {
-              // After heading, insert paragraph
-              e.preventDefault();
-              document.execCommand("formatBlock", false, "P");
-              return;
-            }
-          }
-        }
-        if (e.key === "Tab") {
+          if (!sel || !sel.rangeCount) return;
+          const anchor = sel.anchorNode;
+          // Find top-level block
+          let block = anchor.nodeType === 3 ? anchor.parentNode : anchor;
+          while (block && block.parentNode !== ed) block = block.parentNode;
+
+          if (!block || block === ed) return; // let browser handle
+
+          const tag = block.tagName;
+
+          // Inside PRE — allow default newline
+          if (tag === "PRE") return;
+
           e.preventDefault();
-          document.execCommand("insertText", false, "  ");
+
+          // Heading → convert to paragraph on Enter
+          if (tag === "H1" || tag === "H2" || tag === "H3") {
+            const p = document.createElement("p");
+            p.innerHTML = "<br>";
+            block.after(p);
+            setCursor(p, 0);
+            onContentChange(ed.innerHTML);
+            return;
+          }
+
+          // Blockquote — Enter on empty line exits quote
+          if (tag === "BLOCKQUOTE") {
+            const text = block.innerText || "";
+            if (!text.trim()) {
+              const p = document.createElement("p"); p.innerHTML = "<br>";
+              block.replaceWith(p); setCursor(p, 0);
+            } else {
+              const p = document.createElement("p"); p.innerHTML = "<br>";
+              block.after(p); setCursor(p, 0);
+            }
+            onContentChange(ed.innerHTML);
+            return;
+          }
+
+          // Normal paragraph / div — insert new paragraph
+          if (tag === "P" || tag === "DIV") {
+            const range = sel.getRangeAt(0);
+            // Split content at cursor
+            const afterRange = document.createRange();
+            afterRange.setStart(range.endContainer, range.endOffset);
+            afterRange.setEndAfter(block.lastChild || block);
+            const fragment = afterRange.extractContents();
+            const afterText = fragment.textContent;
+            const p = document.createElement("p");
+            if (afterText.trim()) {
+              p.appendChild(fragment);
+            } else {
+              p.innerHTML = "<br>";
+            }
+            block.after(p);
+            setCursor(p, 0);
+            onContentChange(ed.innerHTML);
+            return;
+          }
+
+          // Default fallback — new paragraph after block
+          const p = document.createElement("p"); p.innerHTML = "<br>";
+          block.after(p); setCursor(p, 0);
+          onContentChange(ed.innerHTML);
         }
       }
 
+      function setCursor(el, offset) {
+        try {
+          const range = document.createRange();
+          const sel = window.getSelection();
+          if (el.childNodes.length === 0) {
+            range.setStart(el, 0);
+          } else {
+            const firstChild = el.firstChild;
+            if (firstChild.nodeType === 3) {
+              range.setStart(firstChild, Math.min(offset, firstChild.length));
+            } else {
+              range.setStart(el, 0);
+            }
+          }
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch(err) {}
+      }
+
       function getBlock(node) {
-        const blockTags = ["P","H1","H2","H3","UL","OL","LI","BLOCKQUOTE","PRE","DIV"];
+        const blockTags = [
+          "P",
+          "H1",
+          "H2",
+          "H3",
+          "UL",
+          "OL",
+          "LI",
+          "BLOCKQUOTE",
+          "PRE",
+          "DIV",
+        ];
         let n = node;
         while (n && n !== document.getElementById("wysiwyg-editor")) {
           if (blockTags.includes(n.nodeName)) return n;
@@ -2280,7 +2972,8 @@
           // Don't hide if toolbar button is being clicked
           setTimeout(() => {
             const activeEl = document.activeElement;
-            if (!document.getElementById("float-toolbar").contains(activeEl)) hideFloatToolbar();
+            if (!document.getElementById("float-toolbar").contains(activeEl))
+              hideFloatToolbar();
           }, 100);
           return;
         }
@@ -2309,7 +3002,7 @@
 
       function updateToolbarState() {
         const btns = document.querySelectorAll(".ft-btn");
-        btns.forEach(b => b.classList.remove("on"));
+        btns.forEach((b) => b.classList.remove("on"));
       }
 
       function ftFmt(cmd) {
@@ -2319,16 +3012,42 @@
       }
 
       function ftBlock(tag) {
-        document.execCommand("formatBlock", false, tag);
-        document.getElementById("wysiwyg-editor").focus();
-        onContentChange(document.getElementById("wysiwyg-editor").innerHTML);
+        const ed = document.getElementById("wysiwyg-editor");
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const anchor = sel.anchorNode;
+        // Walk up to find the direct child of the editor (top-level block)
+        let block = anchor.nodeType === 3 ? anchor.parentNode : anchor;
+        while (block && block.parentNode !== ed) {
+          block = block.parentNode;
+          if (!block || block === document.body) { block = null; break; }
+        }
+        if (block && block !== ed) {
+          const newEl = document.createElement(tag);
+          newEl.innerHTML = block.innerHTML || "<br>";
+          block.replaceWith(newEl);
+          try {
+            const r = document.createRange();
+            r.selectNodeContents(newEl); r.collapse(false);
+            sel.removeAllRanges(); sel.addRange(r);
+          } catch(e) {}
+        } else {
+          // bare text node directly in editor — wrap it
+          document.execCommand("formatBlock", false, tag);
+        }
+        ed.focus();
+        onContentChange(ed.innerHTML);
       }
 
       function ftInlineCode() {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed) return;
         const text = sel.toString();
-        document.execCommand("insertHTML", false, `<code>${text.replace(/</g,"&lt;")}</code>`);
+        document.execCommand(
+          "insertHTML",
+          false,
+          `<code>${text.replace(/</g, "&lt;")}</code>`,
+        );
         onContentChange(document.getElementById("wysiwyg-editor").innerHTML);
       }
 
@@ -2343,7 +3062,10 @@
         if (lineText === "/" || lineText.endsWith("\n/")) {
           slashRange = sel.getRangeAt(0).cloneRange();
           showSlashMenu(slashRange);
-        } else if (slashRange && lineText.match(/\/?[^/\n]*$/)?.[0]?.startsWith("/")) {
+        } else if (
+          slashRange &&
+          lineText.match(/\/?[^/\n]*$/)?.[0]?.startsWith("/")
+        ) {
           // filter
           const query = lineText.match(/\/([^/\n]*)$/)?.[1] || "";
           filterSlashMenu(query);
@@ -2355,7 +3077,10 @@
       function showSlashMenu(range) {
         const rect = range.getBoundingClientRect();
         const sm = document.getElementById("slash-menu");
-        sm.querySelectorAll(".sm-item").forEach(i => { i.style.display = ""; i.classList.remove("focused"); });
+        sm.querySelectorAll(".sm-item").forEach((i) => {
+          i.style.display = "";
+          i.classList.remove("focused");
+        });
         sm.querySelectorAll(".sm-item")[0]?.classList.add("focused");
         sm.classList.add("show");
         let left = rect.left;
@@ -2372,15 +3097,31 @@
       }
 
       function filterSlashMenu(q) {
-        const map = {p:"텍스트",h1:"대제목",h2:"중제목",h3:"소제목",ul:"글머리",ol:"번호",todo:"할 일",blockquote:"인용",pre:"코드",hr:"구분선"};
+        const map = {
+          p: "텍스트",
+          h1: "대제목",
+          h2: "중제목",
+          h3: "소제목",
+          ul: "글머리",
+          ol: "번호",
+          todo: "할 일",
+          blockquote: "인용",
+          pre: "코드",
+          hr: "구분선",
+        };
         const sm = document.getElementById("slash-menu");
         sm.querySelectorAll(".sm-item").forEach((item, i) => {
           const key = Object.keys(map)[i];
           const label = map[key] || "";
-          item.style.display = (!q || label.includes(q) || key.includes(q)) ? "" : "none";
+          item.style.display =
+            !q || label.includes(q) || key.includes(q) ? "" : "none";
         });
-        const visible = Array.from(sm.querySelectorAll(".sm-item")).filter(i => i.style.display !== "none");
-        sm.querySelectorAll(".sm-item").forEach(i => i.classList.remove("focused"));
+        const visible = Array.from(sm.querySelectorAll(".sm-item")).filter(
+          (i) => i.style.display !== "none",
+        );
+        sm.querySelectorAll(".sm-item").forEach((i) =>
+          i.classList.remove("focused"),
+        );
         visible[0]?.classList.add("focused");
         if (!visible.length) hideSlashMenu();
       }
@@ -2399,17 +3140,33 @@
             range.setStart(node, slashIdx);
             range.setEnd(node, sel.anchorOffset);
             range.deleteContents();
-            sel.removeAllRanges(); sel.addRange(range);
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
         }
-        if (type === "hr") { document.execCommand("insertHTML", false, "<hr><p><br></p>"); }
-        else if (type === "pre") { document.execCommand("insertHTML", false, '<pre contenteditable="true"><br></pre><p><br></p>'); }
-        else if (type === "todo") {
-          document.execCommand("insertHTML", false, '<div class="todo-item"><input type="checkbox" onchange="this.parentElement.classList.toggle(\'done\',this.checked)"><span contenteditable="true"><br></span></div>');
-        } else if (type === "blockquote") { document.execCommand("formatBlock", false, "BLOCKQUOTE"); }
-        else if (type === "ul") { document.execCommand("insertUnorderedList"); }
-        else if (type === "ol") { document.execCommand("insertOrderedList"); }
-        else { document.execCommand("formatBlock", false, type.toUpperCase()); }
+        if (type === "hr") {
+          document.execCommand("insertHTML", false, "<hr><p><br></p>");
+        } else if (type === "pre") {
+          document.execCommand(
+            "insertHTML",
+            false,
+            '<pre contenteditable="true"><br></pre><p><br></p>',
+          );
+        } else if (type === "todo") {
+          document.execCommand(
+            "insertHTML",
+            false,
+            '<div class="todo-item"><input type="checkbox" onchange="this.parentElement.classList.toggle(\'done\',this.checked)"><span contenteditable="true"><br></span></div>',
+          );
+        } else if (type === "blockquote") {
+          document.execCommand("formatBlock", false, "BLOCKQUOTE");
+        } else if (type === "ul") {
+          document.execCommand("insertUnorderedList");
+        } else if (type === "ol") {
+          document.execCommand("insertOrderedList");
+        } else {
+          document.execCommand("formatBlock", false, type.toUpperCase());
+        }
         ed.focus();
         onContentChange(ed.innerHTML);
       }
@@ -2427,7 +3184,9 @@
         drawCtx.lineJoin = "round";
         // Resize observer
         new ResizeObserver(() => {
-          const imgData = drawCtx ? drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height) : null;
+          const imgData = drawCtx
+            ? drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height)
+            : null;
           drawCanvas.width = body.offsetWidth;
           drawCanvas.height = body.offsetHeight;
           if (imgData) drawCtx.putImageData(imgData, 0, 0);
@@ -2438,9 +3197,11 @@
         drawCanvas.addEventListener("pointerup", onDrawEnd);
         drawCanvas.addEventListener("pointerleave", onDrawEnd);
         // Auto-activate drawing mode when Apple Pencil detected
-        document.getElementById("wysiwyg-editor").addEventListener("pointerdown", function(e) {
-          if (e.pointerType === "pen" && !drawMode) toggleDrawMode();
-        });
+        document
+          .getElementById("wysiwyg-editor")
+          .addEventListener("pointerdown", function (e) {
+            if (e.pointerType === "pen" && !drawMode) toggleDrawMode();
+          });
       }
 
       function toggleDrawMode() {
@@ -2474,14 +3235,22 @@
 
       function setDrawTool(tool) {
         drawTool = tool;
-        document.getElementById("dc-pen").classList.toggle("on", tool === "pen");
-        document.getElementById("dc-hl").classList.toggle("on", tool === "highlight");
-        document.getElementById("dc-erase").classList.toggle("on", tool === "erase");
+        document
+          .getElementById("dc-pen")
+          .classList.toggle("on", tool === "pen");
+        document
+          .getElementById("dc-hl")
+          .classList.toggle("on", tool === "highlight");
+        document
+          .getElementById("dc-erase")
+          .classList.toggle("on", tool === "erase");
       }
 
       function setDrawColor(c) {
         drawColor = c;
-        document.querySelectorAll(".dc-color").forEach(el => el.classList.remove("on"));
+        document
+          .querySelectorAll(".dc-color")
+          .forEach((el) => el.classList.remove("on"));
         event.target.classList.add("on");
       }
 
@@ -2501,7 +3270,8 @@
         const rect = drawCanvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        drawCtx.globalCompositeOperation = drawTool === "erase" ? "destination-out" : "source-over";
+        drawCtx.globalCompositeOperation =
+          drawTool === "erase" ? "destination-out" : "source-over";
         if (drawTool === "highlight") {
           drawCtx.globalAlpha = 0.35;
           drawCtx.strokeStyle = "#fbbf24";
@@ -2512,13 +3282,15 @@
         } else {
           drawCtx.globalAlpha = 1;
           drawCtx.strokeStyle = drawColor;
-          drawCtx.lineWidth = e.pressure > 0 ? Math.max(1, e.pressure * 5) : drawSize;
+          drawCtx.lineWidth =
+            e.pressure > 0 ? Math.max(1, e.pressure * 5) : drawSize;
         }
         drawCtx.lineTo(x, y);
         drawCtx.stroke();
         drawCtx.beginPath();
         drawCtx.moveTo(x, y);
-        lastX = x; lastY = y;
+        lastX = x;
+        lastY = y;
       }
 
       function onDrawEnd(e) {
@@ -2541,7 +3313,9 @@
         drawCtx?.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         if (n?.drawing) {
           const img = new Image();
-          img.onload = () => { if (drawCtx) drawCtx.drawImage(img, 0, 0); };
+          img.onload = () => {
+            if (drawCtx) drawCtx.drawImage(img, 0, 0);
+          };
           img.src = n.drawing;
         }
       }
@@ -2550,7 +3324,10 @@
         if (!drawCtx || !drawCanvas) return;
         drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         const n = note();
-        if (n) { n.drawing = null; save("ss_notes", notes); }
+        if (n) {
+          n.drawing = null;
+          save("ss_notes", notes);
+        }
       }
 
       // ════════════════════════════════════════════════════
@@ -2892,7 +3669,10 @@
       function resetAiUI() {
         const r = document.getElementById("ai-result-box");
         const qw = document.getElementById("quiz-wrap");
-        if (r) { r.style.display = "none"; r.innerHTML = ""; }
+        if (r) {
+          r.style.display = "none";
+          r.innerHTML = "";
+        }
         if (qw) qw.style.display = "none";
         exitSplitMode();
         currentQuiz = [];
@@ -2904,7 +3684,7 @@
         const pane = document.getElementById("ai-split-pane");
         const area = document.getElementById("editor-area");
         const body = document.getElementById("ai-split-body");
-        const qws  = document.getElementById("quiz-wrap-split");
+        const qws = document.getElementById("quiz-wrap-split");
         document.getElementById("ai-split-title").textContent = title;
         area.classList.add("split-mode");
         pane.classList.add("active");
@@ -2935,7 +3715,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${apiKey}`,
+              Authorization: `Bearer ${apiKey}`,
               "x-api-key": apiKey,
             },
             body: JSON.stringify({
@@ -2971,7 +3751,11 @@
           );
           enterSplitMode("🤖 노트 요약", marked.parse(result), false);
         } catch (e) {
-          enterSplitMode("🤖 노트 요약", `<span style="color:#ef4444">❌ ${esc(e.message)}</span>`, false);
+          enterSplitMode(
+            "🤖 노트 요약",
+            `<span style="color:#ef4444">❌ ${esc(e.message)}</span>`,
+            false,
+          );
         } finally {
           btn.disabled = false;
           btn.textContent = "🤖 노트 요약하기";
@@ -3005,7 +3789,11 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
           document.getElementById("qz-submit-split").style.display = "block";
           document.getElementById("qz-score-split").style.display = "none";
         } catch (e) {
-          enterSplitMode("📝 문제 생성", `<p style="color:#ef4444;font-size:13px">❌ ${esc(e.message)}</p>`, false);
+          enterSplitMode(
+            "📝 문제 생성",
+            `<p style="color:#ef4444;font-size:13px">❌ ${esc(e.message)}</p>`,
+            false,
+          );
         } finally {
           btn.disabled = false;
           btn.textContent = "📝 문제 생성하기 (7문제)";
@@ -3046,15 +3834,23 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
 
       function submitQuiz() {
         const unanswered = currentQuiz.length - Object.keys(quizAnswers).length;
-        if (unanswered > 0 && !confirm(`${unanswered}개 미답. 채점할까요?`)) return;
+        if (unanswered > 0 && !confirm(`${unanswered}개 미답. 채점할까요?`))
+          return;
         quizDone = true;
-        const correct = currentQuiz.filter((q, i) => quizAnswers[i] === q.answer).length;
+        const correct = currentQuiz.filter(
+          (q, i) => quizAnswers[i] === q.answer,
+        ).length;
         const score = Math.round((correct / currentQuiz.length) * 100);
         renderQuiz();
         document.getElementById("qz-submit").style.display = "none";
         const sd = document.getElementById("qz-score");
         sd.style.display = "block";
-        sd.innerHTML = scoreHTML(score, correct, currentQuiz.length, "retakeQuiz()");
+        sd.innerHTML = scoreHTML(
+          score,
+          correct,
+          currentQuiz.length,
+          "retakeQuiz()",
+        );
       }
 
       function retakeQuiz() {
@@ -3068,23 +3864,28 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
       // ── Split quiz helpers ──
       function renderQuizSplit() {
         document.getElementById("quiz-content-split").innerHTML = currentQuiz
-          .map((q, qi) =>
-            `<div class="qz-q">
+          .map(
+            (q, qi) =>
+              `<div class="qz-q">
               <div class="qz-q-text">${qi + 1}. ${esc(q.q)}</div>
-              ${q.options.map((o, oi) => {
-                let cls = "qz-opt";
-                if (quizAnswers[qi] === oi) cls += " sel";
-                if (quizDone && oi === q.answer) cls += " ok";
-                if (quizDone && quizAnswers[qi] === oi && oi !== q.answer) cls += " ng";
-                return `<div class="${cls}" onclick="${quizDone ? "" : "selectOptSplit(" + qi + "," + oi + ")"}">
+              ${q.options
+                .map((o, oi) => {
+                  let cls = "qz-opt";
+                  if (quizAnswers[qi] === oi) cls += " sel";
+                  if (quizDone && oi === q.answer) cls += " ok";
+                  if (quizDone && quizAnswers[qi] === oi && oi !== q.answer)
+                    cls += " ng";
+                  return `<div class="${cls}" onclick="${quizDone ? "" : "selectOptSplit(" + qi + "," + oi + ")"}">
                   <span class="qz-opt-key">${String.fromCharCode(65 + oi)}</span>
                   <span>${esc(o)}</span>
                   ${quizDone && oi === q.answer ? '<span style="margin-left:auto;color:#22c55e;font-size:12px">✓</span>' : ""}
                   ${quizDone && quizAnswers[qi] === oi && oi !== q.answer ? '<span style="margin-left:auto;color:#ef4444;font-size:12px">✗</span>' : ""}
                 </div>`;
-              }).join("")}
-            </div>`
-          ).join("");
+                })
+                .join("")}
+            </div>`,
+          )
+          .join("");
       }
 
       function selectOptSplit(qi, oi) {
@@ -3095,15 +3896,23 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
 
       function submitQuizSplit() {
         const unanswered = currentQuiz.length - Object.keys(quizAnswers).length;
-        if (unanswered > 0 && !confirm(`${unanswered}개 미답. 채점할까요?`)) return;
+        if (unanswered > 0 && !confirm(`${unanswered}개 미답. 채점할까요?`))
+          return;
         quizDone = true;
-        const correct = currentQuiz.filter((q, i) => quizAnswers[i] === q.answer).length;
+        const correct = currentQuiz.filter(
+          (q, i) => quizAnswers[i] === q.answer,
+        ).length;
         const score = Math.round((correct / currentQuiz.length) * 100);
         renderQuizSplit();
         document.getElementById("qz-submit-split").style.display = "none";
         const sd = document.getElementById("qz-score-split");
         sd.style.display = "block";
-        sd.innerHTML = scoreHTML(score, correct, currentQuiz.length, "retakeQuizSplit()");
+        sd.innerHTML = scoreHTML(
+          score,
+          correct,
+          currentQuiz.length,
+          "retakeQuizSplit()",
+        );
       }
 
       function retakeQuizSplit() {
@@ -3136,26 +3945,39 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
       async function fetchModels() {
         const btn = document.getElementById("fetch-models-btn");
         const key = document.getElementById("apikey-input").value.trim();
-        if (!key) { alert("먼저 API 키를 입력해주세요."); return; }
+        if (!key) {
+          alert("먼저 API 키를 입력해주세요.");
+          return;
+        }
         btn.textContent = "불러오는 중...";
         btn.disabled = true;
         try {
-          const res = await fetch("https://factchat-cloud.mindlogic.ai/v1/gateway/models/", {
-            headers: {
-              "Authorization": `Bearer ${key}`,
-              "x-api-key": key,
+          const res = await fetch(
+            "https://factchat-cloud.mindlogic.ai/v1/gateway/models/",
+            {
+              headers: {
+                Authorization: `Bearer ${key}`,
+                "x-api-key": key,
+              },
             },
-          });
+          );
           if (!res.ok) throw new Error(`오류 ${res.status}`);
           const data = await res.json();
-          const models = (data.data || data.models || data).map(m => m.id || m.name || m).filter(Boolean);
+          const models = (data.data || data.models || data)
+            .map((m) => m.id || m.name || m)
+            .filter(Boolean);
           const sel = document.getElementById("apimodel-select");
-          sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join("");
+          sel.innerHTML = models
+            .map((m) => `<option value="${m}">${m}</option>`)
+            .join("");
           sel.style.display = "";
-          sel.value = document.getElementById("apimodel-input").value || models[0];
-          sel.onchange = () => { document.getElementById("apimodel-input").value = sel.value; };
+          sel.value =
+            document.getElementById("apimodel-input").value || models[0];
+          sel.onchange = () => {
+            document.getElementById("apimodel-input").value = sel.value;
+          };
           btn.textContent = "새로고침";
-        } catch(e) {
+        } catch (e) {
           alert("모델 목록 불러오기 실패: " + e.message);
           btn.textContent = "목록 불러오기";
         } finally {
@@ -3170,9 +3992,11 @@ answer는 정답 인덱스(0~3)입니다. 7개 문제를 만드세요.`,
         setTimeout(() => document.getElementById("apikey-input").focus(), 80);
       }
       function saveApiKey() {
-        apiKey   = document.getElementById("apikey-input").value.trim();
-        apiModel = document.getElementById("apimodel-input").value.trim() || "gpt-4o-mini";
-        localStorage.setItem("ss_apikey",   apiKey);
+        apiKey = document.getElementById("apikey-input").value.trim();
+        apiModel =
+          document.getElementById("apimodel-input").value.trim() ||
+          "gpt-4o-mini";
+        localStorage.setItem("ss_apikey", apiKey);
         localStorage.setItem("ss_apimodel", apiModel);
         closeModal("modal-apikey");
         checkApiKey();
