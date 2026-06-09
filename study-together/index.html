@@ -78,7 +78,7 @@
       class="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
     >
       <nav
-        class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between"
+        class="w-full px-4 sm:px-8 h-16 flex items-center justify-between"
       >
         <a
           href="../index.html"
@@ -101,9 +101,9 @@
       </nav>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <!-- ════════════════ 로비 뷰 ════════════════ -->
-      <section id="lobby-view">
+    <main class="w-full px-4 sm:px-8 py-8">
+      <!-- ════════════════ 로비 뷰 (가운데 정렬 유지) ════════════════ -->
+      <section id="lobby-view" class="max-w-5xl mx-auto">
         <div class="text-center mb-8">
           <h2 class="text-2xl sm:text-3xl font-bold font-poppins mb-2">
             친구와 같은 비행기를 타고 ✈️
@@ -233,8 +233,8 @@
           class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5 mb-5"
         >
           <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-            <div>
-              <h2 id="room-title" class="text-xl font-bold font-poppins"></h2>
+            <div class="min-w-0">
+              <h2 id="room-title" class="text-xl font-bold font-poppins break-keep"></h2>
               <p class="text-sm text-light-subtext dark:text-dark-subtext">
                 <span id="room-from"></span>
                 <span class="mx-1">→</span>
@@ -349,7 +349,7 @@
         </div><!-- /왼쪽 열 -->
 
         <!-- 오른쪽: 채팅 사이드바 -->
-        <aside class="lg:w-80 lg:flex-shrink-0 mt-6 lg:mt-0 lg:sticky lg:top-20">
+        <aside class="lg:w-80 xl:w-96 lg:flex-shrink-0 mt-6 lg:mt-0 lg:sticky lg:top-20">
           <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 class="font-bold mb-3 flex items-center gap-2">💬 채팅</h3>
             <div id="chat-log"
