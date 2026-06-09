@@ -1,0 +1,281 @@
+<!doctype html>
+<!--
+  ════════════════════════════════════════════════════════════════
+  같이 공부 (Study Flight) — PeerJS 기반 P2P 화상 스터디
+  이 폴더(study-together/)는 독립 기능입니다. 삭제 시:
+    1) 이 폴더 통째로 삭제
+    2) index.html nav의 "같이 공부" 링크 2곳 제거
+  외부 의존: tailwind CDN, PeerJS CDN, Google Fonts (모두 외부 — 부모 파일 의존 없음)
+  ════════════════════════════════════════════════════════════════
+-->
+<html lang="ko" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>같이 공부 ✈️ | 김다빈's Portfolio</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 포트폴리오와 동일한 컬러/폰트 (자체 포함) -->
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Noto Sans KR", "sans-serif"],
+              poppins: ["Poppins", "sans-serif"],
+            },
+            colors: {
+              primary: "#6366F1",
+              "primary-hover": "#4F46E5",
+              "light-bg": "#F9FAFB",
+              "light-card": "#FFFFFF",
+              "light-text": "#111827",
+              "light-subtext": "#4B5563",
+              "dark-bg": "#111827",
+              "dark-card": "#1F2937",
+              "dark-text": "#E5E7EB",
+              "dark-subtext": "#9CA3AF",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- 다크모드 초기화 (포트폴리오와 같은 localStorage 'theme' 키 공유) -->
+    <script>
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Poppins:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- PeerJS (P2P 화상/시그널링 — 공개 브로커) -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body
+    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300 min-h-screen"
+  >
+    <!-- ═══ 헤더 ═══ -->
+    <header
+      class="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
+    >
+      <nav
+        class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between"
+      >
+        <a
+          href="../index.html"
+          class="flex items-center gap-2 text-light-subtext dark:text-dark-subtext hover:text-primary transition"
+        >
+          <span class="text-lg">←</span>
+          <span class="text-sm font-medium">포트폴리오</span>
+        </a>
+        <h1 class="text-lg font-bold font-poppins flex items-center gap-2">
+          <span>✈️</span><span>같이 공부</span>
+        </h1>
+        <button
+          id="theme-toggle"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-light-subtext dark:text-dark-subtext hover:bg-gray-100 dark:hover:bg-dark-card transition"
+          title="테마 전환"
+        >
+          <span class="dark:hidden">🌙</span>
+          <span class="hidden dark:inline">☀️</span>
+        </button>
+      </nav>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <!-- ════════════════ 로비 뷰 ════════════════ -->
+      <section id="lobby-view">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl sm:text-3xl font-bold font-poppins mb-2">
+            친구와 같은 비행기를 타고 ✈️
+          </h2>
+          <p class="text-light-subtext dark:text-dark-subtext">
+            방을 만들어 친구를 초대하고, 정해진 시간 동안 카메라만 켠 채 함께
+            집중해요.
+          </p>
+        </div>
+
+        <!-- 닉네임 -->
+        <div
+          class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5 mb-5"
+        >
+          <label class="block text-sm font-medium mb-2">내 닉네임</label>
+          <input
+            id="nickname"
+            type="text"
+            maxlength="12"
+            placeholder="예) 다빈"
+            class="w-full px-4 py-2.5 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+          />
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5">
+          <!-- 방 만들기 -->
+          <div
+            class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5"
+          >
+            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+              <span>🛫</span> 방 만들기 <span class="text-xs font-normal text-light-subtext dark:text-dark-subtext">(방장)</span>
+            </h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium mb-1 text-light-subtext dark:text-dark-subtext">방 이름</label>
+                <input id="r-title" type="text" maxlength="20" placeholder="새벽 집중 비행"
+                  class="w-full px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium mb-1 text-light-subtext dark:text-dark-subtext">출발지</label>
+                  <input id="r-from" type="text" maxlength="16" placeholder="인천"
+                    class="w-full px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium mb-1 text-light-subtext dark:text-dark-subtext">목적지</label>
+                  <input id="r-to" type="text" maxlength="16" placeholder="파리"
+                    class="w-full px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1 text-light-subtext dark:text-dark-subtext">공부 시간 (분)</label>
+                <input id="r-duration" type="number" min="1" max="600" value="50"
+                  class="w-full px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
+              </div>
+              <button id="create-btn"
+                class="w-full py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition">
+                방 만들고 대기실 입장
+              </button>
+            </div>
+          </div>
+
+          <!-- 코드로 입장 + 내 방 목록 -->
+          <div class="space-y-5">
+            <div
+              class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5"
+            >
+              <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                <span>🎫</span> 코드로 입장
+              </h3>
+              <div class="flex gap-2">
+                <input id="join-code" type="text" placeholder="방 코드"
+                  class="flex-1 px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm uppercase tracking-wider" />
+                <button id="join-btn"
+                  class="px-5 py-2 rounded-lg bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 font-semibold text-sm hover:opacity-90 transition">
+                  입장
+                </button>
+              </div>
+              <p class="text-xs text-light-subtext dark:text-dark-subtext mt-2">
+                친구가 보내준 코드 또는 초대 링크로 들어올 수 있어요.
+              </p>
+            </div>
+
+            <div
+              class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5"
+            >
+              <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span>📋</span> 내가 만든 방
+              </h3>
+              <div id="my-rooms" class="space-y-2">
+                <p class="text-sm text-light-subtext dark:text-dark-subtext">
+                  아직 만든 방이 없어요.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-light-subtext dark:text-dark-subtext mt-6 leading-relaxed">
+          ⚠️ 백엔드 없는 P2P 방식이라 <b>공개 방 목록</b>은 없고, 코드를 받은 친구만 입장할 수 있어요.<br />
+          카메라만 공유되며 마이크·스피커는 항상 음소거입니다.
+        </p>
+      </section>
+
+      <!-- ════════════════ 방(비행) 뷰 ════════════════ -->
+      <section id="room-view" class="hidden">
+        <!-- 비행 헤더 -->
+        <div
+          class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5 mb-5"
+        >
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div>
+              <h2 id="room-title" class="text-xl font-bold font-poppins"></h2>
+              <p class="text-sm text-light-subtext dark:text-dark-subtext">
+                <span id="room-from"></span>
+                <span class="mx-1">→</span>
+                <span id="room-to"></span>
+              </p>
+            </div>
+            <div class="text-right">
+              <div id="room-status"
+                class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                대기 중
+              </div>
+              <div id="room-timer" class="text-3xl font-bold font-poppins tabular-nums mt-1">
+                --:--
+              </div>
+            </div>
+          </div>
+
+          <!-- 비행 트랙 -->
+          <div class="flight-track">
+            <span class="flight-dot start">🛫</span>
+            <div class="flight-line">
+              <div id="flight-progress" class="flight-progress"></div>
+              <span id="flight-plane" class="flight-plane">✈️</span>
+            </div>
+            <span class="flight-dot end">🛬</span>
+          </div>
+
+          <!-- 컨트롤 -->
+          <div class="flex items-center justify-between flex-wrap gap-3 mt-5">
+            <div class="flex items-center gap-2 text-sm">
+              <span class="text-light-subtext dark:text-dark-subtext">방 코드</span>
+              <code id="room-code" class="px-2 py-1 rounded bg-light-bg dark:bg-dark-bg font-mono text-primary font-semibold tracking-wider"></code>
+              <button id="copy-code" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">코드 복사</button>
+              <button id="copy-link" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">초대 링크 복사</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="takeoff-btn"
+                class="hidden px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold text-sm transition">
+                🛫 이륙 (공부 시작)
+              </button>
+              <button id="leave-btn"
+                class="px-5 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition">
+                나가기
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 참여자 카메라 그리드 -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold">탑승객 <span id="people-count" class="text-primary">1</span>명</h3>
+          <span class="text-xs text-light-subtext dark:text-dark-subtext">🎤 마이크 OFF · 🔇 스피커 OFF · 📷 카메라만 ON</span>
+        </div>
+        <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+      </section>
+    </main>
+
+    <!-- 토스트 -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm shadow-lg opacity-0 pointer-events-none transition-opacity z-50"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

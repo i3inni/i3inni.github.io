@@ -1,0 +1,126 @@
+/* ════════════════════════════════════════════════
+   같이 공부 (Study Flight) — 전용 스타일
+   Tailwind로 커버 안 되는 비행 트랙/비디오 타일만.
+   ════════════════════════════════════════════════ */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 비행 트랙 ── */
+.flight-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.flight-dot {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.flight-line {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.25) 0 8px,
+    transparent 8px 16px
+  );
+}
+.flight-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: #6366f1;
+  transition: width 0.9s linear;
+}
+.flight-plane {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  transition: left 0.9s linear;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+/* 비행 중일 때 살짝 흔들림 */
+#room-view.flying .flight-plane {
+  animation: bob 1.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -3px;
+  }
+}
+
+/* 도착 시 깜빡임 정지 */
+#room-view.arrived .flight-progress {
+  background: #22c55e;
+}
+
+/* ── 비디오 타일 ── */
+.video-tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0b0d12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 셀카 느낌으로 좌우 반전 */
+  transform: scaleX(-1);
+  background: #0b0d12;
+}
+.video-tile .tile-label {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.video-tile .tile-badge {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #6366f1;
+  color: #fff;
+}
+/* 카메라 로딩/꺼짐 상태 */
+.video-tile .tile-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+/* 토스트 */
+#toast.show {
+  opacity: 1;
+}
