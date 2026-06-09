@@ -237,11 +237,23 @@
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
   }
 
+  let pingInt = null;
+  let reconnectAttempts = 0;
+
   function connectWs() {
+    reconnectAttempts = 0;
     enterRoom();
+    openWs();
+  }
+
+  function openWs() {
     ws = new WebSocket(wsUrl());
     ws.onopen = () => {
+      reconnectAttempts = 0;
       wsSend({ type: "join", roomCode, name: myName, password: joinPassword || "" });
+      // 유휴 연결이 프록시에 끊기지 않도록 주기적 핑
+      clearInterval(pingInt);
+      pingInt = setInterval(() => wsSend({ type: "ping" }), 25000);
     };
     ws.onmessage = (e) => {
       let msg;
@@ -253,16 +265,37 @@
       handleSignal(msg);
     };
     ws.onclose = (ev) => {
-      console.warn("[ws closed] code=", ev.code, "reason=", ev.reason, "url=", wsUrl());
-      if (inRoom) {
-        toast(`서버 연결 끊김 (code ${ev.code}) — ${wsUrl()}`);
-        setTimeout(() => leaveRoom(), 1500);
-      }
+      clearInterval(pingInt);
+      console.warn("[ws closed] code=", ev.code, "reason=", ev.reason);
+      if (inRoom) scheduleReconnect();
     };
     ws.onerror = () => {
       console.warn("[ws error] url=", wsUrl());
-      toast("시그널링 연결 실패: " + wsUrl());
     };
+  }
+
+  // 끊기면 같은 방으로 자동 재접속 (재접속 시 새 세션 → 피어 다시 연결)
+  function scheduleReconnect() {
+    if (!inRoom) return;
+    if (reconnectAttempts >= 6) {
+      toast("서버 연결이 끊겼어요");
+      return leaveRoom();
+    }
+    reconnectAttempts++;
+    toast(`연결이 잠깐 끊겼어요 — 재접속 ${reconnectAttempts}…`);
+    Object.values(pcs).forEach((pc) => {
+      try {
+        pc.close();
+      } catch {}
+    });
+    for (const k in pcs) delete pcs[k];
+    for (const k in remoteStreams) delete remoteStreams[k];
+    for (const k in peerNames) delete peerNames[k];
+    for (const k in pendingIce) delete pendingIce[k];
+    renderTiles();
+    setTimeout(() => {
+      if (inRoom) openWs();
+    }, 1500);
   }
 
   function handleSignal(msg) {
@@ -550,8 +583,11 @@
 
   function leaveRoom() {
     inRoom = false;
+    reconnectAttempts = 0;
     if (timerInt) clearInterval(timerInt);
     timerInt = null;
+    if (pingInt) clearInterval(pingInt);
+    pingInt = null;
     try {
       if (ws) {
         wsSend({ type: "leave" });

@@ -83,6 +83,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "music-add" -> handleMusicAdd(session, node);
                 case "music-ended" -> handleMusicEnded(session, node);
                 case "music-skip" -> handleMusicSkip(session);
+                case "ping" -> send(session, Map.of("type", "pong")); // keepalive
                 case "leave" -> cleanup(session);
                 default -> log.debug("unknown message type: {}", type);
             }
