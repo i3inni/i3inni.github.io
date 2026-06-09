@@ -271,8 +271,8 @@
             </div>
           </div>
 
-          <!-- 영상 영역 (작게) -->
-          <div class="lg:flex-[2] lg:min-h-0 flex flex-col">
+          <!-- 영상 영역 (정사각형 6개 고정, 늘어나지 않음) -->
+          <div class="shrink-0 flex flex-col">
             <div class="flex items-center justify-between mb-2 shrink-0">
               <h3 class="font-bold text-sm">탑승객 <span id="people-count" class="text-primary">1</span>명</h3>
               <div class="flex items-center gap-2">
@@ -285,12 +285,12 @@
               </div>
             </div>
             <div id="video-grid"
-              class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 lg:flex-1 lg:min-h-0 lg:auto-rows-fr"></div>
+              class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 w-full max-w-[600px]"></div>
           </div>
 
           <!-- ═══ 함께 듣기 (크게, 대기열 표시) — 이륙 후 ═══ -->
           <div id="music-panel"
-            class="hidden lg:flex-[3] lg:min-h-0 flex flex-col bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+            class="hidden lg:flex-1 lg:min-h-0 flex flex-col bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
             <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
               <h3 class="font-bold flex items-center gap-2 text-sm">
                 🎶 함께 듣기
