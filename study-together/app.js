@@ -35,6 +35,15 @@
   const ICE_SERVERS = [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
+    {
+      // ExpressTURN 무료 TURN (다른 네트워크 간 영상 중계)
+      urls: [
+        "turn:free.expressturn.com:3478",
+        "turn:free.expressturn.com:3478?transport=tcp",
+      ],
+      username: "000000002096372215",
+      credential: "WQQ3WtFYdMTa1erC93yTBLkDuMI=",
+    },
   ];
 
   // ── DOM ──
