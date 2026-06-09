@@ -9,14 +9,33 @@
 (() => {
   "use strict";
 
-  // PeerJS 공개 브로커 + Google/Twilio STUN (NAT 통과)
+  // PeerJS 공개 브로커 + STUN/TURN (NAT 통과)
+  // TURN 없이는 서로 다른 네트워크(모바일/회사망/대칭 NAT)에서 연결이 자주 실패해서
+  // 무료 공개 TURN(Open Relay)을 함께 사용한다.
   const PEER_CONFIG = {
     config: {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
         { urls: "stun:global.stun.twilio.com:3478" },
+        {
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443?transport=tcp",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
       ],
     },
+    debug: 1,
   };
 
   // ── DOM ──
@@ -192,8 +211,10 @@
     });
     conn.on("data", (d) => {
       if (d && d.type === "hello") {
-        if (!roster.some((r) => r.id === conn.peer))
+        if (!roster.some((r) => r.id === conn.peer)) {
           roster.push({ id: conn.peer, name: d.name || "친구", host: false });
+          toast(`${d.name || "친구"}님이 입장했어요 👋`);
+        }
         hostConns[conn.peer] = conn;
         broadcastState();
       }
@@ -234,17 +255,30 @@
       enterRoom();
 
       hostConn = peer.connect(code, { reliable: true });
-      hostConn.on("open", () => hostConn.send({ type: "hello", name: myName }));
+      hostConn.on("open", () => {
+        hostConn.send({ type: "hello", name: myName });
+        toast("방에 연결됐어요. 명단 받는 중…");
+      });
       hostConn.on("data", onGuestData);
       hostConn.on("close", onHostGone);
       hostConn.on("error", onHostGone);
     });
     peer.on("call", onIncomingCall);
     peer.on("error", onPeerError);
+    peer.on("disconnected", () => {
+      try {
+        peer.reconnect();
+      } catch {}
+    });
   }
 
+  let gotFirstState = false;
   function onGuestData(d) {
     if (d && d.type === "state") {
+      if (!gotFirstState) {
+        gotFirstState = true;
+        toast("방장과 연결됐어요 ✅");
+      }
       roster = d.roster || roster;
       meta = d.meta || meta;
       applyMeta();
@@ -280,6 +314,20 @@
 
   function wireCall(call) {
     calls[call.peer] = call;
+    // ICE 연결 상태 모니터링 (어느 단계에서 막히는지 진단)
+    const pc = call.peerConnection;
+    if (pc) {
+      pc.oniceconnectionstatechange = () => {
+        const st = pc.iceConnectionState;
+        console.log(`[ICE ${call.peer}] ${st}`);
+        if (st === "failed") {
+          toast("상대와 직접 연결 실패 (네트워크가 너무 엄격해요)");
+          const tile = tileEls[call.peer];
+          if (tile && !remoteStreams[call.peer])
+            tile.empty.textContent = "연결 실패 ✕";
+        }
+      };
+    }
     call.on("stream", (s) => {
       remoteStreams[call.peer] = s;
       renderGrid();
@@ -460,6 +508,7 @@
     hostConn = null;
     roster = [];
     meta = null;
+    gotFirstState = false;
     for (const k in hostConns) delete hostConns[k];
     for (const k in calls) delete calls[k];
     for (const k in remoteStreams) delete remoteStreams[k];
