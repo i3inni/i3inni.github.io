@@ -16,12 +16,11 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * WebRTC 시그널링 + 방 presence 중계.
@@ -57,13 +56,57 @@ public class SignalingHandler extends TextWebSocketHandler {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     // sessionId -> roomCode
     private final Map<String, String> sessionRoom = new ConcurrentHashMap<>();
-    // roomCode -> 함께 듣기 음악 큐 상태
+    // roomCode -> 함께 듣기 플레이리스트 상태
     private final Map<String, MusicState> roomMusic = new ConcurrentHashMap<>();
 
-    /** 방별 음악 큐 + 현재 재생곡 */
+    /** 방별 음악 플레이리스트 (1인 5곡 제한, 셔플, 무한 루프) */
     static class MusicState {
-        final Deque<Map<String, String>> queue = new ConcurrentLinkedDeque<>(); // {videoId, addedBy}
-        volatile Map<String, Object> nowPlaying; // {videoId, addedBy, startedAt}
+        final List<Map<String, String>> playlist = new ArrayList<>(); // {videoId, addedBy}
+        final List<Integer> order = new ArrayList<>();                 // 재생 순서(playlist 인덱스)
+        int orderPos = 0;
+        boolean shuffle = false;
+        String currentVideoId;
+        long startedAt;
+
+        void buildOrder() {
+            order.clear();
+            for (int i = 0; i < playlist.size(); i++) order.add(i);
+            if (shuffle) Collections.shuffle(order);
+        }
+
+        void syncPosToCurrent() {
+            for (int p = 0; p < order.size(); p++) {
+                if (playlist.get(order.get(p)).get("videoId").equals(currentVideoId)) {
+                    orderPos = p;
+                    return;
+                }
+            }
+            orderPos = 0;
+        }
+
+        void setCurrentFromPos(long now) {
+            if (order.isEmpty()) { currentVideoId = null; return; }
+            if (orderPos < 0 || orderPos >= order.size()) orderPos = 0;
+            currentVideoId = playlist.get(order.get(orderPos)).get("videoId");
+            startedAt = now;
+        }
+
+        void advance(long now) {
+            if (playlist.isEmpty()) { currentVideoId = null; return; }
+            orderPos++;
+            if (orderPos >= order.size()) { buildOrder(); orderPos = 0; } // 끝나면 다시 처음(무한 루프)
+            setCurrentFromPos(now);
+        }
+
+        long countBy(String name) {
+            return playlist.stream().filter(t -> name.equals(t.get("addedBy"))).count();
+        }
+
+        String currentAddedBy() {
+            for (Map<String, String> t : playlist)
+                if (t.get("videoId").equals(currentVideoId)) return t.get("addedBy");
+            return "";
+        }
     }
 
     @Override
@@ -83,6 +126,8 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "music-add" -> handleMusicAdd(session, node);
                 case "music-ended" -> handleMusicEnded(session, node);
                 case "music-skip" -> handleMusicSkip(session);
+                case "music-shuffle" -> handleMusicShuffle(session);
+                case "music-remove" -> handleMusicRemove(session, node);
                 case "chat" -> handleChat(session, node);
                 case "ping" -> send(session, Map.of("type", "pong")); // keepalive
                 case "leave" -> cleanup(session);
@@ -126,8 +171,7 @@ public class SignalingHandler extends TextWebSocketHandler {
         joined.put("selfId", session.getId());
         joined.put("peers", existingPeers);
         joined.put("meta", metaOf(meta));
-        joined.put("nowPlaying", ms == null ? null : ms.nowPlaying);
-        joined.put("queue", ms == null ? List.of() : new ArrayList<>(ms.queue));
+        putMusic(joined, ms);
         send(session, joined);
 
         broadcast(roomCode, session.getId(), Map.of(
@@ -171,7 +215,9 @@ public class SignalingHandler extends TextWebSocketHandler {
         broadcastAll(roomCode, Map.of("type", "chat", "name", name, "text", text));
     }
 
-    // ── 함께 듣기(음악 큐) ──
+    // ── 함께 듣기 (플레이리스트: 1인 5곡, 셔플, 무한 루프) ──
+
+    private static final int MAX_PER_USER = 5;
 
     private void handleMusicAdd(WebSocketSession session, JsonNode node) {
         String roomCode = sessionRoom.get(session.getId());
@@ -182,10 +228,19 @@ public class SignalingHandler extends TextWebSocketHandler {
 
         MusicState ms = roomMusic.computeIfAbsent(roomCode, k -> new MusicState());
         synchronized (ms) {
-            if (ms.nowPlaying == null) {
-                ms.nowPlaying = nowPlaying(videoId, addedBy);
+            if (ms.countBy(addedBy) >= MAX_PER_USER) {
+                send(session, Map.of("type", "error",
+                        "message", "노래는 1인당 " + MAX_PER_USER + "곡까지예요 🎵"));
+                return;
+            }
+            ms.playlist.add(Map.of("videoId", videoId, "addedBy", addedBy));
+            boolean wasEmpty = (ms.currentVideoId == null);
+            ms.buildOrder();
+            if (wasEmpty) {
+                ms.orderPos = 0;
+                ms.setCurrentFromPos(System.currentTimeMillis());
             } else {
-                ms.queue.addLast(Map.of("videoId", videoId, "addedBy", addedBy));
+                ms.syncPosToCurrent();
             }
         }
         broadcastMusic(roomCode);
@@ -199,10 +254,7 @@ public class SignalingHandler extends TextWebSocketHandler {
         MusicState ms = roomMusic.get(roomCode);
         if (ms == null) return;
         synchronized (ms) {
-            // 현재 곡이 끝났을 때만 다음 곡으로 (중복 ended 방어)
-            if (ms.nowPlaying != null && videoId.equals(ms.nowPlaying.get("videoId"))) {
-                advance(ms);
-            }
+            if (videoId.equals(ms.currentVideoId)) ms.advance(System.currentTimeMillis());
         }
         broadcastMusic(roomCode);
     }
@@ -213,30 +265,74 @@ public class SignalingHandler extends TextWebSocketHandler {
         MusicState ms = roomMusic.get(roomCode);
         if (ms == null) return;
         synchronized (ms) {
-            advance(ms);
+            ms.advance(System.currentTimeMillis());
         }
         broadcastMusic(roomCode);
     }
 
-    private void advance(MusicState ms) {
-        Map<String, String> next = ms.queue.pollFirst();
-        ms.nowPlaying = (next == null) ? null : nowPlaying(next.get("videoId"), next.get("addedBy"));
+    private void handleMusicShuffle(WebSocketSession session) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        MusicState ms = roomMusic.get(roomCode);
+        if (ms == null) return;
+        synchronized (ms) {
+            ms.shuffle = !ms.shuffle;
+            ms.buildOrder();
+            if (ms.currentVideoId != null) ms.syncPosToCurrent();
+        }
+        broadcastMusic(roomCode);
     }
 
-    private Map<String, Object> nowPlaying(String videoId, String addedBy) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("videoId", videoId);
-        m.put("addedBy", addedBy);
-        m.put("startedAt", System.currentTimeMillis());
-        return m;
+    private void handleMusicRemove(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        String videoId = node.path("videoId").asText("");
+        MusicState ms = roomMusic.get(roomCode);
+        if (ms == null) return;
+        synchronized (ms) {
+            boolean removed = false;
+            for (int i = 0; i < ms.playlist.size(); i++) {
+                if (ms.playlist.get(i).get("videoId").equals(videoId)) {
+                    ms.playlist.remove(i);
+                    removed = true;
+                    break;
+                }
+            }
+            if (!removed) return;
+            boolean currentGone = videoId.equals(ms.currentVideoId);
+            ms.buildOrder();
+            if (ms.playlist.isEmpty()) {
+                ms.currentVideoId = null;
+            } else if (currentGone) {
+                if (ms.orderPos >= ms.order.size()) ms.orderPos = 0;
+                ms.setCurrentFromPos(System.currentTimeMillis());
+            } else {
+                ms.syncPosToCurrent();
+            }
+        }
+        broadcastMusic(roomCode);
+    }
+
+    private Map<String, Object> nowPlayingPayload(MusicState ms) {
+        if (ms == null || ms.currentVideoId == null) return null;
+        Map<String, Object> np = new HashMap<>();
+        np.put("videoId", ms.currentVideoId);
+        np.put("addedBy", ms.currentAddedBy());
+        np.put("startedAt", ms.startedAt);
+        return np;
+    }
+
+    private void putMusic(Map<String, Object> target, MusicState ms) {
+        target.put("nowPlaying", nowPlayingPayload(ms));
+        target.put("playlist", ms == null ? List.of() : new ArrayList<>(ms.playlist));
+        target.put("shuffle", ms != null && ms.shuffle);
     }
 
     private void broadcastMusic(String roomCode) {
         MusicState ms = roomMusic.get(roomCode);
         Map<String, Object> payload = new HashMap<>();
         payload.put("type", "music-state");
-        payload.put("nowPlaying", ms == null ? null : ms.nowPlaying);
-        payload.put("queue", ms == null ? List.of() : new ArrayList<>(ms.queue));
+        putMusic(payload, ms);
         broadcastAll(roomCode, payload);
     }
 

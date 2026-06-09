@@ -105,9 +105,12 @@
         video: { facingMode: "user" },
         audio: false,
       });
+      camOn = true;
       return true;
     } catch (e) {
-      toast("카메라 권한이 필요해요 📷");
+      // 권한 거부/카메라 없음 → 카메라 꺼진 채로 진행 (입장은 가능)
+      localStream = null;
+      camOn = false;
       return false;
     }
   }
@@ -175,8 +178,8 @@
       password: $("r-password").value.trim(),
     };
 
-    // 카메라 먼저 확보 (거부 시 빈 방이 안 생기도록)
-    if (!(await getMedia())) return;
+    // 카메라 시도 (거부/없어도 입장은 진행 — 카메라 꺼진 채)
+    if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
 
     let created;
     try {
@@ -224,7 +227,7 @@
       if (password === null) return; // 취소
     }
 
-    if (!(await getMedia())) return;
+    if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
     isHost = false;
     roomCode = code;
     joinPassword = password;
@@ -311,10 +314,10 @@
           peerNames[p.id] = p.name;
           callPeer(p.id);
         });
-        applyMusic(msg.nowPlaying, msg.queue);
+        applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
         break;
       case "music-state":
-        applyMusic(msg.nowPlaying, msg.queue);
+        applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
         break;
       case "chat":
         appendChat(msg.name, msg.text);
@@ -355,7 +358,8 @@
     pcs[peerId] = pc;
     pendingIce[peerId] = pendingIce[peerId] || [];
 
-    localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+    // 카메라가 있으면 트랙 추가, 없으면(권한 거부) 수신만
+    if (localStream) localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
 
     pc.onicecandidate = (ev) => {
       if (ev.candidate) wsSend({ type: "ice", to: peerId, payload: ev.candidate });
@@ -517,7 +521,7 @@
 
       const stream = isMe ? localStream : remoteStreams[id];
       if (stream && tile.video.srcObject !== stream) tile.video.srcObject = stream;
-      if (isMe && !camOn) {
+      if (isMe && (!camOn || !localStream)) {
         tile.empty.textContent = "📷 꺼짐";
         tile.empty.style.display = "flex";
       } else if (stream) {
@@ -600,6 +604,7 @@
     lobbyView.classList.add("hidden");
     roomView.classList.remove("hidden");
     $("room-code").textContent = roomCode;
+    updateCamBtn();
     applyMeta();
     renderTiles();
     if (timerInt) clearInterval(timerInt);
@@ -659,15 +664,50 @@
   }
 
   // ════════════════ 카메라 on/off ════════════════
-  function toggleCamera() {
-    camOn = !camOn;
-    if (localStream) localStream.getVideoTracks().forEach((t) => (t.enabled = camOn));
+  function updateCamBtn() {
     const btn = $("cam-toggle");
-    btn.textContent = camOn ? "📷 카메라 끄기" : "🚫 카메라 켜기";
-    btn.classList.toggle("bg-red-100", !camOn);
-    btn.classList.toggle("dark:bg-red-900/40", !camOn);
-    btn.classList.toggle("text-red-600", !camOn);
+    const on = camOn && !!localStream;
+    btn.textContent = on ? "📷 카메라 끄기" : "📷 카메라 켜기";
+    btn.classList.toggle("bg-red-100", !on);
+    btn.classList.toggle("dark:bg-red-900/40", !on);
+    btn.classList.toggle("text-red-600", !on);
+  }
+
+  async function toggleCamera() {
+    if (!localStream) {
+      // 카메라가 없던 상태 → 권한 요청 후 켜고, 기존 연결에 트랙 추가(재협상)
+      const ok = await getMedia();
+      if (!ok || !localStream) {
+        toast("카메라를 켤 수 없어요 (권한 확인)");
+        return;
+      }
+      camOn = true;
+      updateCamBtn();
+      await addLocalTracksAndRenegotiate();
+      renderTiles();
+      return;
+    }
+    camOn = !camOn;
+    localStream.getVideoTracks().forEach((t) => (t.enabled = camOn));
+    updateCamBtn();
     renderTiles();
+  }
+
+  // 늦게 카메라를 켰을 때: 모든 피어에 트랙 추가 후 새 offer로 재협상
+  async function addLocalTracksAndRenegotiate() {
+    for (const [peerId, pc] of Object.entries(pcs)) {
+      try {
+        localStream.getTracks().forEach((t) => {
+          const exists = pc.getSenders().some((s) => s.track === t);
+          if (!exists) pc.addTrack(t, localStream);
+        });
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        wsSend({ type: "offer", to: peerId, payload: offer });
+      } catch (e) {
+        console.warn("renegotiate error", e);
+      }
+    }
   }
 
   // ════════════════ 채팅 ════════════════
@@ -708,9 +748,16 @@
   function addSong() {
     const id = parseYouTubeId($("music-url").value);
     if (!id) return toast("유효한 유튜브 링크가 아니에요");
-    wsSend({ type: "music-add", videoId: id, addedBy: myName });
+    wsSend({ type: "music-add", videoId: id, addedBy: myName }); // 서버가 1인 5곡 제한
     $("music-url").value = "";
-    toast("🎵 대기열에 추가했어요");
+  }
+
+  function removeSong(videoId) {
+    wsSend({ type: "music-remove", videoId });
+  }
+
+  function toggleShuffle() {
+    wsSend({ type: "music-shuffle" });
   }
 
   function skipSong() {
@@ -732,10 +779,10 @@
     } catch {}
   }
 
-  function applyMusic(nowPlaying, queue) {
-    renderQueue(queue || []);
+  function applyMusic(nowPlaying, playlist, shuffle) {
+    renderPlaylist(playlist || [], nowPlaying, shuffle);
     if (!ytReady) {
-      pendingMusic = { nowPlaying, queue };
+      pendingMusic = { nowPlaying, playlist, shuffle };
       return;
     }
     if (nowPlaying && nowPlaying.videoId) {
@@ -775,22 +822,41 @@
     }, 900);
   }
 
-  function renderQueue(queue) {
-    $("queue-count").textContent = queue.length;
+  function renderPlaylist(playlist, nowPlaying, shuffle) {
+    $("queue-count").textContent = playlist.length;
+    const mine = playlist.filter((t) => t.addedBy === myName).length;
+    const mc = $("my-song-count");
+    if (mc) mc.textContent = mine;
+    const sb = $("music-shuffle");
+    if (sb) {
+      sb.classList.toggle("bg-primary", !!shuffle);
+      sb.classList.toggle("text-white", !!shuffle);
+      sb.title = shuffle ? "셔플 ON (다시 누르면 OFF)" : "셔플 OFF";
+    }
     const box = $("music-queue");
-    if (!queue.length) {
+    if (!playlist.length) {
       box.innerHTML =
-        '<p class="text-sm text-light-subtext dark:text-dark-subtext">대기열이 비어있어요.</p>';
+        '<p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요! (1인 5곡)</p>';
       return;
     }
+    const curId = nowPlaying ? nowPlaying.videoId : null;
     box.innerHTML = "";
-    queue.forEach((it, i) => {
+    playlist.forEach((it) => {
+      const isCur = it.videoId === curId;
       const row = document.createElement("div");
-      row.className = "flex items-center gap-2";
+      row.className = "flex items-center gap-2 p-1 rounded-lg " + (isCur ? "bg-primary/10" : "");
       row.innerHTML = `
-        <span class="text-xs w-4 text-center text-light-subtext dark:text-dark-subtext">${i + 1}</span>
-        <img src="https://img.youtube.com/vi/${it.videoId}/default.jpg" class="w-12 h-9 object-cover rounded flex-shrink-0" alt="" />
-        <span class="text-xs flex-1 truncate">🎵 <b>${escapeHtml(it.addedBy || "게스트")}</b> 님 신청</span>`;
+        <img src="https://img.youtube.com/vi/${it.videoId}/default.jpg" class="w-10 h-7 object-cover rounded flex-shrink-0" alt="" />
+        <span class="text-xs flex-1 truncate ${isCur ? "text-primary font-semibold" : ""}">${
+          isCur ? "▶ " : ""
+        }🎵 ${escapeHtml(it.addedBy || "게스트")} 님</span>`;
+      const del = document.createElement("button");
+      del.className =
+        "text-xs text-light-subtext dark:text-dark-subtext hover:text-red-500 px-1 shrink-0";
+      del.textContent = "✕";
+      del.title = "삭제";
+      del.onclick = () => removeSong(it.videoId);
+      row.appendChild(del);
       box.appendChild(row);
     });
   }
@@ -808,7 +874,7 @@
           if (pendingMusic) {
             const p = pendingMusic;
             pendingMusic = null;
-            applyMusic(p.nowPlaying, p.queue);
+            applyMusic(p.nowPlaying, p.playlist, p.shuffle);
           }
         },
         onStateChange: (e) => {
@@ -847,6 +913,7 @@
   });
   $("music-skip").onclick = () => skipSong();
   $("music-mute").onclick = () => toggleMusicMute();
+  $("music-shuffle").onclick = () => toggleShuffle();
   $("chat-send").onclick = () => sendChat();
   $("chat-input").addEventListener("keydown", (e) => {
     // 한글 IME 조합 중 Enter는 무시 (끝글자 중복 전송 방지)

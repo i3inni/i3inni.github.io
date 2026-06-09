@@ -293,11 +293,15 @@
             class="hidden lg:flex-1 lg:min-h-0 flex flex-col bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
             <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
               <h3 class="font-bold flex items-center gap-2 text-sm">
-                🎶 함께 듣기
-                <span class="hidden sm:inline text-xs font-normal text-light-subtext dark:text-dark-subtext">순서대로 재생</span>
+                🎶 플레이리스트
+                <span class="hidden sm:inline text-xs font-normal text-light-subtext dark:text-dark-subtext">무한 반복 · 1인 5곡</span>
               </h3>
-              <button id="music-mute"
-                class="text-xs px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 font-semibold hover:opacity-80 transition shrink-0" title="내 소리 켜짐">🔊</button>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button id="music-shuffle"
+                  class="text-xs px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 font-semibold hover:opacity-80 transition" title="셔플 OFF">🔀</button>
+                <button id="music-mute"
+                  class="text-xs px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 font-semibold hover:opacity-80 transition" title="내 소리 켜짐">🔊</button>
+              </div>
             </div>
 
             <!-- 신청 입력 -->
@@ -319,13 +323,13 @@
               <button id="music-skip" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition shrink-0" title="다음 곡">⏭</button>
             </div>
 
-            <!-- 대기열 (남는 공간 채우고 스크롤) -->
+            <!-- 플레이리스트 (남는 공간 채우고 스크롤) -->
             <p class="text-xs font-semibold text-light-subtext dark:text-dark-subtext mb-1 shrink-0">
-              대기열 <span id="queue-count" class="text-primary">0</span>곡
+              전체 <span id="queue-count" class="text-primary">0</span>곡 · 내 곡 <span id="my-song-count" class="text-primary">0</span>/5
             </p>
             <div id="music-queue"
-              class="lg:flex-1 lg:min-h-0 max-h-40 lg:max-h-none overflow-y-auto space-y-1.5 pr-1">
-              <p class="text-sm text-light-subtext dark:text-dark-subtext">대기열이 비어있어요.</p>
+              class="lg:flex-1 lg:min-h-0 max-h-40 lg:max-h-none overflow-y-auto space-y-1 pr-1">
+              <p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요! (1인 5곡)</p>
             </div>
 
             <!-- 실제 재생용(소리만) — 화면엔 숨김 -->
