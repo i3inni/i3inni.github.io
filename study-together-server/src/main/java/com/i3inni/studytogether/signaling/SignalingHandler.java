@@ -63,6 +63,8 @@ public class SignalingHandler extends TextWebSocketHandler {
     // 중복 입장 방지: "room|clientId" -> sessionId, sessionId -> key
     private final Map<String, String> clientKeyToSession = new ConcurrentHashMap<>();
     private final Map<String, String> sessionClientKey = new ConcurrentHashMap<>();
+    // 방별 현재 방장 세션
+    private final Map<String, String> roomHost = new ConcurrentHashMap<>();
     // roomCode -> 함께 듣기 플레이리스트 상태
     private final Map<String, MusicState> roomMusic = new ConcurrentHashMap<>();
 
@@ -188,10 +190,14 @@ public class SignalingHandler extends TextWebSocketHandler {
             }
         }
 
+        // 첫 입장자(보통 방장)를 방장 세션으로 지정
+        roomHost.putIfAbsent(roomCode, session.getId());
+
         MusicState ms = roomMusic.get(roomCode);
         Map<String, Object> joined = new HashMap<>();
         joined.put("type", "joined");
         joined.put("selfId", session.getId());
+        joined.put("hostSessionId", roomHost.get(roomCode));
         joined.put("peers", existingPeers);
         joined.put("meta", metaOf(meta));
         putMusic(joined, ms);
@@ -224,6 +230,7 @@ public class SignalingHandler extends TextWebSocketHandler {
     private void handleStart(WebSocketSession session) {
         String roomCode = sessionRoom.get(session.getId());
         if (roomCode == null) return;
+        if (!session.getId().equals(roomHost.get(roomCode))) return; // 방장만 이륙 가능
         Room updated = roomService.start(roomCode);
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("takeoff room={}", roomCode);
@@ -380,8 +387,27 @@ public class SignalingHandler extends TextWebSocketHandler {
         int remaining = presence.remove(roomCode, session.getId());
         broadcastAll(roomCode, Map.of("type", "peer-leave", "id", session.getId()));
 
+        // 방장이 나가면 다음 사람에게 방장 위임
+        if (session.getId().equals(roomHost.get(roomCode))) {
+            List<Map<String, String>> rest = presence.peers(roomCode);
+            if (!rest.isEmpty()) {
+                Map<String, String> next = rest.get(0);
+                roomHost.put(roomCode, next.get("id"));
+                try {
+                    roomService.updateHostName(roomCode, next.get("name"));
+                } catch (Exception ignored) {
+                }
+                broadcastAll(roomCode, Map.of(
+                        "type", "host", "sessionId", next.get("id"), "name", next.get("name")));
+                log.info("host migrated room={} -> {}", roomCode, next.get("name"));
+            } else {
+                roomHost.remove(roomCode);
+            }
+        }
+
         if (remaining == 0) {
             roomMusic.remove(roomCode);
+            roomHost.remove(roomCode);
             try {
                 roomService.deleteIfExists(roomCode);
                 log.info("room {} emptied → removed", roomCode);

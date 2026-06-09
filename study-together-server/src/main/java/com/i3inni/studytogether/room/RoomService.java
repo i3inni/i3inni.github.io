@@ -57,6 +57,12 @@ public class RoomService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "방을 찾을 수 없어요"));
     }
 
+    /** 방장 위임 — 현재 방장이 나가면 다음 사람으로 갱신 */
+    @Transactional
+    public void updateHostName(String code, String name) {
+        repository.findById(code).ifPresent(r -> r.setHostName(name));
+    }
+
     /** 방장이 이륙 → 비행 시작 */
     @Transactional
     public Room start(String code) {

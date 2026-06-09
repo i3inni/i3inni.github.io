@@ -360,6 +360,7 @@
       case "joined":
         selfId = msg.selfId;
         meta = msg.meta;
+        isHost = msg.hostSessionId === selfId; // 서버가 정한 방장
         toast("방에 입장했어요 ✅");
         applyMeta();
         renderTiles();
@@ -369,6 +370,14 @@
           callPeer(p.id);
         });
         applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
+        break;
+      case "host":
+        // 방장 위임됨
+        isHost = msg.sessionId === selfId;
+        if (meta) meta.hostName = msg.name;
+        if (isHost) toast("👑 방장이 되었어요");
+        applyMeta();
+        renderTiles();
         break;
       case "music-state":
         applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
