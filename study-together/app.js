@@ -646,6 +646,9 @@
           ytPlayer.loadVideoById({ videoId: currentVideoId, startSeconds: elapsed });
         } catch {}
         applyMusicMute();
+        // 영상은 숨기고 음악 카드(썸네일+제목)만 표시
+        $("yt-thumb").src = `https://img.youtube.com/vi/${currentVideoId}/hqdefault.jpg`;
+        $("yt-eq").classList.add("show");
         updateNowTitle(nowPlaying.addedBy);
       }
     } else {
@@ -653,18 +656,22 @@
       try {
         ytPlayer.stopVideo();
       } catch {}
+      $("yt-thumb").removeAttribute("src");
       $("yt-title").textContent = "재생 중인 곡이 없어요";
+      $("yt-by").textContent = "";
+      $("yt-eq").classList.remove("show");
     }
   }
 
   function updateNowTitle(addedBy) {
+    $("yt-by").textContent = addedBy ? `${addedBy}님 신청` : "";
     setTimeout(() => {
-      let t = "재생 중";
+      let t = "♪ 재생 중";
       try {
         const d = ytPlayer.getVideoData();
         if (d && d.title) t = d.title;
       } catch {}
-      $("yt-title").textContent = `▶ ${t}` + (addedBy ? ` · ${addedBy}님 신청` : "");
+      $("yt-title").textContent = t;
     }, 900);
   }
 
