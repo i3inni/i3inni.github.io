@@ -1,0 +1,147 @@
+<!doctype html>
+<!-- 같이 공부 — 사용법 가이드 (study-together 기능의 일부) -->
+<html lang="ko" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>사용법 | 같이 공부 ✈️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Noto Sans KR", "sans-serif"],
+              poppins: ["Poppins", "sans-serif"],
+            },
+            colors: {
+              primary: "#6366F1",
+              "primary-hover": "#4F46E5",
+              "light-bg": "#F9FAFB",
+              "light-card": "#FFFFFF",
+              "light-text": "#111827",
+              "light-subtext": "#4B5563",
+              "dark-bg": "#111827",
+              "dark-card": "#1F2937",
+              "dark-text": "#E5E7EB",
+              "dark-subtext": "#9CA3AF",
+            },
+          },
+        },
+      };
+    </script>
+    <script>
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Poppins:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body
+    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300 min-h-screen"
+  >
+    <header
+      class="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
+    >
+      <nav class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <a href="index.html"
+          class="flex items-center gap-2 text-light-subtext dark:text-dark-subtext hover:text-primary transition">
+          <span class="text-lg">←</span><span class="text-sm font-medium">같이 공부로</span>
+        </a>
+        <h1 class="text-lg font-bold font-poppins flex items-center gap-2">
+          <span>📖</span><span>사용법</span>
+        </h1>
+        <span class="w-20"></span>
+      </nav>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+      <div class="text-center mb-2">
+        <h2 class="text-2xl font-bold font-poppins mb-1">✈️ 같이 공부, 이렇게 써요</h2>
+        <p class="text-sm text-light-subtext dark:text-dark-subtext">
+          친구와 같은 비행기를 타고, 정해진 시간 동안 카메라를 켠 채 함께 집중하는 스터디룸이에요.
+        </p>
+      </div>
+
+      <!-- step cards -->
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">1️⃣ 방 만들기 / 입장</h3>
+        <ul class="text-sm space-y-1.5 text-light-subtext dark:text-dark-subtext list-disc pl-5">
+          <li><b class="text-light-text dark:text-dark-text">닉네임</b>을 먼저 입력해요.</li>
+          <li><b class="text-light-text dark:text-dark-text">방 만들기</b>: 방 이름·출발지·목적지·공부 시간(분)을 정하면 6자리 방 코드가 생겨요.</li>
+          <li><b class="text-light-text dark:text-dark-text">입장</b>: 오른쪽 <b>열려있는 방</b> 목록에서 누르거나, 친구가 준 코드로 들어가요. (목록은 실시간 갱신)</li>
+          <li><b class="text-light-text dark:text-dark-text">초대</b>: 방 안의 <b>코드 복사 / 초대 링크</b> 버튼으로 친구에게 공유해요.</li>
+        </ul>
+      </section>
+
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">🔒 비밀번호 방</h3>
+        <p class="text-sm text-light-subtext dark:text-dark-subtext">
+          방 만들 때 비밀번호를 넣으면 목록엔 🔒로 보이고, <b class="text-light-text dark:text-dark-text">비밀번호를 맞춰야</b> 입장돼요. (비번은 암호화 저장)
+        </p>
+      </section>
+
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">2️⃣ 이륙 & 타이머</h3>
+        <p class="text-sm text-light-subtext dark:text-dark-subtext">
+          방장이 <b class="text-light-text dark:text-dark-text">🛫 이륙</b>을 누르면 다 같이 비행 시작! 출발지 → 목적지로 비행기가 이동하고, 정한 시간이 끝나면 🛬 도착해요. 모두 같은 타이머로 동기화돼요.
+        </p>
+      </section>
+
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">📷 카메라</h3>
+        <ul class="text-sm space-y-1.5 text-light-subtext dark:text-dark-subtext list-disc pl-5">
+          <li>참여자 카메라만 켜져요. <b class="text-light-text dark:text-dark-text">마이크·스피커는 항상 음소거</b>(서로 소리 안 들림).</li>
+          <li>카메라 <b class="text-light-text dark:text-dark-text">권한이 없어도 입장 가능</b> — 꺼진 채로 들어와서 나중에 <b>📷 카메라 켜기</b>로 켤 수 있어요.</li>
+          <li>참여자가 많으면 <b class="text-light-text dark:text-dark-text">6명씩 페이지</b>로 넘겨봐요.</li>
+        </ul>
+      </section>
+
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">🎶 함께 듣기 (플레이리스트)</h3>
+        <ul class="text-sm space-y-1.5 text-light-subtext dark:text-dark-subtext list-disc pl-5">
+          <li>이륙 후, <b class="text-light-text dark:text-dark-text">유튜브 링크</b>를 붙여넣어 신청하면 방 플레이리스트에 쌓여요. (개수 무제한)</li>
+          <li>순서대로 재생되고, 끝나면 <b class="text-light-text dark:text-dark-text">처음부터 무한 반복</b>. <b>🔀 셔플</b>도 가능.</li>
+          <li><b class="text-light-text dark:text-dark-text">🔊 내 소리</b>로 개인별 음소거, <b>⏭</b>로 다음 곡, 곡 옆 <b>✕</b>로 삭제.</li>
+          <li>영상은 숨고 <b class="text-light-text dark:text-dark-text">소리만</b> 나와요. (유튜브 광고는 각자 광고차단기로 막을 수 있어요)</li>
+        </ul>
+      </section>
+
+      <section class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">💬 채팅</h3>
+        <p class="text-sm text-light-subtext dark:text-dark-subtext">
+          오른쪽 채팅창에서 실시간으로 대화해요. (기록은 저장 안 함 — 나가면 사라져요)
+        </p>
+      </section>
+
+      <section class="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-5">
+        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">⚠️ 알아두면 좋아요</h3>
+        <ul class="text-sm space-y-1.5 text-amber-800 dark:text-amber-200/90 list-disc pl-5">
+          <li>화상은 브라우저끼리 직접(P2P) 연결돼요. <b>같은 와이파이</b>면 가장 잘 되고, 다른 네트워크는 중계서버(TURN)로 연결돼요(드물게 실패 가능).</li>
+          <li>크롬/엣지/사파리 <b>최신 브라우저 + HTTPS</b>에서 카메라가 동작해요.</li>
+          <li>서버가 잠깐 쉬다 깨면 첫 로딩이 몇 초 걸릴 수 있어요.</li>
+        </ul>
+      </section>
+
+      <div class="text-center pt-2 pb-8">
+        <a href="index.html"
+          class="inline-block px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition">
+          ✈️ 같이 공부 시작하기
+        </a>
+      </div>
+    </main>
+  </body>
+</html>

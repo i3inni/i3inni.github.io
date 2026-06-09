@@ -20,6 +20,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // 방 비밀번호 해싱(BCrypt)용 — 전체 시큐리티 없이 crypto 모듈만
+    implementation 'org.springframework.security:spring-security-crypto'
 
     runtimeOnly 'org.postgresql:postgresql'
 

@@ -1,5 +1,6 @@
 package com.i3inni.studytogether.room;
 
+import com.i3inni.studytogether.lobby.LobbyHub;
 import com.i3inni.studytogether.presence.PresenceRegistry;
 import com.i3inni.studytogether.room.dto.CreateRoomRequest;
 import com.i3inni.studytogether.room.dto.RoomResponse;
@@ -29,11 +30,13 @@ public class RoomController {
 
     private final RoomService roomService;
     private final PresenceRegistry presence;
+    private final LobbyHub lobbyHub;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RoomResponse create(@Valid @RequestBody CreateRoomRequest request) {
         Room room = roomService.create(request);
+        lobbyHub.publish(); // 새 방 → 로비 실시간 갱신
         return RoomResponse.from(room, presence.count(room.getCode()));
     }
 

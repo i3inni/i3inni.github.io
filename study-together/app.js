@@ -116,27 +116,22 @@
   }
 
   // ════════════════ 로비 (공개 방 목록) ════════════════
-  async function refreshLobby() {
+  let lobbyWs = null;
+
+  function renderRooms(rooms) {
     const box = $("room-list");
-    try {
-      const ctrl = new AbortController();
-      const to = setTimeout(() => ctrl.abort(), 6000);
-      const res = await fetch(apiBase() + "/api/rooms", { signal: ctrl.signal });
-      clearTimeout(to);
-      if (!res.ok) throw new Error("bad status");
-      const rooms = await res.json();
-      if (!rooms.length) {
-        box.innerHTML =
-          '<p class="text-sm text-light-subtext dark:text-dark-subtext">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
-        return;
-      }
-      box.innerHTML = "";
-      rooms.forEach((r) => {
-        const flying = r.status === "FLYING";
-        const row = document.createElement("div");
-        row.className =
-          "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
-        row.innerHTML = `
+    if (!rooms || !rooms.length) {
+      box.innerHTML =
+        '<p class="text-sm text-light-subtext dark:text-dark-subtext">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
+      return;
+    }
+    box.innerHTML = "";
+    rooms.forEach((r) => {
+      const flying = r.status === "FLYING";
+      const row = document.createElement("div");
+      row.className =
+        "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
+      row.innerHTML = `
           <div class="min-w-0">
             <p class="font-semibold text-sm truncate">${r.locked ? "🔒 " : ""}${escapeHtml(r.title)}
               <span class="ml-1 align-middle inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
@@ -150,24 +145,63 @@
             </p>
           </div>
           <button class="join-room px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition flex-shrink-0">입장</button>`;
-        row.querySelector(".join-room").onclick = () => joinRoom(r.code);
-        box.appendChild(row);
-      });
+      row.querySelector(".join-room").onclick = () => joinRoom(r.code);
+      box.appendChild(row);
+    });
+  }
+
+  async function refreshLobby() {
+    const box = $("room-list");
+    try {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(apiBase() + "/api/rooms", { signal: ctrl.signal });
+      clearTimeout(to);
+      if (!res.ok) throw new Error("bad status");
+      renderRooms(await res.json());
     } catch (e) {
       box.innerHTML = `<p class="text-sm text-red-500">서버에 연결할 수 없어요. 하단의 백엔드 주소를 확인해주세요. (${escapeHtml(apiBase())})</p>`;
     }
   }
-  function startLobbyPolling() {
-    refreshLobby();
-    // 첫 진입/콜드스타트 대비 초기 빠른 재시도 (서버 깨어나면 바로 방 표시)
-    setTimeout(() => { if (!inRoom) refreshLobby(); }, 1500);
-    setTimeout(() => { if (!inRoom) refreshLobby(); }, 3500);
-    if (lobbyInt) clearInterval(lobbyInt);
-    lobbyInt = setInterval(refreshLobby, 4000);
+
+  // 로비 실시간 푸시 (방 생성/삭제/입장/이륙 즉시 반영)
+  function connectLobbyWs() {
+    try {
+      if (lobbyWs) lobbyWs.close();
+    } catch {}
+    const url = apiBase().replace(/^http/, "ws") + "/ws/lobby";
+    lobbyWs = new WebSocket(url);
+    lobbyWs.onmessage = (e) => {
+      try {
+        const m = JSON.parse(e.data);
+        if (m.type === "rooms") renderRooms(m.rooms);
+      } catch {}
+    };
+    lobbyWs.onclose = () => {
+      lobbyWs = null;
+      if (!inRoom) setTimeout(() => { if (!inRoom) connectLobbyWs(); }, 3000);
+    };
+    lobbyWs.onerror = () => {};
   }
+
+  function startLobbyPolling() {
+    refreshLobby(); // 즉시 1회(콜드스타트 대비)
+    connectLobbyWs(); // 실시간 푸시
+    setTimeout(() => { if (!inRoom) refreshLobby(); }, 1500);
+    if (lobbyInt) clearInterval(lobbyInt);
+    // WS가 끊겨있을 때만 폴백 폴링
+    lobbyInt = setInterval(() => {
+      if (!lobbyWs || lobbyWs.readyState !== WebSocket.OPEN) refreshLobby();
+    }, 8000);
+  }
+
   function stopLobbyPolling() {
     if (lobbyInt) clearInterval(lobbyInt);
     lobbyInt = null;
+    try {
+      if (lobbyWs) lobbyWs.close();
+    } catch {}
+    lobbyWs = null;
   }
 
   // ════════════════ 방 생성 (방장) ════════════════

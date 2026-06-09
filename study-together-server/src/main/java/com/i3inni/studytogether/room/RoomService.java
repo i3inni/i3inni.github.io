@@ -3,6 +3,7 @@ package com.i3inni.studytogether.room;
 import com.i3inni.studytogether.room.dto.CreateRoomRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ public class RoomService {
     private final SecureRandom random = new SecureRandom();
 
     private final RoomRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Room create(CreateRoomRequest req) {
@@ -36,7 +38,7 @@ public class RoomService {
                 .departure(blankToDefault(req.getDeparture(), "출발지"))
                 .destination(blankToDefault(req.getDestination(), "목적지"))
                 .durationMinutes(req.getDurationMinutes())
-                .password(blankToNull(req.getPassword()))
+                .password(encodePassword(req.getPassword()))
                 .status(RoomStatus.WAITING)
                 .createdAt(Instant.now())
                 .build();
@@ -81,11 +83,20 @@ public class RoomService {
         return sb.toString();
     }
 
-    private String blankToDefault(String value, String fallback) {
-        return (value == null || value.isBlank()) ? fallback : value.trim();
+    /** 입장 비밀번호 검증 (방에 비번 없으면 항상 통과) */
+    public boolean passwordOk(Room room, String provided) {
+        String hash = room.getPassword();
+        if (hash == null || hash.isBlank()) return true;
+        if (provided == null || provided.isEmpty()) return false;
+        return passwordEncoder.matches(provided, hash);
     }
 
-    private String blankToNull(String value) {
-        return (value == null || value.isBlank()) ? null : value.trim();
+    private String encodePassword(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        return passwordEncoder.encode(raw.trim());
+    }
+
+    private String blankToDefault(String value, String fallback) {
+        return (value == null || value.isBlank()) ? fallback : value.trim();
     }
 }

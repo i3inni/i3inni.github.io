@@ -3,9 +3,11 @@ package com.i3inni.studytogether.signaling;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.i3inni.studytogether.lobby.LobbyHub;
 import com.i3inni.studytogether.presence.PresenceRegistry;
 import com.i3inni.studytogether.room.Room;
 import com.i3inni.studytogether.room.RoomService;
+import com.i3inni.studytogether.security.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,8 @@ public class SignalingHandler extends TextWebSocketHandler {
 
     private final RoomService roomService;
     private final PresenceRegistry presence;
+    private final RateLimiter rateLimiter;
+    private final LobbyHub lobbyHub;
 
     // sessionId -> WebSocketSession
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -135,8 +139,13 @@ public class SignalingHandler extends TextWebSocketHandler {
     }
 
     private void handleJoin(WebSocketSession session, JsonNode node) {
+        // 입장(=비번 시도) 폭주/무차별 대입 차단: IP당 분 30회
+        if (!rateLimiter.allow("join:" + ipOf(session), 30, 60_000L)) {
+            send(session, Map.of("type", "error", "message", "요청이 너무 많아요. 잠시 후 다시 시도해주세요."));
+            return;
+        }
         String roomCode = node.path("roomCode").asText("").trim().toUpperCase();
-        String name = node.path("name").asText("게스트");
+        String name = clamp(node.path("name").asText("게스트"), 20);
 
         Room meta;
         try {
@@ -146,13 +155,10 @@ public class SignalingHandler extends TextWebSocketHandler {
             return;
         }
 
-        // 비밀번호 방이면 검증
-        if (meta.getPassword() != null && !meta.getPassword().isBlank()) {
-            String provided = node.path("password").asText("");
-            if (!meta.getPassword().equals(provided)) {
-                send(session, Map.of("type", "error", "message", "비밀번호가 틀렸어요 🔒"));
-                return;
-            }
+        // 비밀번호 방이면 해시 검증
+        if (!roomService.passwordOk(meta, node.path("password").asText(""))) {
+            send(session, Map.of("type", "error", "message", "비밀번호가 틀렸어요 🔒"));
+            return;
         }
 
         // 나를 추가하기 전의 기존 참가자 목록 (이들에게 내가 offer를 건다)
@@ -177,10 +183,13 @@ public class SignalingHandler extends TextWebSocketHandler {
         ));
         log.info("join room={} session={} name={} (now {} people)",
                 roomCode, session.getId(), name, presence.count(roomCode));
+        lobbyHub.publish(); // 인원수 변경 → 로비 갱신
     }
 
     /** offer/answer/ice 를 to 대상에게 그대로 전달 (from 채워서) */
     private void relay(WebSocketSession session, JsonNode node) {
+        // 시그널링 폭주 차단 (ICE 후보가 많아 임계는 넉넉히)
+        if (!rateLimiter.allow("relay:" + session.getId(), 400, 10_000L)) return;
         String to = node.path("to").asText(null);
         if (to == null) return;
         WebSocketSession target = sessions.get(to);
@@ -197,6 +206,7 @@ public class SignalingHandler extends TextWebSocketHandler {
         Room updated = roomService.start(roomCode);
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("takeoff room={}", roomCode);
+        lobbyHub.publish(); // 상태(비행중) 변경 → 로비 갱신
     }
 
     // ── 채팅 ──
@@ -204,10 +214,11 @@ public class SignalingHandler extends TextWebSocketHandler {
     private void handleChat(WebSocketSession session, JsonNode node) {
         String roomCode = sessionRoom.get(session.getId());
         if (roomCode == null) return;
+        if (!rateLimiter.allow("chat:" + session.getId(), 10, 3_000L)) return; // 3초 10개
         String text = node.path("text").asText("").trim();
         if (text.isEmpty()) return;
         if (text.length() > 500) text = text.substring(0, 500);
-        String name = node.path("name").asText("게스트");
+        String name = clamp(node.path("name").asText("게스트"), 20);
         broadcastAll(roomCode, Map.of("type", "chat", "name", name, "text", text));
     }
 
@@ -218,9 +229,10 @@ public class SignalingHandler extends TextWebSocketHandler {
     private void handleMusicAdd(WebSocketSession session, JsonNode node) {
         String roomCode = sessionRoom.get(session.getId());
         if (roomCode == null) return;
+        if (!rateLimiter.allow("music:" + session.getId(), 20, 10_000L)) return; // 10초 20곡
         String videoId = node.path("videoId").asText("");
         if (!videoId.matches("[A-Za-z0-9_-]{11}")) return; // 유효한 유튜브 ID만
-        String addedBy = node.path("addedBy").asText("게스트");
+        String addedBy = clamp(node.path("addedBy").asText("게스트"), 20);
 
         MusicState ms = roomMusic.computeIfAbsent(roomCode, k -> new MusicState());
         synchronized (ms) {
@@ -353,9 +365,21 @@ public class SignalingHandler extends TextWebSocketHandler {
             } catch (Exception ignored) {
             }
         }
+        lobbyHub.publish(); // 퇴장/방 삭제 → 로비 갱신
     }
 
     // ── helpers ──
+
+    private String ipOf(WebSocketSession s) {
+        Object ip = s.getAttributes().get("ip");
+        return ip == null ? "?" : ip.toString();
+    }
+
+    private String clamp(String s, int max) {
+        if (s == null) return "";
+        s = s.trim();
+        return s.length() > max ? s.substring(0, max) : s;
+    }
 
     private Map<String, Object> metaOf(Room r) {
         Map<String, Object> m = new HashMap<>();

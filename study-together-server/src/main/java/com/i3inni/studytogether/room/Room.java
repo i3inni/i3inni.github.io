@@ -43,8 +43,8 @@ public class Room {
     @Column(nullable = false)
     private int durationMinutes;
 
-    /** 방 비밀번호. 설정되면 입장 시 일치해야 함 (null = 공개방, 비번 없음) */
-    @Column(length = 30)
+    /** 방 비밀번호(BCrypt 해시). null = 공개방. (해시 60자라 100 길이, 새 컬럼명) */
+    @Column(name = "pw_hash", length = 100)
     private String password;
 
     @Enumerated(EnumType.STRING)
