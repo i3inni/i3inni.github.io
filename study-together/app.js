@@ -1,42 +1,38 @@
 /* ════════════════════════════════════════════════════════════════
-   같이 공부 (Study Flight) — PeerJS P2P 메시 화상 스터디
-   ─ 방장(host): 고정 peer id = 방 코드. 명단(roster) 관리 + 브로드캐스트.
-   ─ 참가자(guest): 랜덤 id. 방장에게 data 연결로 hello → state 수신.
-   ─ 화상: 풀메시. "나중에 합류한 사람이 먼저 있던 사람에게 call" 규칙으로
-     쌍마다 정확히 1번만 연결(중복 호출 방지).
-   ─ 카메라만 공유(audio:false) / 원격 비디오 muted → 마이크·스피커 OFF 보장.
+   같이 공부 (Study Flight) — 프론트엔드
+   백엔드(Spring Boot)와 통신:
+     · REST  : 로비(공개 방 목록), 방 생성
+     · WS    : /ws/signal — WebRTC 시그널링 + presence
+     · WebRTC: 네이티브 RTCPeerConnection 풀메시 (카메라만)
+   백엔드 주소는 화면 하단에서 설정(기본 http://localhost:8080).
    ════════════════════════════════════════════════════════════════ */
 (() => {
   "use strict";
 
-  // PeerJS 공개 브로커 + STUN/TURN (NAT 통과)
-  // TURN 없이는 서로 다른 네트워크(모바일/회사망/대칭 NAT)에서 연결이 자주 실패해서
-  // 무료 공개 TURN(Open Relay)을 함께 사용한다.
-  const PEER_CONFIG = {
-    config: {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:global.stun.twilio.com:3478" },
-        {
-          urls: "turn:openrelay.metered.ca:80",
-          username: "openrelayproject",
-          credential: "openrelayproject",
-        },
-        {
-          urls: "turn:openrelay.metered.ca:443",
-          username: "openrelayproject",
-          credential: "openrelayproject",
-        },
-        {
-          urls: "turn:openrelay.metered.ca:443?transport=tcp",
-          username: "openrelayproject",
-          credential: "openrelayproject",
-        },
-      ],
-    },
-    debug: 1,
-  };
+  // ── 백엔드 주소 ──
+  // Railway 배포 후 아래에 도메인을 붙여넣으면 GitHub Pages에서 자동으로 사용됨.
+  //   예: "https://study-together-server-production.up.railway.app"
+  // 비워두면 localhost:8080 (로컬 개발). 화면 하단 입력칸으로 언제든 덮어쓸 수 있음.
+  const RAILWAY_API = "";
+
+  function apiBase() {
+    const saved = localStorage.getItem("sf_api");
+    if (saved) return saved.replace(/\/+$/, "");
+    if (RAILWAY_API) return RAILWAY_API.replace(/\/+$/, "");
+    return "http://localhost:8080";
+  }
+  function wsUrl() {
+    const base = apiBase();
+    const ws = base.replace(/^http/, "ws"); // http→ws, https→wss
+    return ws + "/ws/signal";
+  }
+
+  // 다른 네트워크 연결엔 TURN이 필요. 데모는 STUN만(같은 망 OK).
+  // TURN 추가 지점 ↓ (예: {urls:"turn:...", username:"...", credential:"..."})
+  const ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ];
 
   // ── DOM ──
   const $ = (id) => document.getElementById(id);
@@ -46,21 +42,23 @@
   const toastEl = $("toast");
 
   // ── 상태 ──
-  let peer = null;
-  let myId = null;
   let myName = "";
   let isHost = false;
   let roomCode = null;
+  let meta = null; // {code,title,hostName,departure,destination,durationMinutes,status,startedAt}
+  let ws = null;
+  let selfId = null;
   let localStream = null;
-  let hostConn = null; // guest → host data conn
-  const hostConns = {}; // host: guestId → data conn
-  const calls = {}; // peerId → MediaConnection
+  let inRoom = false;
+
+  const pcs = {}; // peerId → RTCPeerConnection
+  const peerNames = {}; // peerId → name
   const remoteStreams = {}; // peerId → MediaStream
-  const tileEls = {}; // peerId → {root, video, label, badge, empty}
-  let roster = []; // [{id, name, host}]
-  let meta = null; // {title, from, to, duration, startedAt, status}
+  const pendingIce = {}; // peerId → [candidate,...] (remoteDescription 전 버퍼)
+  const tileEls = {}; // id → {root, video, label, badge, empty}
+
   let timerInt = null;
-  let arrivedFired = false;
+  let lobbyInt = null;
 
   // ════════════════ 유틸 ════════════════
   let toastT;
@@ -70,169 +68,112 @@
     clearTimeout(toastT);
     toastT = setTimeout(() => toastEl.classList.remove("show"), 2600);
   }
-
-  function genCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 헷갈리는 문자 제외
-    let c = "";
-    for (let i = 0; i < 6; i++)
-      c += chars[Math.floor(Math.random() * chars.length)];
-    return c;
-  }
-
   function fmt(sec) {
     sec = Math.max(0, Math.floor(sec));
-    const m = String(Math.floor(sec / 60)).padStart(2, "0");
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s}`;
+    return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
   }
-
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+    );
+  }
   async function getMedia() {
     try {
-      // 카메라만! 오디오는 캡처하지 않음 → 마이크 OFF 보장
+      // 카메라만! 오디오 미캡처 → 마이크 OFF 보장
       localStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
         audio: false,
       });
       return true;
     } catch (e) {
-      toast("카메라 권한이 필요해요 📷 (브라우저 설정 확인)");
+      toast("카메라 권한이 필요해요 📷");
       return false;
     }
   }
 
-  // ════════════════ 로컬 저장 (내가 만든 방) ════════════════
-  const LS_KEY = "sf_rooms";
-  function loadRooms() {
+  // ════════════════ 로비 (공개 방 목록) ════════════════
+  async function refreshLobby() {
+    const box = $("room-list");
     try {
-      return JSON.parse(localStorage.getItem(LS_KEY)) || [];
-    } catch {
-      return [];
+      const res = await fetch(apiBase() + "/api/rooms");
+      if (!res.ok) throw new Error("bad status");
+      const rooms = await res.json();
+      if (!rooms.length) {
+        box.innerHTML =
+          '<p class="text-sm text-light-subtext dark:text-dark-subtext">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
+        return;
+      }
+      box.innerHTML = "";
+      rooms.forEach((r) => {
+        const flying = r.status === "FLYING";
+        const row = document.createElement("div");
+        row.className =
+          "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
+        row.innerHTML = `
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate">${escapeHtml(r.title)}
+              <span class="ml-1 align-middle inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                flying
+                  ? "bg-primary/15 text-primary"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+              }">${flying ? "비행중" : "대기중"}</span>
+            </p>
+            <p class="text-xs text-light-subtext dark:text-dark-subtext truncate">
+              ${escapeHtml(r.departure)} → ${escapeHtml(r.destination)} · ${r.durationMinutes}분 · 👤 ${r.participantCount} · <span class="font-mono text-primary">${r.code}</span>
+            </p>
+          </div>
+          <button class="join-room px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition flex-shrink-0">입장</button>`;
+        row.querySelector(".join-room").onclick = () => joinRoom(r.code);
+        box.appendChild(row);
+      });
+    } catch (e) {
+      box.innerHTML = `<p class="text-sm text-red-500">서버에 연결할 수 없어요. 하단의 백엔드 주소를 확인해주세요. (${escapeHtml(apiBase())})</p>`;
     }
   }
-  function saveRoom(r) {
-    const rooms = loadRooms().filter((x) => x.code !== r.code);
-    rooms.unshift(r);
-    localStorage.setItem(LS_KEY, JSON.stringify(rooms.slice(0, 8)));
-    renderMyRooms();
+  function startLobbyPolling() {
+    refreshLobby();
+    if (lobbyInt) clearInterval(lobbyInt);
+    lobbyInt = setInterval(refreshLobby, 4000);
   }
-  function deleteRoom(code) {
-    localStorage.setItem(
-      LS_KEY,
-      JSON.stringify(loadRooms().filter((x) => x.code !== code))
-    );
-    renderMyRooms();
-  }
-  function renderMyRooms() {
-    const rooms = loadRooms();
-    const box = $("my-rooms");
-    if (!rooms.length) {
-      box.innerHTML =
-        '<p class="text-sm text-light-subtext dark:text-dark-subtext">아직 만든 방이 없어요.</p>';
-      return;
-    }
-    box.innerHTML = "";
-    rooms.forEach((r) => {
-      const row = document.createElement("div");
-      row.className =
-        "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
-      row.innerHTML = `
-        <div class="min-w-0">
-          <p class="font-semibold text-sm truncate">${escapeHtml(r.title)}</p>
-          <p class="text-xs text-light-subtext dark:text-dark-subtext truncate">
-            ${escapeHtml(r.from)} → ${escapeHtml(r.to)} · ${r.duration}분 · <span class="font-mono text-primary">${r.code}</span>
-          </p>
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-          <button class="rehost px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition">다시 열기</button>
-          <button class="del px-2 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-xs hover:opacity-80 transition" title="삭제">✕</button>
-        </div>`;
-      row.querySelector(".rehost").onclick = () => {
-        myName = $("nickname").value.trim();
-        if (!myName) return toast("닉네임을 먼저 입력해주세요");
-        createRoom(r);
-      };
-      row.querySelector(".del").onclick = () => deleteRoom(r.code);
-      box.appendChild(row);
-    });
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c]
-    );
+  function stopLobbyPolling() {
+    if (lobbyInt) clearInterval(lobbyInt);
+    lobbyInt = null;
   }
 
   // ════════════════ 방 생성 (방장) ════════════════
-  async function createRoom(existing) {
+  async function createRoom() {
     myName = $("nickname").value.trim();
     if (!myName) return toast("닉네임을 입력해주세요");
 
-    const m = {
-      title: ($("r-title").value || existing?.title || "같이 공부 비행").trim(),
-      from: ($("r-from").value || existing?.from || "출발지").trim(),
-      to: ($("r-to").value || existing?.to || "목적지").trim(),
-      duration: Math.min(
-        600,
-        Math.max(1, parseInt($("r-duration").value || existing?.duration || 50, 10))
-      ),
-      startedAt: null,
-      status: "waiting",
+    const body = {
+      title: $("r-title").value.trim() || "같이 공부 비행",
+      hostName: myName,
+      departure: $("r-from").value.trim() || "출발지",
+      destination: $("r-to").value.trim() || "목적지",
+      durationMinutes: Math.min(600, Math.max(1, parseInt($("r-duration").value || "50", 10))),
     };
 
+    // 카메라 먼저 확보 (거부 시 빈 방이 안 생기도록)
     if (!(await getMedia())) return;
 
+    let created;
+    try {
+      const res = await fetch(apiBase() + "/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("create failed");
+      created = await res.json();
+    } catch (e) {
+      if (localStream) localStream.getTracks().forEach((t) => t.stop());
+      return toast("방 생성 실패 — 백엔드 주소를 확인해주세요");
+    }
+
     isHost = true;
-    roomCode = existing?.code || genCode();
-    myId = roomCode;
-    meta = m;
-
-    peer = new Peer(roomCode, PEER_CONFIG);
-    peer.on("open", () => {
-      roster = [{ id: roomCode, name: myName, host: true }];
-      saveRoom({ code: roomCode, ...m });
-      enterRoom();
-    });
-    peer.on("connection", onHostConnection);
-    peer.on("call", onIncomingCall);
-    peer.on("error", onPeerError);
-  }
-
-  function onHostConnection(conn) {
-    conn.on("open", () => {
-      hostConns[conn.peer] = conn;
-    });
-    conn.on("data", (d) => {
-      if (d && d.type === "hello") {
-        if (!roster.some((r) => r.id === conn.peer)) {
-          roster.push({ id: conn.peer, name: d.name || "친구", host: false });
-          toast(`${d.name || "친구"}님이 입장했어요 👋`);
-        }
-        hostConns[conn.peer] = conn;
-        broadcastState();
-      }
-    });
-    conn.on("close", () => removePeer(conn.peer));
-    conn.on("error", () => removePeer(conn.peer));
-  }
-
-  function broadcastState() {
-    const payload = { type: "state", roster, meta };
-    Object.values(hostConns).forEach((c) => {
-      try {
-        if (c.open) c.send(payload);
-      } catch {}
-    });
-    // 방장 본인 화면도 갱신
-    applyMeta();
-    renderGrid();
+    roomCode = created.code;
+    meta = created;
+    connectWs();
   }
 
   // ════════════════ 방 입장 (참가자) ════════════════
@@ -243,129 +184,206 @@
     if (!code) return toast("방 코드를 입력해주세요");
 
     if (!(await getMedia())) return;
-
     isHost = false;
     roomCode = code;
-    meta = { title: "입장 중…", from: "", to: "", duration: 0, startedAt: null, status: "waiting" };
+    meta = { code, title: "입장 중…", departure: "", destination: "", durationMinutes: 0, status: "WAITING", startedAt: null };
+    connectWs();
+  }
 
-    peer = new Peer(PEER_CONFIG);
-    peer.on("open", (id) => {
-      myId = id;
-      roster = [{ id: myId, name: myName, host: false }];
-      enterRoom();
+  // ════════════════ WebSocket 시그널링 ════════════════
+  function wsSend(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+  }
 
-      hostConn = peer.connect(code, { reliable: true });
-      hostConn.on("open", () => {
-        hostConn.send({ type: "hello", name: myName });
-        toast("방에 연결됐어요. 명단 받는 중…");
-      });
-      hostConn.on("data", onGuestData);
-      hostConn.on("close", onHostGone);
-      hostConn.on("error", onHostGone);
-    });
-    peer.on("call", onIncomingCall);
-    peer.on("error", onPeerError);
-    peer.on("disconnected", () => {
+  function connectWs() {
+    enterRoom();
+    ws = new WebSocket(wsUrl());
+    ws.onopen = () => {
+      wsSend({ type: "join", roomCode, name: myName });
+    };
+    ws.onmessage = (e) => {
+      let msg;
       try {
-        peer.reconnect();
-      } catch {}
-    });
-  }
-
-  let gotFirstState = false;
-  function onGuestData(d) {
-    if (d && d.type === "state") {
-      if (!gotFirstState) {
-        gotFirstState = true;
-        toast("방장과 연결됐어요 ✅");
+        msg = JSON.parse(e.data);
+      } catch {
+        return;
       }
-      roster = d.roster || roster;
-      meta = d.meta || meta;
-      applyMeta();
-      renderGrid();
-      runMeshCalls();
-    }
-  }
-
-  function onHostGone() {
-    if (!isHost && peer) {
-      toast("방장이 방을 닫았어요. 로비로 돌아갈게요.");
-      setTimeout(() => leaveRoom(), 1200);
-    }
-  }
-
-  // ════════════════ 화상(미디어) ════════════════
-  // 규칙: 내가 명단에서 더 뒤(나중 합류)면, 앞에 있던 사람에게 내가 call.
-  function runMeshCalls() {
-    const myIdx = roster.findIndex((r) => r.id === myId);
-    if (myIdx < 0) return;
-    roster.forEach((r, i) => {
-      if (r.id !== myId && i < myIdx && !calls[r.id]) {
-        const c = peer.call(r.id, localStream);
-        if (c) wireCall(c);
+      handleSignal(msg);
+    };
+    ws.onclose = () => {
+      if (inRoom) {
+        toast("서버 연결이 끊겼어요");
+        setTimeout(() => leaveRoom(), 800);
       }
-    });
+    };
+    ws.onerror = () => {
+      toast("시그널링 서버에 연결 실패 — 백엔드 주소 확인");
+    };
   }
 
-  function onIncomingCall(call) {
-    call.answer(localStream);
-    wireCall(call);
-  }
-
-  function wireCall(call) {
-    calls[call.peer] = call;
-    // ICE 연결 상태 모니터링 (어느 단계에서 막히는지 진단)
-    const pc = call.peerConnection;
-    if (pc) {
-      pc.oniceconnectionstatechange = () => {
-        const st = pc.iceConnectionState;
-        console.log(`[ICE ${call.peer}] ${st}`);
-        if (st === "failed") {
-          toast("상대와 직접 연결 실패 (네트워크가 너무 엄격해요)");
-          const tile = tileEls[call.peer];
-          if (tile && !remoteStreams[call.peer])
-            tile.empty.textContent = "연결 실패 ✕";
-        }
-      };
+  function handleSignal(msg) {
+    switch (msg.type) {
+      case "joined":
+        selfId = msg.selfId;
+        meta = msg.meta;
+        toast("방에 입장했어요 ✅");
+        applyMeta();
+        renderTiles();
+        // 내가 새로 들어왔으니 기존 참가자들에게 내가 offer를 건다
+        (msg.peers || []).forEach((p) => {
+          peerNames[p.id] = p.name;
+          callPeer(p.id);
+        });
+        break;
+      case "peer-join":
+        // 새 사람이 들어옴 → 그가 나에게 offer 할 것. 이름만 기록.
+        peerNames[msg.id] = msg.name;
+        toast(`${msg.name}님이 입장했어요 👋`);
+        renderTiles();
+        break;
+      case "offer":
+        onOffer(msg.from, msg.payload);
+        break;
+      case "answer":
+        onAnswer(msg.from, msg.payload);
+        break;
+      case "ice":
+        onIce(msg.from, msg.payload);
+        break;
+      case "peer-leave":
+        removePeer(msg.id);
+        break;
+      case "state":
+        meta = msg.meta;
+        applyMeta();
+        break;
+      case "error":
+        toast(msg.message || "오류가 발생했어요");
+        setTimeout(() => leaveRoom(), 1000);
+        break;
     }
-    call.on("stream", (s) => {
-      remoteStreams[call.peer] = s;
-      renderGrid();
-    });
-    call.on("close", () => {
-      delete remoteStreams[call.peer];
-      delete calls[call.peer];
-      renderGrid();
-    });
-    call.on("error", () => {
-      delete remoteStreams[call.peer];
-      delete calls[call.peer];
-      renderGrid();
-    });
+  }
+
+  // ════════════════ WebRTC ════════════════
+  function makePeer(peerId) {
+    if (pcs[peerId]) return pcs[peerId];
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pcs[peerId] = pc;
+    pendingIce[peerId] = pendingIce[peerId] || [];
+
+    localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+
+    pc.onicecandidate = (ev) => {
+      if (ev.candidate) wsSend({ type: "ice", to: peerId, payload: ev.candidate });
+    };
+    pc.ontrack = (ev) => {
+      remoteStreams[peerId] = ev.streams[0];
+      renderTiles();
+    };
+    pc.onconnectionstatechange = () => {
+      const st = pc.connectionState;
+      console.log(`[pc ${peerId}] ${st}`);
+      if (st === "failed") {
+        const tile = tileEls[peerId];
+        if (tile && !remoteStreams[peerId]) tile.empty.textContent = "연결 실패 ✕";
+      }
+    };
+    return pc;
+  }
+
+  async function callPeer(peerId) {
+    const pc = makePeer(peerId);
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      wsSend({ type: "offer", to: peerId, payload: offer });
+    } catch (e) {
+      console.warn("offer error", e);
+    }
+  }
+
+  async function onOffer(from, payload) {
+    const pc = makePeer(from);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(payload));
+      await flushIce(from);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      wsSend({ type: "answer", to: from, payload: answer });
+    } catch (e) {
+      console.warn("answer error", e);
+    }
+  }
+
+  async function onAnswer(from, payload) {
+    const pc = pcs[from];
+    if (!pc) return;
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(payload));
+      await flushIce(from);
+    } catch (e) {
+      console.warn("setRemote(answer) error", e);
+    }
+  }
+
+  async function onIce(from, payload) {
+    const pc = pcs[from];
+    if (!pc || !payload) return;
+    if (!pc.remoteDescription || !pc.remoteDescription.type) {
+      (pendingIce[from] = pendingIce[from] || []).push(payload);
+      return;
+    }
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(payload));
+    } catch (e) {
+      console.warn("addIce error", e);
+    }
+  }
+
+  async function flushIce(peerId) {
+    const pc = pcs[peerId];
+    const queue = pendingIce[peerId] || [];
+    pendingIce[peerId] = [];
+    for (const cand of queue) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(cand));
+      } catch (e) {
+        console.warn("flushIce error", e);
+      }
+    }
   }
 
   function removePeer(id) {
-    if (roster.some((r) => r.id === id)) roster = roster.filter((r) => r.id !== id);
-    if (calls[id]) {
+    if (pcs[id]) {
       try {
-        calls[id].close();
+        pcs[id].close();
       } catch {}
-      delete calls[id];
+      delete pcs[id];
     }
     delete remoteStreams[id];
-    delete hostConns[id];
-    if (isHost) broadcastState();
-    else renderGrid();
+    delete peerNames[id];
+    delete pendingIce[id];
+    renderTiles();
   }
 
   // ════════════════ 렌더링 ════════════════
-  function createTile(id) {
+  function participantIds() {
+    // 나 + 알려진 피어들(이름 또는 pc 존재)
+    const ids = [selfId].filter(Boolean);
+    const peers = new Set([...Object.keys(peerNames), ...Object.keys(pcs)]);
+    peers.forEach((id) => {
+      if (id !== selfId) ids.push(id);
+    });
+    return ids;
+  }
+
+  function createTile() {
     const root = document.createElement("div");
     root.className = "video-tile";
     const video = document.createElement("video");
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = true; // 스피커 OFF (원격 소리 안 들림)
+    video.muted = true; // 스피커 OFF
     const empty = document.createElement("div");
     empty.className = "tile-empty";
     empty.textContent = "연결 중…";
@@ -379,30 +397,29 @@
     return { root, video, label, badge, empty };
   }
 
-  function renderGrid() {
-    const ids = roster.map((r) => r.id);
-    // 떠난 사람 타일 제거
+  function renderTiles() {
+    const ids = participantIds();
     Object.keys(tileEls).forEach((id) => {
       if (!ids.includes(id)) {
         tileEls[id].root.remove();
         delete tileEls[id];
       }
     });
-    // 추가/갱신 (명단 순서대로)
-    roster.forEach((r) => {
-      let tile = tileEls[r.id];
+    const hostName = meta ? meta.hostName : null;
+    ids.forEach((id) => {
+      let tile = tileEls[id];
       if (!tile) {
-        tile = createTile(r.id);
-        grid.appendChild(tile.root);
-        tileEls[r.id] = tile;
-      } else {
-        grid.appendChild(tile.root); // 순서 정렬
+        tile = createTile();
+        tileEls[id] = tile;
       }
-      const isMe = r.id === myId;
-      tile.label.innerHTML = `📷 ${escapeHtml(isMe ? "나" : r.name || "친구")}`;
-      tile.badge.style.display = r.host ? "block" : "none";
+      grid.appendChild(tile.root);
 
-      const stream = isMe ? localStream : remoteStreams[r.id];
+      const isMe = id === selfId;
+      const name = isMe ? myName : peerNames[id] || "친구";
+      tile.label.innerHTML = `📷 ${escapeHtml(isMe ? "나" : name)}`;
+      tile.badge.style.display = hostName && name === hostName ? "block" : "none";
+
+      const stream = isMe ? localStream : remoteStreams[id];
       if (stream) {
         if (tile.video.srcObject !== stream) tile.video.srcObject = stream;
         tile.empty.style.display = "none";
@@ -410,65 +427,54 @@
         tile.empty.style.display = "flex";
       }
     });
-    $("people-count").textContent = roster.length;
+    $("people-count").textContent = ids.length;
   }
 
   function applyMeta() {
     if (!meta) return;
     $("room-title").textContent = meta.title;
-    $("room-from").textContent = meta.from;
-    $("room-to").textContent = meta.to;
+    $("room-from").textContent = meta.departure;
+    $("room-to").textContent = meta.destination;
 
     const badge = $("room-status");
     roomView.classList.remove("flying", "arrived");
-    if (meta.status === "flying") {
+    if (meta.status === "FLYING") {
       badge.textContent = "✈️ 비행 중 (집중!)";
-      badge.className =
-        "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary";
+      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary";
       roomView.classList.add("flying");
-    } else if (meta.status === "arrived") {
+    } else if (meta.status === "FINISHED") {
       badge.textContent = "🛬 도착! 수고했어요";
-      badge.className =
-        "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       roomView.classList.add("arrived");
     } else {
       badge.textContent = "🕒 대기 중";
-      badge.className =
-        "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
     }
-
-    // 이륙 버튼: 방장 + 대기 중일 때만
-    $("takeoff-btn").classList.toggle(
-      "hidden",
-      !(isHost && meta.status === "waiting")
-    );
+    // 이륙 버튼: 방장 + 대기 중
+    $("takeoff-btn").classList.toggle("hidden", !(isHost && meta.status === "WAITING"));
     tick();
   }
 
   function tick() {
     if (!meta) return;
-    const total = meta.duration * 60;
+    const total = (meta.durationMinutes || 0) * 60;
     let remain = total;
     let pct = 0;
-
-    if (meta.status === "flying" && meta.startedAt) {
+    if (meta.status === "FLYING" && meta.startedAt) {
       const elapsed = (Date.now() - meta.startedAt) / 1000;
       remain = total - elapsed;
-      pct = Math.min(100, (elapsed / total) * 100);
+      pct = total > 0 ? Math.min(100, (elapsed / total) * 100) : 0;
       if (remain <= 0) {
         remain = 0;
         pct = 100;
-        if (isHost && !arrivedFired) {
-          arrivedFired = true;
-          meta.status = "arrived";
-          broadcastState();
-        }
+        meta.status = "FINISHED";
+        applyMeta();
+        return;
       }
-    } else if (meta.status === "arrived") {
+    } else if (meta.status === "FINISHED") {
       remain = 0;
       pct = 100;
     }
-
     $("room-timer").textContent = fmt(remain);
     $("flight-progress").style.width = pct + "%";
     $("flight-plane").style.left = pct + "%";
@@ -476,103 +482,69 @@
 
   // ════════════════ 화면 전환 ════════════════
   function enterRoom() {
+    inRoom = true;
+    stopLobbyPolling();
     lobbyView.classList.add("hidden");
     roomView.classList.remove("hidden");
     $("room-code").textContent = roomCode;
-    arrivedFired = false;
     applyMeta();
-    renderGrid();
+    renderTiles();
     if (timerInt) clearInterval(timerInt);
     timerInt = setInterval(tick, 1000);
     window.scrollTo(0, 0);
   }
 
   function leaveRoom() {
+    inRoom = false;
     if (timerInt) clearInterval(timerInt);
     timerInt = null;
     try {
-      Object.values(calls).forEach((c) => c.close());
+      if (ws) {
+        wsSend({ type: "leave" });
+        ws.close();
+      }
     } catch {}
+    Object.values(pcs).forEach((pc) => {
+      try {
+        pc.close();
+      } catch {}
+    });
     try {
       if (localStream) localStream.getTracks().forEach((t) => t.stop());
     } catch {}
-    try {
-      if (peer) peer.destroy();
-    } catch {}
 
-    peer = null;
-    myId = null;
+    ws = null;
+    selfId = null;
+    localStream = null;
     isHost = false;
     roomCode = null;
-    localStream = null;
-    hostConn = null;
-    roster = [];
     meta = null;
-    gotFirstState = false;
-    for (const k in hostConns) delete hostConns[k];
-    for (const k in calls) delete calls[k];
+    for (const k in pcs) delete pcs[k];
+    for (const k in peerNames) delete peerNames[k];
     for (const k in remoteStreams) delete remoteStreams[k];
+    for (const k in pendingIce) delete pendingIce[k];
     Object.values(tileEls).forEach((t) => t.root.remove());
     for (const k in tileEls) delete tileEls[k];
     grid.innerHTML = "";
 
     roomView.classList.add("hidden");
     lobbyView.classList.remove("hidden");
-    renderMyRooms();
+    startLobbyPolling();
   }
 
-  // ════════════════ 에러 ════════════════
-  function onPeerError(err) {
-    const t = err && err.type;
-    if (t === "unavailable-id") {
-      // 코드 충돌 → 새 코드로 재시도
-      toast("코드가 겹쳐서 새 코드로 다시 만들게요");
-      try {
-        peer.destroy();
-      } catch {}
-      roomCode = genCode();
-      myId = roomCode;
-      peer = new Peer(roomCode, PEER_CONFIG);
-      peer.on("open", () => {
-        roster = [{ id: roomCode, name: myName, host: true }];
-        if (meta) saveRoom({ code: roomCode, ...meta });
-        $("room-code").textContent = roomCode;
-        renderGrid();
-      });
-      peer.on("connection", onHostConnection);
-      peer.on("call", onIncomingCall);
-      peer.on("error", onPeerError);
-      return;
-    }
-    if (t === "peer-unavailable") {
-      if (!isHost) {
-        toast("방을 찾을 수 없어요. 코드를 확인해주세요.");
-        setTimeout(() => leaveRoom(), 1200);
-      }
-      return;
-    }
-    if (t === "network" || t === "server-error" || t === "socket-error") {
-      toast("연결 서버 문제가 있어요. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-    console.warn("[peer error]", err);
-  }
-
-  // ════════════════ 이벤트 바인딩 ════════════════
+  // ════════════════ 이벤트 ════════════════
   $("create-btn").onclick = () => createRoom();
   $("join-btn").onclick = () => joinRoom($("join-code").value);
   $("join-code").addEventListener("keydown", (e) => {
     if (e.key === "Enter") joinRoom($("join-code").value);
   });
+  $("refresh-rooms").onclick = () => refreshLobby();
   $("leave-btn").onclick = () => {
     if (confirm("방에서 나갈까요?")) leaveRoom();
   };
   $("takeoff-btn").onclick = () => {
-    if (!isHost || !meta) return;
-    meta.startedAt = Date.now();
-    meta.status = "flying";
-    arrivedFired = false;
-    broadcastState();
+    if (!isHost) return;
+    wsSend({ type: "start" });
     toast("🛫 이륙! 지금부터 집중 시작");
   };
   $("copy-code").onclick = () => {
@@ -588,8 +560,17 @@
     const dark = document.documentElement.classList.toggle("dark");
     localStorage.theme = dark ? "dark" : "light";
   };
+  $("save-server").onclick = () => {
+    const v = $("server-url").value.trim();
+    if (v) {
+      localStorage.setItem("sf_api", v);
+      toast("백엔드 주소를 저장했어요");
+      refreshLobby();
+    }
+  };
 
-  // 초대 링크(?room=CODE)로 들어온 경우 코드 자동 입력
+  // ── 초기화 ──
+  $("server-url").value = apiBase();
   const params = new URLSearchParams(location.search);
   const invited = params.get("room");
   if (invited) {
@@ -598,13 +579,12 @@
     toast("초대받은 방이에요! 닉네임 입력 후 입장하세요");
   }
 
-  // 나가기 전 정리
   window.addEventListener("beforeunload", () => {
     try {
+      if (ws) ws.close();
       if (localStream) localStream.getTracks().forEach((t) => t.stop());
-      if (peer) peer.destroy();
     } catch {}
   });
 
-  renderMyRooms();
+  startLobbyPolling();
 })();

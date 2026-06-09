@@ -63,9 +63,6 @@
       rel="stylesheet"
     />
 
-    <!-- PeerJS (P2P 화상/시그널링 — 공개 브로커) -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
     <link rel="stylesheet" href="style.css" />
   </head>
 
@@ -189,22 +186,32 @@
             <div
               class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5"
             >
-              <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
-                <span>📋</span> 내가 만든 방
-              </h3>
-              <div id="my-rooms" class="space-y-2">
-                <p class="text-sm text-light-subtext dark:text-dark-subtext">
-                  아직 만든 방이 없어요.
-                </p>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                  <span>🌐</span> 열려있는 방
+                </h3>
+                <button id="refresh-rooms"
+                  class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">
+                  새로고침
+                </button>
+              </div>
+              <div id="room-list" class="space-y-2 max-h-72 overflow-y-auto">
+                <p class="text-sm text-light-subtext dark:text-dark-subtext">불러오는 중…</p>
               </div>
             </div>
           </div>
         </div>
 
-        <p class="text-center text-xs text-light-subtext dark:text-dark-subtext mt-6 leading-relaxed">
-          ⚠️ 백엔드 없는 P2P 방식이라 <b>공개 방 목록</b>은 없고, 코드를 받은 친구만 입장할 수 있어요.<br />
-          카메라만 공유되며 마이크·스피커는 항상 음소거입니다.
-        </p>
+        <div class="mt-6 text-center text-xs text-light-subtext dark:text-dark-subtext space-y-2">
+          <div class="flex items-center justify-center gap-2 flex-wrap">
+            <span>백엔드 서버</span>
+            <input id="server-url" type="text" placeholder="http://localhost:8080"
+              class="px-2 py-1 rounded bg-light-card dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-xs w-64" />
+            <button id="save-server"
+              class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:opacity-80 transition">저장</button>
+          </div>
+          <p>📷 카메라만 켜지고 🎤 마이크 · 🔇 스피커는 항상 음소거예요.</p>
+        </div>
       </section>
 
       <!-- ════════════════ 방(비행) 뷰 ════════════════ -->

@@ -1,0 +1,31 @@
+server:
+  # Railway 등 PaaS는 PORT 를 주입한다. 없으면 SERVER_PORT, 그것도 없으면 8080.
+  port: ${PORT:${SERVER_PORT:8080}}
+
+spring:
+  application:
+    name: study-together-server
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/studytogether}
+    username: ${DB_USERNAME:studytogether}
+    password: ${DB_PASSWORD:studytogether}
+  jpa:
+    hibernate:
+      # 운영에서는 validate / flyway 권장. 데모 편의상 update.
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# 애플리케이션 커스텀 설정 (전부 환경변수로 분리)
+app:
+  # CORS 허용 오리진 (콤마 구분). 프론트가 올라간 곳을 넣는다.
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5500,http://127.0.0.1:5500,https://i3inni.github.io}
+  # 빈 방 자동 정리까지 유지 시간(분) — 안내용, 정리는 presence 0 시점에 수행
+  room:
+    max-participants: ${ROOM_MAX_PARTICIPANTS:8}
+
+logging:
+  level:
+    com.i3inni.studytogether: ${LOG_LEVEL:INFO}
