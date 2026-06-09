@@ -98,10 +98,6 @@ public class SignalingHandler extends TextWebSocketHandler {
             setCurrentFromPos(now);
         }
 
-        long countBy(String name) {
-            return playlist.stream().filter(t -> name.equals(t.get("addedBy"))).count();
-        }
-
         String currentAddedBy() {
             for (Map<String, String> t : playlist)
                 if (t.get("videoId").equals(currentVideoId)) return t.get("addedBy");
@@ -215,9 +211,9 @@ public class SignalingHandler extends TextWebSocketHandler {
         broadcastAll(roomCode, Map.of("type", "chat", "name", name, "text", text));
     }
 
-    // ── 함께 듣기 (플레이리스트: 1인 5곡, 셔플, 무한 루프) ──
+    // ── 함께 듣기 (플레이리스트: 곡 수 무제한, 셔플, 무한 루프) ──
 
-    private static final int MAX_PER_USER = 5;
+    private static final int MAX_PLAYLIST = 300; // 폭주 방지용 전체 상한
 
     private void handleMusicAdd(WebSocketSession session, JsonNode node) {
         String roomCode = sessionRoom.get(session.getId());
@@ -228,9 +224,9 @@ public class SignalingHandler extends TextWebSocketHandler {
 
         MusicState ms = roomMusic.computeIfAbsent(roomCode, k -> new MusicState());
         synchronized (ms) {
-            if (ms.countBy(addedBy) >= MAX_PER_USER) {
+            if (ms.playlist.size() >= MAX_PLAYLIST) {
                 send(session, Map.of("type", "error",
-                        "message", "노래는 1인당 " + MAX_PER_USER + "곡까지예요 🎵"));
+                        "message", "플레이리스트가 가득 찼어요 (최대 " + MAX_PLAYLIST + "곡)"));
                 return;
             }
             ms.playlist.add(Map.of("videoId", videoId, "addedBy", addedBy));

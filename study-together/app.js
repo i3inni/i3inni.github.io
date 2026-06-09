@@ -119,7 +119,10 @@
   async function refreshLobby() {
     const box = $("room-list");
     try {
-      const res = await fetch(apiBase() + "/api/rooms");
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(apiBase() + "/api/rooms", { signal: ctrl.signal });
+      clearTimeout(to);
       if (!res.ok) throw new Error("bad status");
       const rooms = await res.json();
       if (!rooms.length) {
@@ -156,6 +159,9 @@
   }
   function startLobbyPolling() {
     refreshLobby();
+    // 첫 진입/콜드스타트 대비 초기 빠른 재시도 (서버 깨어나면 바로 방 표시)
+    setTimeout(() => { if (!inRoom) refreshLobby(); }, 1500);
+    setTimeout(() => { if (!inRoom) refreshLobby(); }, 3500);
     if (lobbyInt) clearInterval(lobbyInt);
     lobbyInt = setInterval(refreshLobby, 4000);
   }
@@ -748,7 +754,7 @@
   function addSong() {
     const id = parseYouTubeId($("music-url").value);
     if (!id) return toast("유효한 유튜브 링크가 아니에요");
-    wsSend({ type: "music-add", videoId: id, addedBy: myName }); // 서버가 1인 5곡 제한
+    wsSend({ type: "music-add", videoId: id, addedBy: myName });
     $("music-url").value = "";
   }
 
@@ -836,7 +842,7 @@
     const box = $("music-queue");
     if (!playlist.length) {
       box.innerHTML =
-        '<p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요! (1인 5곡)</p>';
+        '<p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요!</p>';
       return;
     }
     const curId = nowPlaying ? nowPlaying.videoId : null;
