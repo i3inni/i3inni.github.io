@@ -824,7 +824,8 @@
   $("create-btn").onclick = () => createRoom();
   $("join-btn").onclick = () => joinRoom($("join-code").value);
   $("join-code").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") joinRoom($("join-code").value);
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229)
+      joinRoom($("join-code").value);
   });
   $("refresh-rooms").onclick = () => refreshLobby();
   $("vp-prev").onclick = () => {
@@ -842,13 +843,14 @@
   $("cam-toggle").onclick = () => toggleCamera();
   $("music-add").onclick = () => addSong();
   $("music-url").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addSong();
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) addSong();
   });
   $("music-skip").onclick = () => skipSong();
   $("music-mute").onclick = () => toggleMusicMute();
   $("chat-send").onclick = () => sendChat();
   $("chat-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendChat();
+    // 한글 IME 조합 중 Enter는 무시 (끝글자 중복 전송 방지)
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) sendChat();
   });
   $("leave-btn").onclick = () => {
     if (confirm("방에서 나갈까요?")) leaveRoom();
