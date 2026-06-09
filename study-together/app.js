@@ -13,7 +13,7 @@
   // Railway 배포 후 아래에 도메인을 붙여넣으면 GitHub Pages에서 자동으로 사용됨.
   //   예: "https://study-together-server-production.up.railway.app"
   // 비워두면 localhost:8080 (로컬 개발). 화면 하단 입력칸으로 언제든 덮어쓸 수 있음.
-  const RAILWAY_API = "";
+  const RAILWAY_API = "https://i3innigithubio-production.up.railway.app";
 
   function apiBase() {
     const saved = localStorage.getItem("sf_api");
