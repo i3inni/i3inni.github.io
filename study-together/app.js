@@ -17,7 +17,10 @@
 
   function apiBase() {
     const saved = localStorage.getItem("sf_api");
-    if (saved) return saved.replace(/\/+$/, "");
+    const onLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
+    // 라이브 사이트인데 저장된 주소가 localhost면 무시(예전 로컬 테스트 잔재 자동 치유)
+    const savedIsLocal = saved && /localhost|127\.0\.0\.1/.test(saved);
+    if (saved && !(savedIsLocal && !onLocalhost)) return saved.replace(/\/+$/, "");
     if (RAILWAY_API) return RAILWAY_API.replace(/\/+$/, "");
     return "http://localhost:8080";
   }
@@ -210,14 +213,16 @@
       }
       handleSignal(msg);
     };
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
+      console.warn("[ws closed] code=", ev.code, "reason=", ev.reason, "url=", wsUrl());
       if (inRoom) {
-        toast("서버 연결이 끊겼어요");
-        setTimeout(() => leaveRoom(), 800);
+        toast(`서버 연결 끊김 (code ${ev.code}) — ${wsUrl()}`);
+        setTimeout(() => leaveRoom(), 1500);
       }
     };
     ws.onerror = () => {
-      toast("시그널링 서버에 연결 실패 — 백엔드 주소 확인");
+      console.warn("[ws error] url=", wsUrl());
+      toast("시그널링 연결 실패: " + wsUrl());
     };
   }
 
