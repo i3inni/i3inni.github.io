@@ -53,6 +53,15 @@
   let selfId = null;
   let localStream = null;
   let inRoom = false;
+  let joinPassword = "";
+
+  // 카메라 / 음악
+  let camOn = true;
+  let musicMuted = false; // 개인별 음소거 (로컬)
+  let ytPlayer = null;
+  let ytReady = false;
+  let currentVideoId = null;
+  let pendingMusic = null; // 플레이어 준비 전 도착한 상태
 
   const pcs = {}; // peerId → RTCPeerConnection
   const peerNames = {}; // peerId → name
@@ -114,7 +123,7 @@
           "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
         row.innerHTML = `
           <div class="min-w-0">
-            <p class="font-semibold text-sm truncate">${escapeHtml(r.title)}
+            <p class="font-semibold text-sm truncate">${r.locked ? "🔒 " : ""}${escapeHtml(r.title)}
               <span class="ml-1 align-middle inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
                 flying
                   ? "bg-primary/15 text-primary"
@@ -154,6 +163,7 @@
       departure: $("r-from").value.trim() || "출발지",
       destination: $("r-to").value.trim() || "목적지",
       durationMinutes: Math.min(600, Math.max(1, parseInt($("r-duration").value || "50", 10))),
+      password: $("r-password").value.trim(),
     };
 
     // 카메라 먼저 확보 (거부 시 빈 방이 안 생기도록)
@@ -176,6 +186,7 @@
     isHost = true;
     roomCode = created.code;
     meta = created;
+    joinPassword = body.password || ""; // 방장은 자기가 정한 비번으로 입장
     connectWs();
   }
 
@@ -186,9 +197,28 @@
     code = (code || "").trim().toUpperCase();
     if (!code) return toast("방 코드를 입력해주세요");
 
+    // 방 정보 확인 (잠김 여부)
+    let info = null;
+    try {
+      const res = await fetch(apiBase() + "/api/rooms/" + code);
+      if (res.ok) info = await res.json();
+    } catch {}
+    if (info === null) {
+      // 상세 조회 실패해도 진행은 시도 (서버가 최종 판단)
+    } else if (!info) {
+      return toast("방을 찾을 수 없어요");
+    }
+
+    let password = "";
+    if (info && info.locked) {
+      password = prompt("🔒 비밀번호를 입력하세요");
+      if (password === null) return; // 취소
+    }
+
     if (!(await getMedia())) return;
     isHost = false;
     roomCode = code;
+    joinPassword = password;
     meta = { code, title: "입장 중…", departure: "", destination: "", durationMinutes: 0, status: "WAITING", startedAt: null };
     connectWs();
   }
@@ -202,7 +232,7 @@
     enterRoom();
     ws = new WebSocket(wsUrl());
     ws.onopen = () => {
-      wsSend({ type: "join", roomCode, name: myName });
+      wsSend({ type: "join", roomCode, name: myName, password: joinPassword || "" });
     };
     ws.onmessage = (e) => {
       let msg;
@@ -239,6 +269,10 @@
           peerNames[p.id] = p.name;
           callPeer(p.id);
         });
+        applyMusic(msg.nowPlaying, msg.queue);
+        break;
+      case "music-state":
+        applyMusic(msg.nowPlaying, msg.queue);
         break;
       case "peer-join":
         // 새 사람이 들어옴 → 그가 나에게 offer 할 것. 이름만 기록.
@@ -425,10 +459,14 @@
       tile.badge.style.display = hostName && name === hostName ? "block" : "none";
 
       const stream = isMe ? localStream : remoteStreams[id];
-      if (stream) {
-        if (tile.video.srcObject !== stream) tile.video.srcObject = stream;
+      if (stream && tile.video.srcObject !== stream) tile.video.srcObject = stream;
+      if (isMe && !camOn) {
+        tile.empty.textContent = "📷 꺼짐";
+        tile.empty.style.display = "flex";
+      } else if (stream) {
         tile.empty.style.display = "none";
       } else {
+        tile.empty.textContent = "연결 중…";
         tile.empty.style.display = "flex";
       }
     });
@@ -457,6 +495,8 @@
     }
     // 이륙 버튼: 방장 + 대기 중
     $("takeoff-btn").classList.toggle("hidden", !(isHost && meta.status === "WAITING"));
+    // 함께 듣기: 이륙(비행/도착) 후 표시
+    $("music-panel").classList.toggle("hidden", meta.status === "WAITING");
     tick();
   }
 
@@ -524,6 +564,14 @@
     isHost = false;
     roomCode = null;
     meta = null;
+    joinPassword = "";
+    camOn = true;
+    currentVideoId = null;
+    pendingMusic = null;
+    try {
+      if (ytPlayer && ytReady) ytPlayer.stopVideo();
+    } catch {}
+    $("cam-toggle").textContent = "📷 카메라 끄기";
     for (const k in pcs) delete pcs[k];
     for (const k in peerNames) delete peerNames[k];
     for (const k in remoteStreams) delete remoteStreams[k];
@@ -537,6 +585,134 @@
     startLobbyPolling();
   }
 
+  // ════════════════ 카메라 on/off ════════════════
+  function toggleCamera() {
+    camOn = !camOn;
+    if (localStream) localStream.getVideoTracks().forEach((t) => (t.enabled = camOn));
+    const btn = $("cam-toggle");
+    btn.textContent = camOn ? "📷 카메라 끄기" : "🚫 카메라 켜기";
+    btn.classList.toggle("bg-red-100", !camOn);
+    btn.classList.toggle("dark:bg-red-900/40", !camOn);
+    btn.classList.toggle("text-red-600", !camOn);
+    renderTiles();
+  }
+
+  // ════════════════ 함께 듣기 (유튜브 큐) ════════════════
+  function parseYouTubeId(input) {
+    if (!input) return null;
+    const s = input.trim();
+    const m = s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
+    if (m) return m[1];
+    if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+    return null;
+  }
+
+  function addSong() {
+    const id = parseYouTubeId($("music-url").value);
+    if (!id) return toast("유효한 유튜브 링크가 아니에요");
+    wsSend({ type: "music-add", videoId: id, addedBy: myName });
+    $("music-url").value = "";
+    toast("🎵 대기열에 추가했어요");
+  }
+
+  function skipSong() {
+    wsSend({ type: "music-skip" });
+  }
+
+  function toggleMusicMute() {
+    musicMuted = !musicMuted;
+    applyMusicMute();
+    $("music-mute").textContent = musicMuted ? "🔇 내 소리 꺼짐" : "🔊 내 소리 켜짐";
+  }
+  function applyMusicMute() {
+    if (!ytReady) return;
+    try {
+      if (musicMuted) ytPlayer.mute();
+      else ytPlayer.unMute();
+    } catch {}
+  }
+
+  function applyMusic(nowPlaying, queue) {
+    renderQueue(queue || []);
+    if (!ytReady) {
+      pendingMusic = { nowPlaying, queue };
+      return;
+    }
+    if (nowPlaying && nowPlaying.videoId) {
+      if (nowPlaying.videoId !== currentVideoId) {
+        currentVideoId = nowPlaying.videoId;
+        const elapsed = Math.max(0, (Date.now() - (nowPlaying.startedAt || Date.now())) / 1000);
+        try {
+          ytPlayer.loadVideoById({ videoId: currentVideoId, startSeconds: elapsed });
+        } catch {}
+        applyMusicMute();
+        updateNowTitle(nowPlaying.addedBy);
+      }
+    } else {
+      currentVideoId = null;
+      try {
+        ytPlayer.stopVideo();
+      } catch {}
+      $("yt-title").textContent = "재생 중인 곡이 없어요";
+    }
+  }
+
+  function updateNowTitle(addedBy) {
+    setTimeout(() => {
+      let t = "재생 중";
+      try {
+        const d = ytPlayer.getVideoData();
+        if (d && d.title) t = d.title;
+      } catch {}
+      $("yt-title").textContent = `▶ ${t}` + (addedBy ? ` · ${addedBy}님 신청` : "");
+    }, 900);
+  }
+
+  function renderQueue(queue) {
+    $("queue-count").textContent = queue.length;
+    const box = $("music-queue");
+    if (!queue.length) {
+      box.innerHTML =
+        '<p class="text-sm text-light-subtext dark:text-dark-subtext">대기열이 비어있어요.</p>';
+      return;
+    }
+    box.innerHTML = "";
+    queue.forEach((it, i) => {
+      const row = document.createElement("div");
+      row.className = "flex items-center gap-2";
+      row.innerHTML = `
+        <span class="text-xs w-4 text-center text-light-subtext dark:text-dark-subtext">${i + 1}</span>
+        <img src="https://img.youtube.com/vi/${it.videoId}/default.jpg" class="w-12 h-9 object-cover rounded flex-shrink-0" alt="" />
+        <span class="text-xs flex-1 truncate">🎵 <b>${escapeHtml(it.addedBy || "게스트")}</b> 님 신청</span>`;
+      box.appendChild(row);
+    });
+  }
+
+  // YouTube IFrame API 준비되면 호출됨 (전역 콜백)
+  window.onYouTubeIframeAPIReady = function () {
+    ytPlayer = new YT.Player("yt-player", {
+      width: "100%",
+      height: "100%",
+      playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+      events: {
+        onReady: () => {
+          ytReady = true;
+          applyMusicMute();
+          if (pendingMusic) {
+            const p = pendingMusic;
+            pendingMusic = null;
+            applyMusic(p.nowPlaying, p.queue);
+          }
+        },
+        onStateChange: (e) => {
+          if (e.data === YT.PlayerState.ENDED && currentVideoId) {
+            wsSend({ type: "music-ended", videoId: currentVideoId });
+          }
+        },
+      },
+    });
+  };
+
   // ════════════════ 이벤트 ════════════════
   $("create-btn").onclick = () => createRoom();
   $("join-btn").onclick = () => joinRoom($("join-code").value);
@@ -544,6 +720,13 @@
     if (e.key === "Enter") joinRoom($("join-code").value);
   });
   $("refresh-rooms").onclick = () => refreshLobby();
+  $("cam-toggle").onclick = () => toggleCamera();
+  $("music-add").onclick = () => addSong();
+  $("music-url").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addSong();
+  });
+  $("music-skip").onclick = () => skipSong();
+  $("music-mute").onclick = () => toggleMusicMute();
   $("leave-btn").onclick = () => {
     if (confirm("방에서 나갈까요?")) leaveRoom();
   };

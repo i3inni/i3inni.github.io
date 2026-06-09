@@ -17,6 +17,7 @@ public class RoomResponse {
     private String departure;
     private String destination;
     private int durationMinutes;
+    private boolean locked;
     private String status;
     private int participantCount;
     private long remainingSeconds;
@@ -31,6 +32,7 @@ public class RoomResponse {
                 .departure(room.getDeparture())
                 .destination(room.getDestination())
                 .durationMinutes(room.getDurationMinutes())
+                .locked(room.getPassword() != null && !room.getPassword().isBlank())
                 .status(room.getStatus().name())
                 .participantCount(participantCount)
                 .remainingSeconds(remaining(room))

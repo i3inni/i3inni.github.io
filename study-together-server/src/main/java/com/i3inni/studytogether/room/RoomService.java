@@ -36,6 +36,7 @@ public class RoomService {
                 .departure(blankToDefault(req.getDeparture(), "출발지"))
                 .destination(blankToDefault(req.getDestination(), "목적지"))
                 .durationMinutes(req.getDurationMinutes())
+                .password(blankToNull(req.getPassword()))
                 .status(RoomStatus.WAITING)
                 .createdAt(Instant.now())
                 .build();
@@ -82,5 +83,9 @@ public class RoomService {
 
     private String blankToDefault(String value, String fallback) {
         return (value == null || value.isBlank()) ? fallback : value.trim();
+    }
+
+    private String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
     }
 }

@@ -15,10 +15,13 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * WebRTC 시그널링 + 방 presence 중계.
@@ -54,6 +57,14 @@ public class SignalingHandler extends TextWebSocketHandler {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     // sessionId -> roomCode
     private final Map<String, String> sessionRoom = new ConcurrentHashMap<>();
+    // roomCode -> 함께 듣기 음악 큐 상태
+    private final Map<String, MusicState> roomMusic = new ConcurrentHashMap<>();
+
+    /** 방별 음악 큐 + 현재 재생곡 */
+    static class MusicState {
+        final Deque<Map<String, String>> queue = new ConcurrentLinkedDeque<>(); // {videoId, addedBy}
+        volatile Map<String, Object> nowPlaying; // {videoId, addedBy, startedAt}
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -69,6 +80,9 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "join" -> handleJoin(session, node);
                 case "offer", "answer", "ice" -> relay(session, node);
                 case "start" -> handleStart(session);
+                case "music-add" -> handleMusicAdd(session, node);
+                case "music-ended" -> handleMusicEnded(session, node);
+                case "music-skip" -> handleMusicSkip(session);
                 case "leave" -> cleanup(session);
                 default -> log.debug("unknown message type: {}", type);
             }
@@ -89,18 +103,30 @@ public class SignalingHandler extends TextWebSocketHandler {
             return;
         }
 
+        // 비밀번호 방이면 검증
+        if (meta.getPassword() != null && !meta.getPassword().isBlank()) {
+            String provided = node.path("password").asText("");
+            if (!meta.getPassword().equals(provided)) {
+                send(session, Map.of("type", "error", "message", "비밀번호가 틀렸어요 🔒"));
+                return;
+            }
+        }
+
         // 나를 추가하기 전의 기존 참가자 목록 (이들에게 내가 offer를 건다)
         List<Map<String, String>> existingPeers = presence.peers(roomCode);
 
         presence.add(roomCode, session.getId(), name);
         sessionRoom.put(session.getId(), roomCode);
 
-        send(session, Map.of(
-                "type", "joined",
-                "selfId", session.getId(),
-                "peers", existingPeers,
-                "meta", metaOf(meta)
-        ));
+        MusicState ms = roomMusic.get(roomCode);
+        Map<String, Object> joined = new HashMap<>();
+        joined.put("type", "joined");
+        joined.put("selfId", session.getId());
+        joined.put("peers", existingPeers);
+        joined.put("meta", metaOf(meta));
+        joined.put("nowPlaying", ms == null ? null : ms.nowPlaying);
+        joined.put("queue", ms == null ? List.of() : new ArrayList<>(ms.queue));
+        send(session, joined);
 
         broadcast(roomCode, session.getId(), Map.of(
                 "type", "peer-join",
@@ -131,6 +157,75 @@ public class SignalingHandler extends TextWebSocketHandler {
         log.info("takeoff room={}", roomCode);
     }
 
+    // ── 함께 듣기(음악 큐) ──
+
+    private void handleMusicAdd(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        String videoId = node.path("videoId").asText("");
+        if (!videoId.matches("[A-Za-z0-9_-]{11}")) return; // 유효한 유튜브 ID만
+        String addedBy = node.path("addedBy").asText("게스트");
+
+        MusicState ms = roomMusic.computeIfAbsent(roomCode, k -> new MusicState());
+        synchronized (ms) {
+            if (ms.nowPlaying == null) {
+                ms.nowPlaying = nowPlaying(videoId, addedBy);
+            } else {
+                ms.queue.addLast(Map.of("videoId", videoId, "addedBy", addedBy));
+            }
+        }
+        broadcastMusic(roomCode);
+        log.info("music-add room={} videoId={} by={}", roomCode, videoId, addedBy);
+    }
+
+    private void handleMusicEnded(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        String videoId = node.path("videoId").asText("");
+        MusicState ms = roomMusic.get(roomCode);
+        if (ms == null) return;
+        synchronized (ms) {
+            // 현재 곡이 끝났을 때만 다음 곡으로 (중복 ended 방어)
+            if (ms.nowPlaying != null && videoId.equals(ms.nowPlaying.get("videoId"))) {
+                advance(ms);
+            }
+        }
+        broadcastMusic(roomCode);
+    }
+
+    private void handleMusicSkip(WebSocketSession session) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        MusicState ms = roomMusic.get(roomCode);
+        if (ms == null) return;
+        synchronized (ms) {
+            advance(ms);
+        }
+        broadcastMusic(roomCode);
+    }
+
+    private void advance(MusicState ms) {
+        Map<String, String> next = ms.queue.pollFirst();
+        ms.nowPlaying = (next == null) ? null : nowPlaying(next.get("videoId"), next.get("addedBy"));
+    }
+
+    private Map<String, Object> nowPlaying(String videoId, String addedBy) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("videoId", videoId);
+        m.put("addedBy", addedBy);
+        m.put("startedAt", System.currentTimeMillis());
+        return m;
+    }
+
+    private void broadcastMusic(String roomCode) {
+        MusicState ms = roomMusic.get(roomCode);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "music-state");
+        payload.put("nowPlaying", ms == null ? null : ms.nowPlaying);
+        payload.put("queue", ms == null ? List.of() : new ArrayList<>(ms.queue));
+        broadcastAll(roomCode, payload);
+    }
+
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         cleanup(session);
@@ -145,6 +240,7 @@ public class SignalingHandler extends TextWebSocketHandler {
         broadcastAll(roomCode, Map.of("type", "peer-leave", "id", session.getId()));
 
         if (remaining == 0) {
+            roomMusic.remove(roomCode);
             try {
                 roomService.deleteIfExists(roomCode);
                 log.info("room {} emptied → removed", roomCode);

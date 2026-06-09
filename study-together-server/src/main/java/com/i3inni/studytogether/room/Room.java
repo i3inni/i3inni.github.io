@@ -43,6 +43,10 @@ public class Room {
     @Column(nullable = false)
     private int durationMinutes;
 
+    /** 방 비밀번호. 설정되면 입장 시 일치해야 함 (null = 공개방, 비번 없음) */
+    @Column(length = 30)
+    private String password;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 12)
     private RoomStatus status;

@@ -28,4 +28,8 @@ public class CreateRoomRequest {
     @Min(1)
     @Max(600)
     private int durationMinutes;
+
+    /** 방 비밀번호 (선택). 입력 시 입장하려면 이 비번을 맞춰야 함 */
+    @Size(max = 30)
+    private String password;
 }
