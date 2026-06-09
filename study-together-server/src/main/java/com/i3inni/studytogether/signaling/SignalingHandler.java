@@ -83,6 +83,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "music-add" -> handleMusicAdd(session, node);
                 case "music-ended" -> handleMusicEnded(session, node);
                 case "music-skip" -> handleMusicSkip(session);
+                case "chat" -> handleChat(session, node);
                 case "ping" -> send(session, Map.of("type", "pong")); // keepalive
                 case "leave" -> cleanup(session);
                 default -> log.debug("unknown message type: {}", type);
@@ -156,6 +157,18 @@ public class SignalingHandler extends TextWebSocketHandler {
         Room updated = roomService.start(roomCode);
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("takeoff room={}", roomCode);
+    }
+
+    // ── 채팅 ──
+
+    private void handleChat(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        String text = node.path("text").asText("").trim();
+        if (text.isEmpty()) return;
+        if (text.length() > 500) text = text.substring(0, 500);
+        String name = node.path("name").asText("게스트");
+        broadcastAll(roomCode, Map.of("type", "chat", "name", name, "text", text));
     }
 
     // ── 함께 듣기(음악 큐) ──

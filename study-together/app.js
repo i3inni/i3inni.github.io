@@ -316,6 +316,9 @@
       case "music-state":
         applyMusic(msg.nowPlaying, msg.queue);
         break;
+      case "chat":
+        appendChat(msg.name, msg.text);
+        break;
       case "peer-join":
         // 새 사람이 들어옴 → 그가 나에게 offer 할 것. 이름만 기록.
         peerNames[msg.id] = msg.name;
@@ -624,6 +627,7 @@
     Object.values(tileEls).forEach((t) => t.root.remove());
     for (const k in tileEls) delete tileEls[k];
     grid.innerHTML = "";
+    $("chat-log").innerHTML = "";
 
     roomView.classList.add("hidden");
     lobbyView.classList.remove("hidden");
@@ -640,6 +644,31 @@
     btn.classList.toggle("dark:bg-red-900/40", !camOn);
     btn.classList.toggle("text-red-600", !camOn);
     renderTiles();
+  }
+
+  // ════════════════ 채팅 ════════════════
+  function sendChat() {
+    const input = $("chat-input");
+    const text = input.value.trim();
+    if (!text) return;
+    wsSend({ type: "chat", name: myName, text }); // 서버가 전원에 브로드캐스트(나 포함)
+    input.value = "";
+  }
+
+  function appendChat(name, text) {
+    const log = $("chat-log");
+    const isMe = name === myName;
+    const row = document.createElement("div");
+    row.className = (isMe ? "self-end text-right" : "self-start") + " max-w-[80%]";
+    row.innerHTML =
+      (isMe
+        ? ""
+        : `<p class="text-[11px] text-light-subtext dark:text-dark-subtext mb-0.5 px-1">${escapeHtml(name)}</p>`) +
+      `<span class="inline-block px-3 py-1.5 rounded-2xl text-sm break-words whitespace-pre-wrap ${
+        isMe ? "bg-primary text-white" : "bg-light-bg dark:bg-dark-bg"
+      }">${escapeHtml(text)}</span>`;
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
   }
 
   // ════════════════ 함께 듣기 (유튜브 큐) ════════════════
@@ -779,6 +808,10 @@
   });
   $("music-skip").onclick = () => skipSong();
   $("music-mute").onclick = () => toggleMusicMute();
+  $("chat-send").onclick = () => sendChat();
+  $("chat-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendChat();
+  });
   $("leave-btn").onclick = () => {
     if (confirm("방에서 나갈까요?")) leaveRoom();
   };
