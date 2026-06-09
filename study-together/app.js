@@ -481,16 +481,28 @@
     return { root, video, label, badge, empty };
   }
 
+  const VIDEO_PAGE_SIZE = 6;
+  let videoPage = 0;
+  let videoTotalPages = 1;
+
   function renderTiles() {
     const ids = participantIds();
+    videoTotalPages = Math.max(1, Math.ceil(ids.length / VIDEO_PAGE_SIZE));
+    videoPage = Math.min(Math.max(0, videoPage), videoTotalPages - 1);
+    const visible = ids.slice(
+      videoPage * VIDEO_PAGE_SIZE,
+      videoPage * VIDEO_PAGE_SIZE + VIDEO_PAGE_SIZE
+    );
+
+    // 현재 페이지에 없는 타일은 DOM에서 제거 (연결/스트림은 유지)
     Object.keys(tileEls).forEach((id) => {
-      if (!ids.includes(id)) {
+      if (!visible.includes(id)) {
         tileEls[id].root.remove();
         delete tileEls[id];
       }
     });
     const hostName = meta ? meta.hostName : null;
-    ids.forEach((id) => {
+    visible.forEach((id) => {
       let tile = tileEls[id];
       if (!tile) {
         tile = createTile();
@@ -516,6 +528,17 @@
       }
     });
     $("people-count").textContent = ids.length;
+
+    // 페이지네이션 표시 (6명 초과 시)
+    const pager = $("video-pager");
+    if (videoTotalPages > 1) {
+      pager.classList.remove("hidden");
+      pager.classList.add("flex");
+      $("vp-label").textContent = `${videoPage + 1} / ${videoTotalPages}`;
+    } else {
+      pager.classList.add("hidden");
+      pager.classList.remove("flex");
+    }
   }
 
   function applyMeta() {
@@ -614,6 +637,7 @@
     meta = null;
     joinPassword = "";
     camOn = true;
+    videoPage = 0;
     currentVideoId = null;
     pendingMusic = null;
     try {
@@ -696,7 +720,9 @@
   function toggleMusicMute() {
     musicMuted = !musicMuted;
     applyMusicMute();
-    $("music-mute").textContent = musicMuted ? "🔇 내 소리 꺼짐" : "🔊 내 소리 켜짐";
+    const b = $("music-mute");
+    b.textContent = musicMuted ? "🔇" : "🔊";
+    b.title = musicMuted ? "내 소리 꺼짐" : "내 소리 켜짐";
   }
   function applyMusicMute() {
     if (!ytReady) return;
@@ -801,6 +827,18 @@
     if (e.key === "Enter") joinRoom($("join-code").value);
   });
   $("refresh-rooms").onclick = () => refreshLobby();
+  $("vp-prev").onclick = () => {
+    if (videoPage > 0) {
+      videoPage--;
+      renderTiles();
+    }
+  };
+  $("vp-next").onclick = () => {
+    if (videoPage < videoTotalPages - 1) {
+      videoPage++;
+      renderTiles();
+    }
+  };
   $("cam-toggle").onclick = () => toggleCamera();
   $("music-add").onclick = () => addSong();
   $("music-url").addEventListener("keydown", (e) => {

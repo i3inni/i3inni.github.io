@@ -71,11 +71,11 @@
   </head>
 
   <body
-    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300 min-h-screen"
+    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans transition-colors duration-300 min-h-screen lg:h-screen lg:overflow-hidden lg:flex lg:flex-col"
   >
     <!-- ═══ 헤더 ═══ -->
     <header
-      class="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
+      class="sticky top-0 z-40 lg:shrink-0 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700"
     >
       <nav
         class="w-full px-4 sm:px-8 h-16 flex items-center justify-between"
@@ -101,7 +101,7 @@
       </nav>
     </header>
 
-    <main class="w-full px-4 sm:px-8 py-8">
+    <main class="w-full px-4 sm:px-8 py-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
       <!-- ════════════════ 로비 뷰 (가운데 정렬 유지) ════════════════ -->
       <section id="lobby-view" class="max-w-5xl mx-auto">
         <div class="text-center mb-8">
@@ -224,145 +224,111 @@
       </section>
 
       <!-- ════════════════ 방(비행) 뷰 ════════════════ -->
-      <section id="room-view" class="hidden">
-       <div class="lg:flex lg:gap-5 lg:items-start">
+      <section id="room-view" class="hidden lg:h-full">
+       <div class="lg:h-full flex flex-col lg:flex-row gap-4 lg:min-h-0">
         <!-- 왼쪽: 비행 / 영상 / 음악 -->
-        <div class="lg:flex-1 min-w-0">
-        <!-- 비행 헤더 -->
-        <div
-          class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5 mb-5"
-        >
-          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-            <div class="min-w-0">
-              <h2 id="room-title" class="text-xl font-bold font-poppins break-keep"></h2>
-              <p class="text-sm text-light-subtext dark:text-dark-subtext">
-                <span id="room-from"></span>
-                <span class="mx-1">→</span>
-                <span id="room-to"></span>
-              </p>
-            </div>
-            <div class="text-right">
-              <div id="room-status"
-                class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                대기 중
+        <div class="lg:flex-1 min-w-0 flex flex-col gap-3 lg:min-h-0">
+
+          <!-- 비행 헤더 (컴팩트) -->
+          <div class="shrink-0 bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <h2 id="room-title" class="text-lg font-bold font-poppins break-keep truncate"></h2>
+                <p class="text-xs text-light-subtext dark:text-dark-subtext truncate">
+                  <span id="room-from"></span><span class="mx-1">→</span><span id="room-to"></span>
+                  · 방코드 <code id="room-code" class="font-mono text-primary font-semibold"></code>
+                </p>
               </div>
-              <div id="room-timer" class="text-3xl font-bold font-poppins tabular-nums mt-1">
-                --:--
+              <div class="flex items-center gap-3 shrink-0">
+                <div id="room-status"
+                  class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">대기 중</div>
+                <div id="room-timer" class="text-2xl font-bold font-poppins tabular-nums">--:--</div>
               </div>
             </div>
-          </div>
-
-          <!-- 비행 트랙 -->
-          <div class="flight-track">
-            <span class="flight-dot start">🛫</span>
-            <div class="flight-line">
-              <div id="flight-progress" class="flight-progress"></div>
-              <span id="flight-plane" class="flight-plane">✈️</span>
+            <!-- 비행 트랙 -->
+            <div class="flight-track mt-2">
+              <span class="flight-dot start">🛫</span>
+              <div class="flight-line">
+                <div id="flight-progress" class="flight-progress"></div>
+                <span id="flight-plane" class="flight-plane">✈️</span>
+              </div>
+              <span class="flight-dot end">🛬</span>
             </div>
-            <span class="flight-dot end">🛬</span>
-          </div>
-
-          <!-- 컨트롤 -->
-          <div class="flex items-center justify-between flex-wrap gap-3 mt-5">
-            <div class="flex items-center gap-2 text-sm">
-              <span class="text-light-subtext dark:text-dark-subtext">방 코드</span>
-              <code id="room-code" class="px-2 py-1 rounded bg-light-bg dark:bg-dark-bg font-mono text-primary font-semibold tracking-wider"></code>
-              <button id="copy-code" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">코드 복사</button>
-              <button id="copy-link" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">초대 링크 복사</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="takeoff-btn"
-                class="hidden px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold text-sm transition">
-                🛫 이륙 (공부 시작)
-              </button>
-              <button id="cam-toggle"
-                class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 font-semibold text-sm hover:opacity-80 transition">
-                📷 카메라 끄기
-              </button>
-              <button id="leave-btn"
-                class="px-5 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition">
-                나가기
-              </button>
+            <!-- 컨트롤 -->
+            <div class="flex items-center justify-between gap-2 mt-2 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <button id="copy-code" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">코드 복사</button>
+                <button id="copy-link" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">초대 링크</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="takeoff-btn"
+                  class="hidden px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold text-sm transition">🛫 이륙</button>
+                <button id="cam-toggle"
+                  class="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-700 font-semibold text-sm hover:opacity-80 transition">📷 카메라 끄기</button>
+                <button id="leave-btn"
+                  class="px-4 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition">나가기</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 참여자 카메라 그리드 -->
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-bold">탑승객 <span id="people-count" class="text-primary">1</span>명</h3>
-          <span class="text-xs text-light-subtext dark:text-dark-subtext">🎤 마이크 OFF · 🔇 스피커 OFF · 📷 카메라만 ON</span>
-        </div>
-        <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-
-        <!-- ═══ 함께 듣기 (유튜브 큐) — 이륙 후 표시 ═══ -->
-        <div id="music-panel"
-          class="hidden mt-6 bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <h3 class="font-bold flex items-center gap-2">
-              🎶 함께 듣기
-              <span class="text-xs font-normal text-light-subtext dark:text-dark-subtext">유튜브 링크로 신청 → 순서대로 재생</span>
-            </h3>
-            <button id="music-mute"
-              class="text-xs px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 font-semibold hover:opacity-80 transition">
-              🔊 내 소리 켜짐
-            </button>
-          </div>
-
-          <div class="flex gap-2 mb-4">
-            <input id="music-url" type="text" placeholder="유튜브 링크 또는 영상 ID 붙여넣기"
-              class="flex-1 px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
-            <button id="music-add"
-              class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition">신청</button>
-          </div>
-
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <p class="text-xs font-semibold text-light-subtext dark:text-dark-subtext mb-1">지금 재생 중 🎧</p>
-              <div class="flex items-center gap-3 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700">
-                <img id="yt-thumb" class="w-16 h-16 object-cover rounded-lg flex-shrink-0 bg-black" alt="" />
-                <div class="min-w-0 flex-1">
-                  <p id="yt-title" class="text-sm font-semibold truncate">재생 중인 곡이 없어요</p>
-                  <p id="yt-by" class="text-xs text-light-subtext dark:text-dark-subtext truncate"></p>
-                  <div class="flex items-center gap-2 mt-1.5">
-                    <span id="yt-eq" class="eq"><i></i><i></i><i></i><i></i></span>
-                    <button id="music-skip"
-                      class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition">⏭ 다음 곡</button>
-                  </div>
+          <!-- 영상 영역 (남는 공간 채움) -->
+          <div class="lg:flex-1 lg:min-h-0 flex flex-col">
+            <div class="flex items-center justify-between mb-2 shrink-0">
+              <h3 class="font-bold text-sm">탑승객 <span id="people-count" class="text-primary">1</span>명</h3>
+              <div class="flex items-center gap-2">
+                <span class="hidden sm:inline text-xs text-light-subtext dark:text-dark-subtext">🎤 OFF · 🔇 OFF · 📷 ON</span>
+                <div id="video-pager" class="hidden items-center gap-1 text-xs">
+                  <button id="vp-prev" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80">◀</button>
+                  <span id="vp-label" class="tabular-nums">1 / 1</span>
+                  <button id="vp-next" class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80">▶</button>
                 </div>
               </div>
-              <!-- 실제 재생용(소리만) — 화면엔 숨김 -->
-              <div aria-hidden="true"
-                style="position:absolute; left:-9999px; top:0; width:320px; height:180px; overflow:hidden; pointer-events:none;">
-                <div id="yt-player"></div>
+            </div>
+            <div id="video-grid"
+              class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 lg:flex-1 lg:min-h-0 lg:auto-rows-fr"></div>
+          </div>
+
+          <!-- ═══ 함께 듣기 (컴팩트 바) — 이륙 후 표시 ═══ -->
+          <div id="music-panel"
+            class="hidden shrink-0 bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 px-3 py-2.5">
+            <div class="flex items-center gap-2.5">
+              <img id="yt-thumb" class="w-10 h-10 object-cover rounded-md shrink-0 bg-black" alt="" />
+              <div class="min-w-0 flex-1">
+                <p id="yt-title" class="text-sm font-semibold truncate leading-tight">재생 중인 곡이 없어요</p>
+                <p id="yt-by" class="text-[11px] text-light-subtext dark:text-dark-subtext truncate leading-tight"></p>
+              </div>
+              <span id="yt-eq" class="eq shrink-0"><i></i><i></i><i></i><i></i></span>
+              <button id="music-skip" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition shrink-0" title="다음 곡">⏭</button>
+              <button id="music-mute" class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 font-semibold hover:opacity-80 transition shrink-0" title="내 소리 켜짐">🔊</button>
+              <span class="hidden md:inline text-xs text-light-subtext dark:text-dark-subtext shrink-0">대기 <span id="queue-count" class="text-primary font-semibold">0</span></span>
+              <div class="flex gap-1.5 shrink-0">
+                <input id="music-url" type="text" placeholder="유튜브 링크"
+                  class="w-28 lg:w-44 px-2.5 py-1.5 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
+                <button id="music-add" class="px-3 py-1.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition">신청</button>
               </div>
             </div>
-            <div>
-              <p class="text-xs font-semibold text-light-subtext dark:text-dark-subtext mb-1">
-                대기열 <span id="queue-count" class="text-primary">0</span>곡
-              </p>
-              <div id="music-queue" class="space-y-2 max-h-52 overflow-y-auto">
-                <p class="text-sm text-light-subtext dark:text-dark-subtext">대기열이 비어있어요.</p>
-              </div>
+            <!-- 실제 재생용(소리만) — 화면엔 숨김 -->
+            <div aria-hidden="true" style="position:absolute; left:-9999px; top:0; width:320px; height:180px; overflow:hidden; pointer-events:none;">
+              <div id="yt-player"></div>
             </div>
+            <div id="music-queue" class="hidden"></div>
           </div>
         </div>
-        </div><!-- /왼쪽 열 -->
 
-        <!-- 오른쪽: 채팅 사이드바 -->
-        <aside class="lg:w-80 xl:w-96 lg:flex-shrink-0 mt-6 lg:mt-0 lg:sticky lg:top-20">
-          <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-            <h3 class="font-bold mb-3 flex items-center gap-2">💬 채팅</h3>
-            <div id="chat-log"
-              class="h-[55vh] lg:h-[62vh] overflow-y-auto space-y-1.5 mb-3 px-1 flex flex-col"></div>
-            <div class="flex gap-2">
+        <!-- 오른쪽: 채팅 (풀 높이) -->
+        <aside class="lg:w-80 xl:w-96 lg:shrink-0 h-[45vh] lg:h-full flex flex-col lg:min-h-0">
+          <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col flex-1 min-h-0">
+            <h3 class="font-bold mb-2 flex items-center gap-2 shrink-0">💬 채팅</h3>
+            <div id="chat-log" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 mb-2 px-1 flex flex-col"></div>
+            <div class="flex gap-2 shrink-0">
               <input id="chat-input" type="text" maxlength="500" placeholder="메시지 입력…"
                 class="flex-1 min-w-0 px-3 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-sm" />
               <button id="chat-send"
-                class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition flex-shrink-0">전송</button>
+                class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition shrink-0">전송</button>
             </div>
           </div>
         </aside>
-       </div><!-- /2열 래퍼 -->
+       </div>
       </section>
     </main>
 
