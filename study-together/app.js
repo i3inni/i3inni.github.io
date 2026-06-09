@@ -24,6 +24,15 @@
     if (RAILWAY_API) return RAILWAY_API.replace(/\/+$/, "");
     return "http://localhost:8080";
   }
+  // 브라우저별 고정 ID (중복 입장 방지용 — 같은 브라우저의 다른 탭과 동일)
+  function clientId() {
+    let id = localStorage.getItem("sf_client");
+    if (!id) {
+      id = (crypto.randomUUID && crypto.randomUUID()) || "c" + Date.now() + Math.random().toString(36).slice(2);
+      localStorage.setItem("sf_client", id);
+    }
+    return id;
+  }
   function wsUrl() {
     const base = apiBase();
     const ws = base.replace(/^http/, "ws"); // http→ws, https→wss
@@ -185,14 +194,19 @@
   }
 
   function startLobbyPolling() {
-    refreshLobby(); // 즉시 1회(콜드스타트 대비)
+    refreshLobby(); // 즉시 1회 = "새로고침" 동작
     connectLobbyWs(); // 실시간 푸시
-    setTimeout(() => { if (!inRoom) refreshLobby(); }, 1500);
+    // 콜드스타트/첫 호출 누락 대비 여러 번 확실히 재시도
+    [300, 1500, 4000].forEach((d) =>
+      setTimeout(() => {
+        if (!inRoom) refreshLobby();
+      }, d)
+    );
     if (lobbyInt) clearInterval(lobbyInt);
     // WS가 끊겨있을 때만 폴백 폴링
     lobbyInt = setInterval(() => {
       if (!lobbyWs || lobbyWs.readyState !== WebSocket.OPEN) refreshLobby();
-    }, 8000);
+    }, 6000);
   }
 
   function stopLobbyPolling() {
@@ -293,7 +307,7 @@
     ws = new WebSocket(wsUrl());
     ws.onopen = () => {
       reconnectAttempts = 0;
-      wsSend({ type: "join", roomCode, name: myName, password: joinPassword || "" });
+      wsSend({ type: "join", roomCode, name: myName, password: joinPassword || "", clientId: clientId() });
       // 유휴 연결이 프록시에 끊기지 않도록 주기적 핑
       clearInterval(pingInt);
       pingInt = setInterval(() => wsSend({ type: "ping" }), 25000);
@@ -385,8 +399,9 @@
         applyMeta();
         break;
       case "error":
+        inRoom = false; // 에러로 종료 → 자동 재접속 막기(강제 퇴장 핑퐁 방지)
         toast(msg.message || "오류가 발생했어요");
-        setTimeout(() => leaveRoom(), 1000);
+        setTimeout(() => leaveRoom(), 1200);
         break;
     }
   }
@@ -819,13 +834,18 @@
     } catch {}
   }
 
+  const titleCache = {}; // videoId -> 곡 제목 (noembed로 조회)
+  let lastMusic = null;
+
   function applyMusic(nowPlaying, playlist, shuffle) {
+    lastMusic = { nowPlaying, playlist: playlist || [], shuffle };
     renderPlaylist(playlist || [], nowPlaying, shuffle);
     if (!ytReady) {
       pendingMusic = { nowPlaying, playlist, shuffle };
       return;
     }
     if (nowPlaying && nowPlaying.videoId) {
+      $("yt-by").textContent = nowPlaying.addedBy ? `${nowPlaying.addedBy}님 신청` : "";
       if (nowPlaying.videoId !== currentVideoId) {
         currentVideoId = nowPlaying.videoId;
         const elapsed = Math.max(0, (Date.now() - (nowPlaying.startedAt || Date.now())) / 1000);
@@ -836,8 +856,9 @@
         // 영상은 숨기고 음악 카드(썸네일+제목)만 표시
         $("yt-thumb").src = `https://img.youtube.com/vi/${currentVideoId}/hqdefault.jpg`;
         $("yt-eq").classList.add("show");
-        updateNowTitle(nowPlaying.addedBy);
       }
+      getTitle(currentVideoId);
+      refreshNowTitle();
     } else {
       currentVideoId = null;
       try {
@@ -850,16 +871,39 @@
     }
   }
 
-  function updateNowTitle(addedBy) {
-    $("yt-by").textContent = addedBy ? `${addedBy}님 신청` : "";
-    setTimeout(() => {
-      let t = "♪ 재생 중";
+  // 유튜브 제목 조회 (noembed — CORS 허용) + 캐시. 로드되면 목록/재생중 갱신.
+  function getTitle(videoId) {
+    if (!videoId) return "";
+    if (videoId in titleCache) return titleCache[videoId];
+    titleCache[videoId] = ""; // 조회 중 표시(중복 요청 방지)
+    fetch("https://noembed.com/embed?url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + videoId))
+      .then((r) => r.json())
+      .then((d) => {
+        titleCache[videoId] = d && d.title ? d.title : "";
+        onTitleLoaded();
+      })
+      .catch(() => {});
+    return "";
+  }
+
+  function onTitleLoaded() {
+    if (lastMusic) renderPlaylist(lastMusic.playlist, lastMusic.nowPlaying, lastMusic.shuffle);
+    refreshNowTitle();
+  }
+
+  function refreshNowTitle() {
+    if (!currentVideoId) {
+      $("yt-title").textContent = "재생 중인 곡이 없어요";
+      return;
+    }
+    let t = titleCache[currentVideoId];
+    if (!t) {
       try {
         const d = ytPlayer.getVideoData();
         if (d && d.title) t = d.title;
       } catch {}
-      $("yt-title").textContent = t;
-    }, 900);
+    }
+    $("yt-title").textContent = t || "재생 중";
   }
 
   function renderPlaylist(playlist, nowPlaying, shuffle) {
@@ -883,13 +927,14 @@
     box.innerHTML = "";
     playlist.forEach((it) => {
       const isCur = it.videoId === curId;
+      const title = getTitle(it.videoId);
       const row = document.createElement("div");
       row.className = "flex items-center gap-2 p-1 rounded-lg " + (isCur ? "bg-primary/10" : "");
       row.innerHTML = `
         <img src="https://img.youtube.com/vi/${it.videoId}/default.jpg" class="w-10 h-7 object-cover rounded flex-shrink-0" alt="" />
         <span class="text-xs flex-1 truncate ${isCur ? "text-primary font-semibold" : ""}">${
           isCur ? "▶ " : ""
-        }🎵 ${escapeHtml(it.addedBy || "게스트")} 님</span>`;
+        }${title ? escapeHtml(title) : "🎵"} <span class="font-normal text-light-subtext dark:text-dark-subtext">· ${escapeHtml(it.addedBy || "게스트")} 님</span></span>`;
       const del = document.createElement("button");
       del.className =
         "text-xs text-light-subtext dark:text-dark-subtext hover:text-red-500 px-1 shrink-0";
@@ -920,6 +965,8 @@
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.ENDED && currentVideoId) {
             wsSend({ type: "music-ended", videoId: currentVideoId });
+          } else if (e.data === YT.PlayerState.PLAYING) {
+            refreshNowTitle(); // 재생 시작 시 플레이어 제목으로도 보정
           }
         },
       },
@@ -927,6 +974,7 @@
   };
 
   // ════════════════ 이벤트 ════════════════
+  try {
   $("create-btn").onclick = () => createRoom();
   $("join-btn").onclick = () => joinRoom($("join-code").value);
   $("join-code").addEventListener("keydown", (e) => {
@@ -1005,6 +1053,10 @@
       if (localStream) localStream.getTracks().forEach((t) => t.stop());
     } catch {}
   });
+  } catch (e) {
+    console.warn("[같이공부 init] 일부 초기화 실패:", e);
+  }
 
+  // 바인딩 에러와 무관하게 로비는 반드시 로드
   startLobbyPolling();
 })();
