@@ -139,6 +139,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "music-shuffle" -> handleMusicShuffle(session);
                 case "music-remove" -> handleMusicRemove(session, node);
                 case "chat" -> handleChat(session, node);
+                case "ding" -> handleDing(session, node);
                 case "ping" -> send(session, Map.of("type", "pong")); // keepalive
                 case "leave" -> cleanup(session);
                 default -> log.debug("unknown message type: {}", type);
@@ -243,6 +244,15 @@ public class SignalingHandler extends TextWebSocketHandler {
         if (text.length() > 500) text = text.substring(0, 500);
         String name = clamp(node.path("name").asText("게스트"), 20);
         broadcastAll(roomCode, Map.of("type", "chat", "name", name, "text", text));
+    }
+
+    // ── 띵동(주목 알림) ──
+    private void handleDing(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        if (!rateLimiter.allow("ding:" + session.getId(), 3, 10_000L)) return; // 도배 방지
+        String name = clamp(node.path("name").asText("게스트"), 20);
+        broadcast(roomCode, session.getId(), Map.of("type", "ding", "name", name)); // 나 제외 전원
     }
 
     // ── 함께 듣기 (플레이리스트: 곡 수 무제한, 셔플, 무한 루프) ──

@@ -425,6 +425,10 @@
       case "chat":
         appendChat(msg.name, msg.text);
         break;
+      case "ding":
+        toast(`🔔 ${msg.name}님이 띵동! 채팅 확인해보세요`);
+        playDing();
+        break;
       case "peer-join":
         // 새 사람이 들어옴 → 그가 나에게 offer 할 것. 이름만 기록.
         peerNames[msg.id] = msg.name;
@@ -865,6 +869,35 @@
     input.value = "";
   }
 
+  // ── 띵동(주목 알림) ──
+  let audioCtx = null;
+  function playDing() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      [[880, 0], [660, 0.18]].forEach(([freq, t]) => {
+        // 딩~동
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, now + t);
+        g.gain.exponentialRampToValueAtTime(0.3, now + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.35);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(now + t);
+        o.stop(now + t + 0.36);
+      });
+    } catch {}
+  }
+  function sendDing() {
+    if (!inRoom) return;
+    wsSend({ type: "ding", name: myName });
+    toast("🔔 띵동! 모두에게 알렸어요");
+    playDing();
+  }
+
   function appendChat(name, text) {
     const log = $("chat-log");
     const isMe = name === myName;
@@ -1090,6 +1123,7 @@
     }
   });
   on("cam-toggle", "click", () => toggleCamera());
+  on("ding-btn", "click", () => sendDing());
   on("music-add", "click", () => addSong());
   on("music-url", "keydown", enterKey(() => addSong()));
   on("music-skip", "click", () => skipSong());
