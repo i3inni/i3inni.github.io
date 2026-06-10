@@ -985,77 +985,82 @@
     });
   };
 
-  // ════════════════ 이벤트 ════════════════
-  try {
-  $("create-btn").onclick = () => createRoom();
-  $("join-btn").onclick = () => joinRoom($("join-code").value);
-  $("join-code").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229)
-      joinRoom($("join-code").value);
-  });
-  $("refresh-rooms").onclick = () => refreshLobby();
-  $("vp-prev").onclick = () => {
+  // ════════════════ 이벤트 (요소 없으면 건너뜀 — null-safe) ════════════════
+  const on = (id, ev, fn) => {
+    const el = $(id);
+    if (el) el.addEventListener(ev, fn);
+  };
+  const enterKey = (fn) => (e) => {
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) fn();
+  };
+
+  on("create-btn", "click", () => createRoom());
+  on("join-btn", "click", () => joinRoom($("join-code") && $("join-code").value));
+  on("join-code", "keydown", enterKey(() => joinRoom($("join-code").value)));
+  on("refresh-rooms", "click", () => refreshLobby());
+  on("vp-prev", "click", () => {
     if (videoPage > 0) {
       videoPage--;
       renderTiles();
     }
-  };
-  $("vp-next").onclick = () => {
+  });
+  on("vp-next", "click", () => {
     if (videoPage < videoTotalPages - 1) {
       videoPage++;
       renderTiles();
     }
-  };
-  $("cam-toggle").onclick = () => toggleCamera();
-  $("music-add").onclick = () => addSong();
-  $("music-url").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) addSong();
   });
-  $("music-skip").onclick = () => skipSong();
-  $("music-mute").onclick = () => toggleMusicMute();
-  $("music-shuffle").onclick = () => toggleShuffle();
-  $("chat-send").onclick = () => sendChat();
-  $("chat-input").addEventListener("keydown", (e) => {
-    // 한글 IME 조합 중 Enter는 무시 (끝글자 중복 전송 방지)
-    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) sendChat();
-  });
-  $("leave-btn").onclick = () => {
+  on("cam-toggle", "click", () => toggleCamera());
+  on("music-add", "click", () => addSong());
+  on("music-url", "keydown", enterKey(() => addSong()));
+  on("music-skip", "click", () => skipSong());
+  on("music-mute", "click", () => toggleMusicMute());
+  on("music-shuffle", "click", () => toggleShuffle());
+  on("chat-send", "click", () => sendChat());
+  on("chat-input", "keydown", enterKey(() => sendChat()));
+  on("leave-btn", "click", () => {
     if (confirm("방에서 나갈까요?")) leaveRoom();
-  };
-  $("takeoff-btn").onclick = () => {
+  });
+  on("takeoff-btn", "click", () => {
     if (!isHost) return;
     wsSend({ type: "start" });
     toast("🛫 이륙! 지금부터 집중 시작");
-  };
-  $("copy-code").onclick = () => {
+  });
+  on("copy-code", "click", () => {
     navigator.clipboard?.writeText(roomCode);
     toast("방 코드를 복사했어요");
-  };
-  $("copy-link").onclick = () => {
+  });
+  on("copy-link", "click", () => {
     const link = `${location.origin}${location.pathname}?room=${roomCode}`;
     navigator.clipboard?.writeText(link);
     toast("초대 링크를 복사했어요");
-  };
-  $("theme-toggle").onclick = () => {
+  });
+  on("theme-toggle", "click", () => {
     const dark = document.documentElement.classList.toggle("dark");
     localStorage.theme = dark ? "dark" : "light";
-  };
-  $("save-server").onclick = () => {
-    const v = $("server-url").value.trim();
+  });
+  on("save-server", "click", () => {
+    const el = $("server-url");
+    const v = el ? el.value.trim() : "";
     if (v) {
       localStorage.setItem("sf_api", v);
       toast("백엔드 주소를 저장했어요");
       refreshLobby();
     }
-  };
+  });
 
   // ── 초기화 ──
-  $("server-url").value = apiBase();
+  const _serverUrlEl = $("server-url");
+  if (_serverUrlEl) _serverUrlEl.value = apiBase();
   const params = new URLSearchParams(location.search);
   const invited = params.get("room");
   if (invited) {
-    $("join-code").value = invited.toUpperCase();
-    setTimeout(() => $("nickname").focus(), 100);
+    const _jc = $("join-code");
+    if (_jc) _jc.value = invited.toUpperCase();
+    setTimeout(() => {
+      const n = $("nickname");
+      if (n) n.focus();
+    }, 100);
     toast("초대받은 방이에요! 닉네임 입력 후 입장하세요");
   }
 
@@ -1065,10 +1070,6 @@
       if (localStream) localStream.getTracks().forEach((t) => t.stop());
     } catch {}
   });
-  } catch (e) {
-    console.warn("[같이공부 init] 일부 초기화 실패:", e);
-  }
 
-  // 바인딩 에러와 무관하게 로비는 반드시 로드
   startLobbyPolling();
 })();
