@@ -73,6 +73,30 @@
   let inRoom = false;
   let joinPassword = "";
 
+  // 같은 브라우저 다른 탭이 이미 방에 있는지 감지 (중복 입장 방지를 깔끔하게)
+  let bc = null;
+  try {
+    bc = new BroadcastChannel("sf_tabs");
+    bc.onmessage = (e) => {
+      if (e.data === "in-room?" && inRoom) bc.postMessage("in-room!");
+    };
+  } catch {}
+  function anotherTabInRoom() {
+    return new Promise((resolve) => {
+      if (!bc) return resolve(false);
+      let found = false;
+      const h = (e) => {
+        if (e.data === "in-room!") found = true;
+      };
+      bc.addEventListener("message", h);
+      bc.postMessage("in-room?");
+      setTimeout(() => {
+        bc.removeEventListener("message", h);
+        resolve(found);
+      }, 200);
+    });
+  }
+
   // 카메라 / 음악
   let camOn = true;
   let musicMuted = false; // 개인별 음소거 (로컬)
@@ -222,6 +246,8 @@
   async function createRoom() {
     myName = $("nickname").value.trim();
     if (!myName) return toast("닉네임을 입력해주세요");
+    if (await anotherTabInRoom())
+      return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
 
     const body = {
       title: $("r-title").value.trim() || "같이 공부 비행",
@@ -262,6 +288,8 @@
     if (!myName) return toast("닉네임을 입력해주세요");
     code = (code || "").trim().toUpperCase();
     if (!code) return toast("방 코드를 입력해주세요");
+    if (await anotherTabInRoom())
+      return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
 
     // 방 정보 확인 (잠김 여부)
     let info = null;
