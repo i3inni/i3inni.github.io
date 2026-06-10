@@ -172,22 +172,12 @@ public class SignalingHandler extends TextWebSocketHandler {
         presence.add(roomCode, session.getId(), name);
         sessionRoom.put(session.getId(), roomCode);
 
-        // 같은 브라우저(clientId)가 이 방에 이미 있으면 이전 탭/세션을 강제 퇴장
+        // clientId 추적만(중복 입장은 클라이언트 탭 감지로 막음).
+        // 서버에서 강제로 끊으면 사용자가 튕기므로 강제 퇴장은 하지 않는다.
         String clientId = node.path("clientId").asText("");
         if (!clientId.isBlank()) {
-            String key = roomCode + "|" + clientId;
-            String prevSid = clientKeyToSession.put(key, session.getId());
-            sessionClientKey.put(session.getId(), key);
-            if (prevSid != null && !prevSid.equals(session.getId())) {
-                WebSocketSession old = sessions.get(prevSid);
-                if (old != null) {
-                    send(old, Map.of("type", "error", "message", "다른 탭/기기에서 입장해서 이 창은 나갑니다."));
-                    try {
-                        old.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
+            clientKeyToSession.put(roomCode + "|" + clientId, session.getId());
+            sessionClientKey.put(session.getId(), roomCode + "|" + clientId);
         }
 
         // 첫 입장자(보통 방장)를 방장 세션으로 지정

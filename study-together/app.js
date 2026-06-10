@@ -71,6 +71,7 @@
   let selfId = null;
   let localStream = null;
   let inRoom = false;
+  let busy = false; // 입장/생성 처리 중 (중복 클릭 방지 — 멱등성)
   let joinPassword = "";
 
   // 같은 브라우저 다른 탭이 이미 방에 있는지 감지 (중복 입장 방지를 깔끔하게)
@@ -244,77 +245,89 @@
 
   // ════════════════ 방 생성 (방장) ════════════════
   async function createRoom() {
+    if (busy || inRoom) return; // 멱등성: 여러 번 눌러도 1번만
     myName = $("nickname").value.trim();
     if (!myName) return toast("닉네임을 입력해주세요");
-    if (await anotherTabInRoom())
-      return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
-
-    const body = {
-      title: $("r-title").value.trim() || "같이 공부 비행",
-      hostName: myName,
-      departure: $("r-from").value.trim() || "출발지",
-      destination: $("r-to").value.trim() || "목적지",
-      durationMinutes: Math.min(600, Math.max(1, parseInt($("r-duration").value || "50", 10))),
-      password: $("r-password").value.trim(),
-    };
-
-    // 카메라 시도 (거부/없어도 입장은 진행 — 카메라 꺼진 채)
-    if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
-
-    let created;
+    busy = true;
     try {
-      const res = await fetch(apiBase() + "/api/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error("create failed");
-      created = await res.json();
-    } catch (e) {
-      if (localStream) localStream.getTracks().forEach((t) => t.stop());
-      return toast("방 생성 실패 — 백엔드 주소를 확인해주세요");
-    }
+      if (await anotherTabInRoom())
+        return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
 
-    isHost = true;
-    roomCode = created.code;
-    meta = created;
-    joinPassword = body.password || ""; // 방장은 자기가 정한 비번으로 입장
-    connectWs();
+      const body = {
+        title: $("r-title").value.trim() || "같이 공부 비행",
+        hostName: myName,
+        departure: $("r-from").value.trim() || "출발지",
+        destination: $("r-to").value.trim() || "목적지",
+        durationMinutes: Math.min(600, Math.max(1, parseInt($("r-duration").value || "50", 10))),
+        password: $("r-password").value.trim(),
+      };
+
+      // 카메라 시도 (거부/없어도 입장은 진행 — 카메라 꺼진 채)
+      if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
+
+      let created;
+      try {
+        const res = await fetch(apiBase() + "/api/rooms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error("create failed");
+        created = await res.json();
+      } catch (e) {
+        if (localStream) localStream.getTracks().forEach((t) => t.stop());
+        return toast("방 생성 실패 — 백엔드 주소를 확인해주세요");
+      }
+
+      isHost = true;
+      roomCode = created.code;
+      meta = created;
+      joinPassword = body.password || ""; // 방장은 자기가 정한 비번으로 입장
+      connectWs();
+    } finally {
+      busy = false;
+    }
   }
 
   // ════════════════ 방 입장 (참가자) ════════════════
   async function joinRoom(code) {
+    if (busy || inRoom) return; // 멱등성: 여러 번 눌러도 1번만
     myName = $("nickname").value.trim();
     if (!myName) return toast("닉네임을 입력해주세요");
     code = (code || "").trim().toUpperCase();
     if (!code) return toast("방 코드를 입력해주세요");
-    if (await anotherTabInRoom())
-      return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
-
-    // 방 정보 확인 (잠김 여부)
-    let info = null;
+    busy = true;
     try {
-      const res = await fetch(apiBase() + "/api/rooms/" + code);
-      if (res.ok) info = await res.json();
-    } catch {}
-    if (info === null) {
-      // 상세 조회 실패해도 진행은 시도 (서버가 최종 판단)
-    } else if (!info) {
-      return toast("방을 찾을 수 없어요");
-    }
+      if (await anotherTabInRoom())
+        return toast("이미 다른 탭/창에서 같이 공부에 들어가 있어요. 그 창을 쓰거나 닫아주세요.");
 
-    let password = "";
-    if (info && info.locked) {
-      password = prompt("🔒 비밀번호를 입력하세요");
-      if (password === null) return; // 취소
-    }
+      // 방 정보 확인 (잠김 여부)
+      let info = null;
+      try {
+        const res = await fetch(apiBase() + "/api/rooms/" + code);
+        if (res.ok) info = await res.json();
+      } catch {}
+      if (info === null) {
+        // 상세 조회 실패해도 진행은 시도 (서버가 최종 판단)
+      } else if (!info) {
+        return toast("방을 찾을 수 없어요");
+      }
 
-    if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
-    isHost = false;
-    roomCode = code;
-    joinPassword = password;
-    meta = { code, title: "입장 중…", departure: "", destination: "", durationMinutes: 0, status: "WAITING", startedAt: null };
-    connectWs();
+      let password = "";
+      if (info && info.locked) {
+        password = prompt("🔒 비밀번호를 입력하세요");
+        if (password === null) return; // 취소
+      }
+
+      if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
+      isHost = false;
+      roomCode = code;
+      joinPassword = password;
+      meta = { code, title: "입장 중…", departure: "", destination: "", durationMinutes: 0, status: "WAITING", startedAt: null };
+      connectWs();
+    } finally {
+      busy = false;
+    }
   }
 
   // ════════════════ WebSocket 시그널링 ════════════════
@@ -363,11 +376,7 @@
   function scheduleReconnect() {
     if (!inRoom) return;
     reconnectAttempts++;
-    if (reconnectAttempts > 40) {
-      // ~3분 이상 실패 시에만 포기
-      toast("서버에 연결할 수 없어요. 잠시 후 다시 들어와주세요.");
-      return leaveRoom();
-    }
+    // 자동으로 로비로 튕기지 않음 — 끊겨도 계속 재접속(나가기는 사용자가 직접)
     if (reconnectAttempts === 1) toast("연결이 끊겨 재접속 중…");
     // 재접속 시 새 세션 → 기존 피어 정리
     Object.values(pcs).forEach((pc) => {
