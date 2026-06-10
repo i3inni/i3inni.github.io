@@ -426,6 +426,7 @@
         appendChat(msg.name, msg.text);
         break;
       case "ding":
+        if (dingMuted) break; // 이 참여자가 띵동 알림을 끔
         toast(`🔔 ${msg.name}님이 띵동! 채팅 확인해보세요`);
         playDing();
         break;
@@ -754,6 +755,7 @@
     roomView.classList.remove("hidden");
     $("room-code").textContent = roomCode;
     updateCamBtn();
+    updateDingMuteBtn();
     applyMeta();
     renderTiles();
     if (timerInt) clearInterval(timerInt);
@@ -896,6 +898,24 @@
     wsSend({ type: "ding", name: myName });
     toast("🔔 띵동! 모두에게 알렸어요");
     playDing();
+  }
+
+  // 개인별 띵동 알림 받기 ON/OFF (로컬 저장)
+  let dingMuted = localStorage.getItem("sf_ding_muted") === "1";
+  function updateDingMuteBtn() {
+    const b = $("ding-mute");
+    if (!b) return;
+    b.textContent = dingMuted ? "🔕" : "🔔";
+    b.title = dingMuted ? "띵동 알림 꺼짐 (클릭해 켜기)" : "띵동 알림 켜짐 (클릭해 끄기)";
+    b.classList.toggle("bg-red-100", dingMuted);
+    b.classList.toggle("dark:bg-red-900/40", dingMuted);
+    b.classList.toggle("text-red-600", dingMuted);
+  }
+  function toggleDingMute() {
+    dingMuted = !dingMuted;
+    localStorage.setItem("sf_ding_muted", dingMuted ? "1" : "0");
+    updateDingMuteBtn();
+    toast(dingMuted ? "🔕 띵동 알림을 껐어요" : "🔔 띵동 알림을 켰어요");
   }
 
   function appendChat(name, text) {
@@ -1124,6 +1144,7 @@
   });
   on("cam-toggle", "click", () => toggleCamera());
   on("ding-btn", "click", () => sendDing());
+  on("ding-mute", "click", () => toggleDingMute());
   on("music-add", "click", () => addSong());
   on("music-url", "keydown", enterKey(() => addSong()));
   on("music-skip", "click", () => skipSong());
