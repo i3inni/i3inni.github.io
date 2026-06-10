@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WebRTC 시그널링 + 방 presence 중계.
@@ -65,6 +68,8 @@ public class SignalingHandler extends TextWebSocketHandler {
     private final Map<String, String> sessionClientKey = new ConcurrentHashMap<>();
     // 방별 현재 방장 세션
     private final Map<String, String> roomHost = new ConcurrentHashMap<>();
+    // 빈 방 지연 삭제용 (새로고침 유예)
+    private final ScheduledExecutorService roomCleaner = Executors.newSingleThreadScheduledExecutor();
     // roomCode -> 함께 듣기 플레이리스트 상태
     private final Map<String, MusicState> roomMusic = new ConcurrentHashMap<>();
 
@@ -396,15 +401,22 @@ public class SignalingHandler extends TextWebSocketHandler {
         }
 
         if (remaining == 0) {
-            roomMusic.remove(roomCode);
-            roomHost.remove(roomCode);
-            try {
-                roomService.deleteIfExists(roomCode);
-                log.info("room {} emptied → removed", roomCode);
-            } catch (Exception ignored) {
-            }
+            // 새로고침 등으로 잠깐 빈 경우 대비 — 45초 후에도 비어있으면 삭제
+            final String rc = roomCode;
+            roomCleaner.schedule(() -> {
+                if (presence.count(rc) == 0) {
+                    roomMusic.remove(rc);
+                    roomHost.remove(rc);
+                    try {
+                        roomService.deleteIfExists(rc);
+                        log.info("room {} stayed empty → removed", rc);
+                    } catch (Exception ignored) {
+                    }
+                    lobbyHub.publish();
+                }
+            }, 45, TimeUnit.SECONDS);
         }
-        lobbyHub.publish(); // 퇴장/방 삭제 → 로비 갱신
+        lobbyHub.publish(); // 퇴장 → 로비 갱신
     }
 
     // ── helpers ──

@@ -702,8 +702,49 @@
   }
 
   // ════════════════ 화면 전환 ════════════════
+  // ── 세션 유지 (새로고침 시 같은 방 자동 재입장) ──
+  const SESSION_KEY = "sf_session";
+  function saveSession() {
+    try {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ roomCode, name: myName, password: joinPassword || "" })
+      );
+    } catch {}
+  }
+  function clearSession() {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+  }
+  async function rejoinSaved() {
+    let s = null;
+    try {
+      s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+    } catch {}
+    if (!s || !s.roomCode || !s.name) {
+      startLobbyPolling();
+      return;
+    }
+    if (await anotherTabInRoom()) {
+      clearSession();
+      startLobbyPolling();
+      return;
+    }
+    myName = s.name;
+    const n = $("nickname");
+    if (n) n.value = s.name;
+    if (!(await getMedia())) toast("카메라 없이 다시 입장해요 📷");
+    isHost = false;
+    roomCode = s.roomCode;
+    joinPassword = s.password || "";
+    meta = { code: s.roomCode, title: "다시 입장 중…", departure: "", destination: "", durationMinutes: 0, status: "WAITING", startedAt: null };
+    connectWs();
+  }
+
   function enterRoom() {
     inRoom = true;
+    saveSession();
     stopLobbyPolling();
     lobbyView.classList.add("hidden");
     roomView.classList.remove("hidden");
@@ -718,6 +759,7 @@
 
   function leaveRoom() {
     inRoom = false;
+    clearSession(); // 직접 나가면 세션 지움(새로고침 재입장 안 함)
     reconnectAttempts = 0;
     if (timerInt) clearInterval(timerInt);
     timerInt = null;
@@ -1108,5 +1150,10 @@
     } catch {}
   });
 
-  startLobbyPolling();
+  // 새로고침 시 저장된 방이 있으면 자동 재입장, 없으면 로비
+  if (sessionStorage.getItem(SESSION_KEY)) {
+    rejoinSaved();
+  } else {
+    startLobbyPolling();
+  }
 })();
