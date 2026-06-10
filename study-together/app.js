@@ -331,15 +331,17 @@
     };
   }
 
-  // 끊기면 같은 방으로 자동 재접속 (재접속 시 새 세션 → 피어 다시 연결)
+  // 끊기면 같은 방으로 끈질기게 재접속 (서버 재배포 2~3분도 버티도록)
   function scheduleReconnect() {
     if (!inRoom) return;
-    if (reconnectAttempts >= 6) {
-      toast("서버 연결이 끊겼어요");
+    reconnectAttempts++;
+    if (reconnectAttempts > 40) {
+      // ~3분 이상 실패 시에만 포기
+      toast("서버에 연결할 수 없어요. 잠시 후 다시 들어와주세요.");
       return leaveRoom();
     }
-    reconnectAttempts++;
-    toast(`연결이 잠깐 끊겼어요 — 재접속 ${reconnectAttempts}…`);
+    if (reconnectAttempts === 1) toast("연결이 끊겨 재접속 중…");
+    // 재접속 시 새 세션 → 기존 피어 정리
     Object.values(pcs).forEach((pc) => {
       try {
         pc.close();
@@ -350,9 +352,10 @@
     for (const k in peerNames) delete peerNames[k];
     for (const k in pendingIce) delete pendingIce[k];
     renderTiles();
+    const delay = Math.min(1000 + reconnectAttempts * 400, 5000); // 백오프(최대 5s)
     setTimeout(() => {
       if (inRoom) openWs();
-    }, 1500);
+    }, delay);
   }
 
   function handleSignal(msg) {
