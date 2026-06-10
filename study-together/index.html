@@ -226,7 +226,7 @@
       <section id="room-view" class="hidden lg:h-full">
        <div class="lg:h-full flex flex-col lg:flex-row gap-4 lg:min-h-0">
         <!-- 왼쪽: 비행 / 영상 / 음악 -->
-        <div class="lg:flex-1 min-w-0 flex flex-col gap-3 lg:min-h-0">
+        <div class="lg:flex-1 min-w-0 flex flex-col gap-3 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
 
           <!-- 비행 헤더 (컴팩트) -->
           <div class="shrink-0 bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3">
@@ -289,7 +289,7 @@
 
           <!-- ═══ 함께 듣기 (크게, 대기열 표시) — 이륙 후 ═══ -->
           <div id="music-panel"
-            class="hidden lg:flex-1 lg:min-h-0 flex flex-col bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+            class="hidden shrink-0 flex flex-col bg-light-card dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
             <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
               <h3 class="font-bold flex items-center gap-2 text-sm">
                 🎶 플레이리스트
@@ -327,7 +327,7 @@
               전체 <span id="queue-count" class="text-primary">0</span>곡 · 내 곡 <span id="my-song-count" class="text-primary">0</span>곡
             </p>
             <div id="music-queue"
-              class="lg:flex-1 lg:min-h-0 max-h-40 lg:max-h-none overflow-y-auto space-y-1 pr-1">
+              class="max-h-64 overflow-y-auto space-y-1 pr-1">
               <p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요!</p>
             </div>
 
