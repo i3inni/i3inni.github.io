@@ -103,6 +103,7 @@
   let musicMuted = false; // 개인별 음소거 (로컬)
   let ytPlayer = null;
   let ytReady = false;
+  let ytApiLoading = false;
   let currentVideoId = null;
   let pendingMusic = null; // 플레이어 준비 전 도착한 상태
 
@@ -984,6 +985,7 @@
   function applyMusic(nowPlaying, playlist, shuffle) {
     lastMusic = { nowPlaying, playlist: playlist || [], shuffle };
     renderPlaylist(playlist || [], nowPlaying, shuffle);
+    if (nowPlaying && nowPlaying.videoId) ensureYouTube(); // 음악 있을 때만 유튜브 로드
     if (!ytReady) {
       pendingMusic = { nowPlaying, playlist, shuffle };
       return;
@@ -1030,9 +1032,14 @@
     return "";
   }
 
+  // 제목이 여러 개 동시에 로드돼도 한 번만 다시 그리도록 묶음(디바운스)
+  let titleRenderT = null;
   function onTitleLoaded() {
-    if (lastMusic) renderPlaylist(lastMusic.playlist, lastMusic.nowPlaying, lastMusic.shuffle);
     refreshNowTitle();
+    clearTimeout(titleRenderT);
+    titleRenderT = setTimeout(() => {
+      if (lastMusic) renderPlaylist(lastMusic.playlist, lastMusic.nowPlaying, lastMusic.shuffle);
+    }, 150);
   }
 
   function refreshNowTitle() {
@@ -1088,6 +1095,15 @@
       row.appendChild(del);
       box.appendChild(row);
     });
+  }
+
+  // 유튜브 IFrame API를 처음 음악 재생이 필요할 때만 동적 로드 (성능)
+  function ensureYouTube() {
+    if (ytPlayer || ytReady || ytApiLoading) return;
+    ytApiLoading = true;
+    const s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(s);
   }
 
   // YouTube IFrame API 준비되면 호출됨 (전역 콜백)
