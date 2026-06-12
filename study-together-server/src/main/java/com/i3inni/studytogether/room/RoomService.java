@@ -72,6 +72,16 @@ public class RoomService {
         return room;
     }
 
+    /** 도착 후 새 시간으로 다시 시작 */
+    @Transactional
+    public Room restart(String code, int minutes) {
+        Room room = get(code);
+        room.setDurationMinutes(Math.min(600, Math.max(1, minutes)));
+        room.setStatus(RoomStatus.FLYING);
+        room.setStartedAt(Instant.now());
+        return room;
+    }
+
     @Transactional
     public boolean deleteIfExists(String code) {
         if (repository.existsById(code)) {

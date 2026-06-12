@@ -133,6 +133,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "join" -> handleJoin(session, node);
                 case "offer", "answer", "ice" -> relay(session, node);
                 case "start" -> handleStart(session);
+                case "restart" -> handleRestart(session, node);
                 case "music-add" -> handleMusicAdd(session, node);
                 case "music-ended" -> handleMusicEnded(session, node);
                 case "music-skip" -> handleMusicSkip(session);
@@ -231,6 +232,18 @@ public class SignalingHandler extends TextWebSocketHandler {
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("takeoff room={}", roomCode);
         lobbyHub.publish(); // 상태(비행중) 변경 → 로비 갱신
+    }
+
+    private void handleRestart(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        if (!session.getId().equals(roomHost.get(roomCode))) return; // 방장만
+        int minutes = node.path("durationMinutes").asInt(0);
+        if (minutes < 1) return;
+        Room updated = roomService.restart(roomCode, minutes);
+        broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
+        log.info("restart room={} minutes={}", roomCode, minutes);
+        lobbyHub.publish();
     }
 
     // ── 채팅 ──

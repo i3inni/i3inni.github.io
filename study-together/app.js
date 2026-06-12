@@ -675,8 +675,10 @@
       badge.textContent = "🕒 대기 중";
       badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
     }
-    // 이륙 버튼: 방장 + 대기 중
+    // 이륙 버튼: 방장 + 대기 중 / 다시 시작 버튼: 방장 + 도착
     $("takeoff-btn").classList.toggle("hidden", !(isHost && meta.status === "WAITING"));
+    const rb = $("restart-btn");
+    if (rb) rb.classList.toggle("hidden", !(isHost && meta.status === "FINISHED"));
     // 함께 듣기: 이륙(비행/도착) 후 표시
     $("music-panel").classList.toggle("hidden", meta.status === "WAITING");
     tick();
@@ -1175,6 +1177,16 @@
     if (!isHost) return;
     wsSend({ type: "start" });
     toast("🛫 이륙! 지금부터 집중 시작");
+  });
+  on("restart-btn", "click", () => {
+    if (!isHost) return;
+    const cur = meta && meta.durationMinutes ? meta.durationMinutes : 50;
+    const v = prompt("다시 시작할 공부 시간(분)을 입력하세요", String(cur));
+    if (v === null) return;
+    const m = Math.min(600, Math.max(1, parseInt(v, 10) || 0));
+    if (!m) return toast("올바른 시간(분)을 입력해주세요");
+    wsSend({ type: "restart", durationMinutes: m });
+    toast(`🔄 ${m}분으로 다시 시작!`);
   });
   on("copy-code", "click", () => {
     navigator.clipboard?.writeText(roomCode);
