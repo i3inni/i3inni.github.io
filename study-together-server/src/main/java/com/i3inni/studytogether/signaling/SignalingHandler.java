@@ -135,6 +135,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "start" -> handleStart(session);
                 case "restart" -> handleRestart(session, node);
                 case "music-add" -> handleMusicAdd(session, node);
+                case "music-add-batch" -> handleMusicAddBatch(session, node);
                 case "music-ended" -> handleMusicEnded(session, node);
                 case "music-skip" -> handleMusicSkip(session);
                 case "music-shuffle" -> handleMusicShuffle(session);
@@ -299,6 +300,38 @@ public class SignalingHandler extends TextWebSocketHandler {
         }
         broadcastMusic(roomCode);
         log.info("music-add room={} videoId={} by={}", roomCode, videoId, addedBy);
+    }
+
+    private void handleMusicAddBatch(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        if (!rateLimiter.allow("music-batch:" + session.getId(), 3, 10_000L)) return;
+        JsonNode videoIds = node.path("videoIds");
+        if (!videoIds.isArray() || videoIds.isEmpty()) return;
+
+        String addedBy = clamp(node.path("addedBy").asText("게스트"), 20);
+        MusicState ms = roomMusic.computeIfAbsent(roomCode, k -> new MusicState());
+        int added = 0;
+        synchronized (ms) {
+            boolean wasEmpty = (ms.currentVideoId == null);
+            for (JsonNode idNode : videoIds) {
+                if (ms.playlist.size() >= MAX_PLAYLIST) break;
+                String videoId = idNode.asText("");
+                if (!videoId.matches("[A-Za-z0-9_-]{11}")) continue;
+                ms.playlist.add(Map.of("videoId", videoId, "addedBy", addedBy));
+                added++;
+            }
+            if (added == 0) return;
+            ms.buildOrder();
+            if (wasEmpty) {
+                ms.orderPos = 0;
+                ms.setCurrentFromPos(System.currentTimeMillis());
+            } else {
+                ms.syncPosToCurrent();
+            }
+        }
+        broadcastMusic(roomCode);
+        log.info("music-add-batch room={} count={} by={}", roomCode, added, addedBy);
     }
 
     private void handleMusicEnded(WebSocketSession session, JsonNode node) {

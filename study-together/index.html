@@ -317,6 +317,38 @@
                 class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition shrink-0">신청</button>
             </div>
 
+            <!-- 유튜브 재생목록 일괄 가져오기 -->
+            <details class="mb-2 shrink-0 rounded-xl border border-gray-200 dark:border-gray-700 bg-light-bg dark:bg-dark-bg">
+              <summary class="cursor-pointer select-none px-3 py-2 text-xs font-semibold">
+                재생목록 페이지 내용/소스로 여러 곡 가져오기
+              </summary>
+              <div class="px-3 pb-3 space-y-2">
+                <p class="text-[11px] leading-relaxed text-light-subtext dark:text-dark-subtext">
+                  유튜브 재생목록 페이지에서 Ctrl+A, Ctrl+C한 뒤 아래에 붙여넣거나, Ctrl+U로 연 페이지 소스 전체를 붙여넣으세요.
+                </p>
+                <textarea id="playlist-source" rows="5"
+                  placeholder="여기에 유튜브 재생목록 페이지 내용 또는 페이지 소스를 붙여넣으세요"
+                  class="w-full resize-y px-3 py-2 rounded-lg bg-light-card dark:bg-dark-card border border-gray-300 dark:border-gray-600 focus:border-primary outline-none text-xs"></textarea>
+                <div class="flex items-center gap-2">
+                  <button id="playlist-analyze"
+                    class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-xs font-semibold hover:opacity-80 transition">노래 추출</button>
+                  <span id="playlist-import-status" class="text-[11px] text-light-subtext dark:text-dark-subtext"></span>
+                </div>
+                <div id="playlist-import-results" class="hidden">
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <div class="flex gap-1.5">
+                      <button id="playlist-select-all" class="text-[11px] text-primary hover:underline">전체 선택</button>
+                      <button id="playlist-select-none" class="text-[11px] text-light-subtext dark:text-dark-subtext hover:underline">전체 해제</button>
+                    </div>
+                    <button id="playlist-add-selected"
+                      class="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition">선택 곡 신청</button>
+                  </div>
+                  <div id="playlist-import-list"
+                    class="max-h-56 overflow-y-auto space-y-1 pr-1 border-t border-gray-200 dark:border-gray-700 pt-1.5"></div>
+                </div>
+              </div>
+            </details>
+
             <!-- 지금 재생 중 -->
             <div class="flex items-center gap-2.5 p-2 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700 mb-2 shrink-0">
               <img id="yt-thumb" class="w-11 h-11 object-cover rounded-md shrink-0 bg-black" alt="" />

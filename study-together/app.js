@@ -954,6 +954,126 @@
     $("music-url").value = "";
   }
 
+  let playlistClipboardHtml = "";
+  let importedPlaylistSongs = [];
+
+  function decodeYouTubeText(value) {
+    if (!value) return "";
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = value;
+    const decoded = textarea.value;
+    try {
+      return JSON.parse(`"${decoded.replace(/"/g, '\\"')}"`);
+    } catch {
+      return decoded
+        .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, "\\");
+    }
+  }
+
+  function extractPlaylistSongs(text, clipboardHtml) {
+    const songs = [];
+    const seen = new Set();
+    const add = (videoId, title) => {
+      if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId) || seen.has(videoId)) return;
+      seen.add(videoId);
+      songs.push({ videoId, title: (decodeYouTubeText(title) || "제목을 불러오는 중").trim() });
+    };
+
+    // 일반 페이지 복사 시 클립보드 HTML에 들어 있는 실제 재생목록 링크를 읽는다.
+    if (clipboardHtml) {
+      const doc = new DOMParser().parseFromString(clipboardHtml, "text/html");
+      const anchors = [...doc.querySelectorAll('a[href*="watch"], a[href*="youtu.be/"]')];
+      const playlistAnchors = anchors.filter((a) => /[?&]list=/.test(a.getAttribute("href") || ""));
+      (playlistAnchors.length ? playlistAnchors : anchors).forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        add(parseYouTubeId(href), a.getAttribute("title") || a.getAttribute("aria-label") || a.textContent);
+      });
+    }
+
+    const source = String(text || "");
+
+    // Ctrl+U 페이지 소스의 playlistVideoRenderer 블록에서 ID와 제목을 순서대로 추출한다.
+    const markerPattern = /\\?"playlistVideoRenderer\\?"\s*:/g;
+    let marker;
+    while ((marker = markerPattern.exec(source))) {
+      const chunk = source.slice(marker.index, marker.index + 6000);
+      const idMatch = chunk.match(/\\?"videoId\\?"\s*:\s*\\?"([A-Za-z0-9_-]{11})\\?"/);
+      if (!idMatch) continue;
+      const titleStart = chunk.search(/\\?"title\\?"\s*:/);
+      const titleChunk = titleStart >= 0 ? chunk.slice(titleStart, titleStart + 1800) : chunk;
+      const titleMatch = titleChunk.match(/\\?"text\\?"\s*:\s*\\?"((?:\\.|[^"\\])*)\\?"/);
+      add(idMatch[1], titleMatch ? titleMatch[1] : "");
+    }
+
+    // 직접 붙여넣은 watch/shorts/youtu.be 링크도 함께 지원한다.
+    const urlPattern = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?[^\s"'<>]*?v=|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})[^\s"'<>]*/g;
+    let urlMatch;
+    while ((urlMatch = urlPattern.exec(source))) add(urlMatch[1], "");
+
+    return songs;
+  }
+
+  function renderPlaylistImport(songs) {
+    importedPlaylistSongs = songs;
+    const results = $("playlist-import-results");
+    const list = $("playlist-import-list");
+    const status = $("playlist-import-status");
+    if (!results || !list || !status) return;
+
+    if (!songs.length) {
+      results.classList.add("hidden");
+      list.innerHTML = "";
+      status.textContent = "영상 링크를 찾지 못했어요. Ctrl+U 페이지 소스를 붙여넣으면 가장 정확해요.";
+      return;
+    }
+
+    results.classList.remove("hidden");
+    status.textContent = `${songs.length}곡을 찾았어요`;
+    list.innerHTML = "";
+    songs.forEach((song, index) => {
+      if (song.title && song.title !== "제목을 불러오는 중") titleCache[song.videoId] = song.title;
+      const row = document.createElement("label");
+      row.className = "flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/60 cursor-pointer";
+      row.innerHTML = `
+        <input type="checkbox" class="playlist-import-check accent-primary shrink-0" data-index="${index}" checked />
+        <img src="https://img.youtube.com/vi/${song.videoId}/default.jpg" class="w-12 h-9 object-cover rounded shrink-0" alt="" />
+        <span class="playlist-import-title min-w-0 text-xs truncate" data-video-id="${song.videoId}">${escapeHtml(song.title)}</span>`;
+      list.appendChild(row);
+      if (song.title === "제목을 불러오는 중") {
+        getTitle(song.videoId);
+      }
+    });
+  }
+
+  function analyzePlaylistSource() {
+    const input = $("playlist-source");
+    const songs = extractPlaylistSongs(input ? input.value : "", playlistClipboardHtml);
+    renderPlaylistImport(songs);
+  }
+
+  function setImportedPlaylistSelection(checked) {
+    document.querySelectorAll(".playlist-import-check").forEach((el) => {
+      el.checked = checked;
+    });
+  }
+
+  function addSelectedPlaylistSongs() {
+    const selected = [...document.querySelectorAll(".playlist-import-check:checked")]
+      .map((el) => importedPlaylistSongs[Number(el.dataset.index)])
+      .filter(Boolean);
+    if (!selected.length) return toast("신청할 곡을 선택해주세요");
+
+    const currentCount = lastMusic && lastMusic.playlist ? lastMusic.playlist.length : 0;
+    const available = Math.max(0, 300 - currentCount);
+    if (!available) return toast("플레이리스트가 가득 찼어요");
+    const songs = selected.slice(0, available);
+    wsSend({ type: "music-add-batch", videoIds: songs.map((song) => song.videoId), addedBy: myName });
+    toast(`${songs.length}곡을 신청했어요`);
+    if (songs.length < selected.length) toast(`남은 자리만큼 ${songs.length}곡을 신청했어요`);
+  }
+
   function removeSong(videoId) {
     wsSend({ type: "music-remove", videoId });
   }
@@ -1038,6 +1158,10 @@
   let titleRenderT = null;
   function onTitleLoaded() {
     refreshNowTitle();
+    document.querySelectorAll(".playlist-import-title").forEach((el) => {
+      const title = titleCache[el.dataset.videoId];
+      if (title) el.textContent = title;
+    });
     clearTimeout(titleRenderT);
     titleRenderT = setTimeout(() => {
       if (lastMusic) renderPlaylist(lastMusic.playlist, lastMusic.nowPlaying, lastMusic.shuffle);
@@ -1165,6 +1289,13 @@
   on("ding-mute", "click", () => toggleDingMute());
   on("music-add", "click", () => addSong());
   on("music-url", "keydown", enterKey(() => addSong()));
+  on("playlist-source", "paste", (e) => {
+    playlistClipboardHtml = e.clipboardData ? e.clipboardData.getData("text/html") : "";
+  });
+  on("playlist-analyze", "click", () => analyzePlaylistSource());
+  on("playlist-select-all", "click", () => setImportedPlaylistSelection(true));
+  on("playlist-select-none", "click", () => setImportedPlaylistSelection(false));
+  on("playlist-add-selected", "click", () => addSelectedPlaylistSongs());
   on("music-skip", "click", () => skipSong());
   on("music-mute", "click", () => toggleMusicMute());
   on("music-shuffle", "click", () => toggleShuffle());
