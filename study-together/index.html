@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   ════════════════════════════════════════════════════════════════
-  같이 공부 (Study Flight) — 프론트엔드 · "Night Departure" 테마
+  같이 공부 (Study Flight) — 프론트엔드 · "Modern Airport Signage & Wayfinding"
   백엔드(study-together-server, Spring Boot) + 네이티브 WebRTC 화상
   외부 의존: tailwind CDN, YouTube IFrame API, Google Fonts
 
@@ -12,7 +12,7 @@
     4) Render 서비스 · Neon 프로젝트 삭제
   ════════════════════════════════════════════════════════════════
 -->
-<html lang="ko" class="dark scroll-smooth">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,7 +21,7 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 디자인 토큰: 색은 style.css의 CSS 변수(다크/라이트)로, 여기선 이름만 연결 -->
+    <!-- 디자인 토큰: 색은 style.css의 CSS 변수(라이트/다크)로, 여기선 이름만 연결 -->
     <script>
       const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
       tailwind.config = {
@@ -41,40 +41,42 @@
             text: token("text"),
             subtext: token("subtext"),
             muted: token("muted"),
+            primary: token("primary"),
+            "primary-ink": token("primary-ink"),
+            band: token("band"),
             accent: token("accent"),
             "accent-ink": token("accent-ink"),
             "accent-soft": token("accent-soft"),
             ok: token("ok"),
+            "ok-dot": token("ok-dot"),
             "ok-soft": token("ok-soft"),
+            warn: token("warn"),
+            "warn-dot": token("warn-dot"),
+            "warn-soft": token("warn-soft"),
             danger: token("danger"),
             "danger-soft": token("danger-soft"),
             "danger-fg": token("danger-fg"),
-            paper: "#F1EBDD",
-            "paper-ink": "#1A1A1A",
-            "paper-sub": "#5B5548",
-            "paper-line": "#CFC6B3",
           },
           extend: {
             fontFamily: {
-              // 메이플스토리체(Light 1종) — 한글·영문 전부 포함, 로드 전엔 IBM Plex Sans KR
-              sans: ["Maplestory", "IBM Plex Sans KR", "sans-serif"],
-              mono: ["IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", "ui-monospace", "monospace"],
+              sans: ["Inter", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "system-ui", "sans-serif"],
+              mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
             },
           },
         },
       };
     </script>
-    <!-- 다크모드 초기화 (포트폴리오와 같은 localStorage 'theme' 키 공유, 기본값 dark) -->
+    <!-- 테마: 라이트 기본 (localStorage 'theme' 키는 포트폴리오와 공유, 'dark'일 때만 다크) -->
     <script>
-      if (localStorage.theme === "light") document.documentElement.classList.remove("dark");
-      else document.documentElement.classList.add("dark");
+      if (localStorage.theme === "dark") document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
     </script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -82,55 +84,72 @@
   </head>
 
   <body
-    class="bg-bg text-text font-sans transition-colors duration-300 min-h-screen lg:h-screen lg:overflow-hidden lg:flex lg:flex-col"
+    class="bg-bg text-text font-sans min-h-screen lg:h-screen lg:overflow-hidden lg:flex lg:flex-col"
+    data-view="lobby"
   >
-    <!-- ═══ 헤더 ═══ -->
-    <header class="sticky top-0 z-40 lg:shrink-0 bg-bg border-b border-line-soft">
-      <nav class="h-[72px] px-4 sm:px-8 lg:px-14 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <span class="w-9 h-9 shrink-0 rounded-[10px] bg-accent text-accent-ink flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+    <!-- ═══ 헤더 (Concourse TopNav) ═══ -->
+    <header class="sticky top-0 z-40 lg:shrink-0 bg-bg/90 backdrop-blur-md border-b border-line shadow-sm">
+      <nav class="relative max-w-[1280px] mx-auto h-16 px-5 md:px-8 lg:px-14 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4 min-w-0">
+          <a href="#/" class="flex items-center gap-2 min-w-0">
+            <span class="w-8 h-8 shrink-0 rounded-lg bg-primary text-primary-ink flex items-center justify-center shadow-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
+            </span>
+            <span class="flex flex-col leading-none min-w-0">
+              <span class="text-lg font-semibold tracking-tight whitespace-nowrap">같이 공부</span>
+              <span class="caption mt-0.5">CONCOURSE T1</span>
+            </span>
+          </a>
+          <span class="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-ok-dot/10 border border-ok-dot/20 text-ok text-[11px] font-semibold tracking-wider">
+            <span class="w-1.5 h-1.5 rounded-full bg-ok-dot animate-pulse"></span>
+            <span>AIRBORNE <span id="live-pax" class="tabular-nums">0</span> PAX</span>
           </span>
-          <h1 class="flex items-baseline gap-2.5 min-w-0">
-            <span class="text-lg font-bold whitespace-nowrap">같이 공부</span>
-            <span class="hidden sm:inline font-mono text-xs tracking-[0.14em] text-subtext truncate">STUDY FLIGHT TERMINAL</span>
-          </h1>
         </div>
-        <div class="flex items-center gap-2">
-          <a href="guide.html"
-            class="h-11 px-4 flex items-center rounded-[10px] text-sm font-medium text-text/80 hover:bg-card transition">사용법</a>
-          <button id="theme-toggle" class="btn-icon" title="테마 전환" aria-label="테마 전환">
-            <svg class="hidden dark:block" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-            <svg class="dark:hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <!-- 페이지 메뉴 (데스크톱) -->
+        <div class="lobby-only hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="#/" data-route="home" class="nav-link">홈</a>
+          <a href="#/departures" data-route="departures" class="nav-link">출발 안내</a>
+          <a href="#/checkin" data-route="checkin" class="nav-link">셀프 체크인</a>
+          <a href="#/log" data-route="log" class="nav-link">탑승 기록</a>
+          <a href="guide.html" class="nav-link">사용법</a>
+        </div>
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- 탑승객 (닉네임 · 카메라) -->
+          <button id="pax-btn" class="lobby-only h-9 pl-1.5 pr-3 rounded-lg border border-line bg-card hover:bg-card-2 flex items-center gap-2 transition-colors max-w-[180px]" aria-haspopup="dialog" aria-expanded="false" aria-controls="pax-panel">
+            <span class="w-6 h-6 shrink-0 rounded bg-band text-white flex items-center justify-center text-[9px] font-bold tracking-wider">PAX</span>
+            <span class="pax-name text-[13px] font-semibold truncate">이름 입력</span>
           </button>
+          <button id="theme-toggle" class="btn-icon" title="테마 전환" aria-label="테마 전환">
+            <svg class="dark:hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <svg class="hidden dark:block" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </button>
+          <a href="#/checkin" class="lobby-only hidden lg:inline-flex btn-primary h-9 px-3.5 text-xs">
+            탑승권 발권
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </a>
         </div>
-      </nav>
-    </header>
 
-    <main class="w-full lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
-      <!-- ════════════════ 로비 뷰 (터미널) ════════════════ -->
-      <section id="lobby-view" class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-14 pt-8 lg:pt-12 pb-10 lg:pb-14 flex flex-col gap-9">
-        <!-- 히어로 + 닉네임 -->
-        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
-          <div class="flex flex-col gap-3.5">
-            <span class="font-mono text-[13px] tracking-[0.18em] text-accent">GATE 07 · BOARDING NOW</span>
-            <h2 class="text-[34px] sm:text-[44px] lg:text-[52px] leading-[1.15] font-bold tracking-[-0.02em] break-keep">
-              오늘은 어디로<br />같이 날아갈까요?
-            </h2>
-            <p class="text-base leading-relaxed text-subtext max-w-[560px] break-keep">
-              방을 만들어 친구를 태우고, 방만의 플레이리스트를 틀고, 정해진 비행 시간 동안 카메라만 켠 채 함께 집중해요.
-            </p>
+        <!-- 탑승객 패널 (닉네임 · 탑승할 때 카메라) -->
+        <div id="pax-panel" role="dialog" aria-label="탑승객 정보" class="hidden absolute right-3 sm:right-5 md:right-8 lg:right-14 top-[60px] w-[calc(100%-24px)] sm:w-[360px] card overflow-hidden z-50" style="box-shadow: 0 20px 40px -12px rgba(15,23,42,.18), 0 0 0 1px rgba(15,23,42,.06)">
+          <div class="bg-band text-white px-5 py-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center font-bold text-[10px] tracking-wider">PAX</span>
+              <div class="flex flex-col">
+                <span class="text-[11px] font-semibold tracking-wider text-white/60">BOARDING IDENTITY</span>
+                <span class="font-semibold">탑승객 정보</span>
+              </div>
+            </div>
+            <button id="pax-close" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center" aria-label="닫기">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
           </div>
-          <div class="w-full lg:w-[380px] shrink-0 rounded-[14px] bg-card border border-line">
-            <label class="px-5 pt-4 pb-3 flex flex-col gap-2">
-              <span class="font-mono text-[11px] tracking-[0.16em] text-subtext">PASSENGER NAME · 내 닉네임</span>
-              <input id="nickname" type="text" maxlength="12" placeholder="예) 닉네임"
-                class="h-8 p-0 bg-transparent border-0 outline-none text-[22px] font-bold text-text" />
+          <div class="p-5 flex flex-col gap-4">
+            <label class="field-label">
+              <span class="caption">Passenger Name · 닉네임</span>
+              <input id="nickname" type="text" maxlength="12" placeholder="예) 닉네임" class="field h-12 text-lg font-semibold" />
             </label>
-            <!-- 탑승할 때 카메라 켜고/끄고 (방 만들기·코드 탑승·목록 탑승 공통, 이 브라우저에 기억) -->
-            <div class="mx-5 border-t border-line-soft"></div>
-            <div class="pl-5 pr-3 py-1 flex items-center justify-between gap-3">
-              <span id="cam-pref-label" class="flex items-center gap-2 text-sm text-text/80">
+            <div class="flex items-center justify-between gap-3 pt-3 border-t border-line">
+              <span id="cam-pref-label" class="flex items-center gap-2 text-sm text-subtext">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.2 3.1a.5.5 0 0 0 .8-.4V8.3a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
                 탑승할 때 카메라
               </span>
@@ -139,169 +158,393 @@
                 <span class="cam-switch-track"><i></i></span>
               </button>
             </div>
+            <p class="text-[13px] text-muted">이 브라우저에 기억해요. 마이크와 스피커는 항상 꺼져 있어요.</p>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="w-full lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+      <!-- ════════════════ 로비 (Concourse) ════════════════ -->
+      <section id="lobby-view" class="max-w-[1280px] mx-auto px-5 md:px-8 lg:px-14 pt-6 pb-10 lg:pt-8 flex flex-col gap-10">
+        <!-- 안내 방송 바 (PA) — 모든 로비 페이지 공통 -->
+        <div class="card px-3 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0 text-[13px]">
+            <span class="shrink-0 px-1.5 py-0.5 rounded bg-band text-white text-[11px] font-semibold tracking-wider">INFO</span>
+            <p id="pa-text" class="truncate text-text">안내 방송을 불러오는 중…</p>
+          </div>
+          <div class="shrink-0 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted tabular-nums">
+            <span class="w-1.5 h-1.5 rounded-full bg-ok-dot"></span>
+            <span>UTC+9 <span id="pa-clock">--:--:--</span> KST</span>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-7 items-start">
-          <!-- 왼쪽 열 -->
-          <div class="flex flex-col gap-7 min-w-0">
-            <!-- 출발 안내판 = 열려있는 방 -->
-            <section class="rounded-[18px] bg-board border border-line-soft overflow-hidden">
-              <div class="min-h-16 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 border-b border-line-soft">
-                <div class="flex items-baseline gap-x-3 gap-y-1 flex-wrap min-w-0">
-                  <h3 class="text-lg font-bold">출발 안내</h3>
-                  <span class="font-mono text-xs tracking-[0.16em] text-subtext">DEPARTURES · 열려있는 방 <span id="room-count">0</span></span>
-                </div>
-                <button id="refresh-rooms" class="btn-ghost shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-                  새로고침
-                </button>
-              </div>
-              <div class="board-head px-6 py-3 font-mono text-[11px] tracking-[0.14em] text-muted">
-                <span>FLIGHT</span><span>ROUTE</span><span>ROOM</span><span>TIME</span><span>PAX</span><span>STATUS</span>
-              </div>
-              <div id="room-list" class="max-h-[420px] overflow-y-auto">
-                <p class="px-6 py-8 text-sm text-subtext text-center">불러오는 중…</p>
-              </div>
-            </section>
+        <!-- 모바일 페이지 메뉴 -->
+        <div class="md:hidden seg w-full -mt-4" role="tablist" aria-label="페이지">
+          <a href="#/" data-route="home" class="seg-btn flex-1 !px-2">홈</a>
+          <a href="#/departures" data-route="departures" class="seg-btn flex-1 !px-2">출발 안내</a>
+          <a href="#/checkin" data-route="checkin" class="seg-btn flex-1 !px-2">체크인</a>
+          <a href="#/log" data-route="log" class="seg-btn flex-1 !px-2">기록</a>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-7">
-              <!-- 코드로 탑승 -->
-              <section class="p-6 rounded-[18px] bg-card border border-line flex flex-col gap-4">
-                <div class="flex flex-col gap-1">
-                  <h3 class="text-lg font-bold">코드로 탑승</h3>
-                  <p class="text-sm text-subtext">친구가 보낸 편명이나 초대 링크로 들어와요.</p>
-                </div>
-                <div class="flex gap-2.5">
-                  <label class="flex-1 min-w-0 flex">
-                    <span class="sr-only">방 코드</span>
-                    <input id="join-code" type="text" placeholder="KR7Q2A"
-                      class="flex-1 min-w-0 h-[52px] px-4 rounded-[10px] border border-line bg-bg text-accent font-mono text-xl font-semibold tracking-[0.3em] uppercase outline-none focus:border-accent transition" />
-                  </label>
-                  <button id="join-btn"
-                    class="h-[52px] px-[22px] rounded-[10px] bg-text text-bg text-[15px] font-bold hover:opacity-90 transition">탑승</button>
-                </div>
-              </section>
+        <!-- ═════════ 홈 ═════════ -->
+        <div data-page="home" class="flex flex-col gap-12">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div class="lg:col-span-7 flex flex-col gap-4">
+              <span class="self-start inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-card-2 border border-line text-[11px] font-semibold tracking-wider uppercase">
+                <svg class="text-accent" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+                Flight Discipline · Focused Departure
+              </span>
+              <h1 class="text-[36px] leading-[42px] md:text-[56px] md:leading-[64px] font-semibold tracking-[-0.03em] break-keep">
+                새로운 몰입의 목적지로 떠나는<br />
+                <span class="text-accent">실시간 스터디 비행</span>
+              </h1>
+              <p class="text-[17px] leading-[26px] text-subtext max-w-xl break-keep">
+                공항 터미널처럼 차분하게. 방을 만들어 친구를 태우고, 정해진 비행 시간 동안 카메라만 켠 채 소리 없이 함께 집중해요.
+              </p>
+              <div class="pt-3 flex flex-wrap items-center gap-2">
+                <a href="#/checkin" class="btn-primary h-12 px-6">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                  셀프 체크인 시작하기
+                </a>
+                <a href="#/departures" class="btn-secondary h-12 px-6">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+                  실시간 출발 안내 보기
+                </a>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 text-[11px] font-semibold tracking-wide text-muted">
+                <span class="flex items-center gap-1.5"><svg class="text-ok-dot" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>가입 없이 바로 탑승</span>
+                <span class="flex items-center gap-1.5"><svg class="text-ok-dot" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>마이크·소리 항상 꺼짐</span>
+                <span class="flex items-center gap-1.5"><svg class="text-ok-dot" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>비행 기록 자동 저장</span>
+              </div>
+            </div>
 
-              <!-- 혼자 비행 (싱글 타이머) -->
-              <section class="p-6 rounded-[18px] bg-card border border-line flex flex-col gap-4">
-                <div class="flex justify-between items-start gap-3">
-                  <div class="flex flex-col gap-1">
-                    <h3 class="text-lg font-bold">혼자 비행</h3>
-                    <p class="text-sm text-subtext">방 없이 싱글 타이머로. 기록은 남아요.</p>
+            <!-- 터미널 현황 + 길 안내 -->
+            <div class="lg:col-span-5">
+              <div class="card overflow-hidden">
+                <div class="bg-band text-white px-5 py-4 flex items-center justify-between gap-3">
+                  <div class="flex flex-col">
+                    <span class="text-[11px] font-semibold tracking-wider text-white/60">TERMINAL STATUS · 지금 터미널</span>
+                    <span class="text-lg font-semibold">제1 탑승동 현황</span>
                   </div>
-                  <span class="font-mono text-[11px] tracking-[0.16em] text-muted whitespace-nowrap pt-1">SOLO</span>
+                  <span class="chip chip-ok">LIVE</span>
                 </div>
-                <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-                  <label><span class="sr-only">출발지</span>
-                    <input id="s-from" type="text" maxlength="16" placeholder="서울" class="field w-full" /></label>
-                  <svg class="text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <label><span class="sr-only">목적지</span>
-                    <input id="s-to" type="text" maxlength="16" placeholder="도쿄" class="field w-full" /></label>
+                <div class="grid grid-cols-3 divide-x divide-line border-b border-line">
+                  <div class="p-4"><span class="caption">탑승 중</span><span id="home-boarding" class="block text-[22px] font-bold tabular-nums">0</span><span class="text-[11px] text-muted">편</span></div>
+                  <div class="p-4"><span class="caption">운항 중</span><span id="home-flying" class="block text-[22px] font-bold tabular-nums">0</span><span class="text-[11px] text-muted">편</span></div>
+                  <div class="p-4"><span class="caption">탑승객</span><span id="home-pax" class="block text-[22px] font-bold tabular-nums">0</span><span class="text-[11px] text-muted">명</span></div>
                 </div>
-                <div class="flex gap-2">
-                  <button data-solo-min="25" class="solo-preset">25분</button>
-                  <button data-solo-min="50" class="solo-preset">50분</button>
-                  <button data-solo-min="90" class="solo-preset">90분</button>
-                </div>
-                <div class="flex gap-2">
-                  <label class="h-12 px-3 rounded-[10px] border border-line bg-bg flex items-center gap-1.5 focus-within:border-accent transition">
-                    <span class="sr-only">공부 시간 (분)</span>
-                    <input id="s-duration" type="number" min="1" max="600" value="25"
-                      class="w-12 bg-transparent border-0 outline-none font-mono text-[15px] font-semibold text-text text-right" />
-                    <span class="text-sm text-subtext">분</span>
-                  </label>
-                  <button id="solo-start-btn"
-                    class="flex-1 h-12 px-[18px] rounded-[10px] bg-accent text-accent-ink text-[15px] font-bold flex items-center justify-center gap-1.5 hover:opacity-90 transition">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
-                    이륙
-                  </button>
-                </div>
-              </section>
+                <nav class="flex flex-col divide-y divide-line" aria-label="바로 가기">
+                  <a href="#/departures" class="flex items-center gap-3 px-5 py-3.5 hover:bg-card-2 transition-colors group">
+                    <span class="icon-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg></span>
+                    <span class="flex-1 min-w-0"><span class="block text-sm font-semibold">출발 안내</span><span class="block text-[12px] text-subtext">열려있는 방을 보고 골라 탑승해요</span></span>
+                    <svg class="text-muted group-hover:text-accent transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                  </a>
+                  <a href="#/checkin" class="flex items-center gap-3 px-5 py-3.5 hover:bg-card-2 transition-colors group">
+                    <span class="icon-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></span>
+                    <span class="flex-1 min-w-0"><span class="block text-sm font-semibold">셀프 체크인</span><span class="block text-[12px] text-subtext">방 만들기 · 편명으로 탑승 · 혼자 비행</span></span>
+                    <svg class="text-muted group-hover:text-accent transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                  </a>
+                  <a href="#/log" class="flex items-center gap-3 px-5 py-3.5 hover:bg-card-2 transition-colors group">
+                    <span class="icon-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></span>
+                    <span class="flex-1 min-w-0"><span class="block text-sm font-semibold">탑승 기록</span><span class="block text-[12px] text-subtext">완주·중도 하차와 집중 시간</span></span>
+                    <svg class="text-muted group-hover:text-accent transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                  </a>
+                </nav>
+              </div>
             </div>
           </div>
 
-          <!-- 오른쪽 열 -->
-          <div class="flex flex-col gap-7 min-w-0">
-            <!-- 탑승권 발권 = 방 만들기 -->
-            <section class="relative rounded-[18px] bg-paper text-paper-ink overflow-hidden">
-              <div class="px-[26px] pt-[22px] pb-[18px] flex justify-between items-center gap-3 bg-[#F5B942] text-[#1A1206]">
-                <h3 class="text-[17px] font-bold">탑승권 발권 · 방 만들기</h3>
-                <span class="font-mono text-[11px] font-semibold tracking-[0.16em]">CAPTAIN</span>
+          <!-- 추천 탑승편 -->
+          <section id="featured-wrap" class="hidden flex-col gap-4" aria-label="추천 탑승편">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-2">
+              <div>
+                <div class="eyebrow">Today's Priority Flight</div>
+                <h2 class="text-[26px] leading-8 md:text-[32px] md:leading-[38px] font-semibold tracking-[-0.02em]">지금 탑승 가능한 추천 편</h2>
               </div>
-              <div class="px-[26px] pt-[22px] pb-[26px] flex flex-col gap-[18px]">
-                <div class="grid grid-cols-[minmax(0,1fr)_40px_minmax(0,1fr)] items-end gap-2">
-                  <label class="flex flex-col gap-1">
-                    <span class="pass-label">FROM 출발지</span>
-                    <input id="r-from" type="text" maxlength="16" placeholder="인천" class="pass-big" />
-                  </label>
-                  <span class="h-11 flex items-center justify-center">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
-                  </span>
-                  <label class="flex flex-col gap-1">
-                    <span class="pass-label">TO 목적지</span>
-                    <input id="r-to" type="text" maxlength="16" placeholder="파리" class="pass-big" />
-                  </label>
-                </div>
-                <label class="flex flex-col gap-1.5">
-                  <span class="pass-label">ROOM 방 이름</span>
-                  <input id="r-title" type="text" maxlength="20" placeholder="새벽 집중 비행" class="pass-field" />
-                </label>
-                <div class="grid grid-cols-2 gap-3">
-                  <label class="flex flex-col gap-1.5">
-                    <span class="pass-label">DURATION 분</span>
-                    <input id="r-duration" type="number" min="1" max="600" value="50" class="pass-field font-mono font-semibold" />
-                  </label>
-                  <label class="flex flex-col gap-1.5">
-                    <span class="pass-label">PASSWORD 선택</span>
-                    <input id="r-password" type="text" maxlength="30" placeholder="비우면 공개방" class="pass-field text-sm" />
-                  </label>
-                </div>
-              </div>
-              <!-- 절취선 + 노치 -->
-              <div class="relative">
-                <div class="mx-[26px] border-t-2 border-dashed border-paper-line"></div>
-                <span class="absolute -left-3.5 -top-3.5 w-7 h-7 rounded-full bg-bg"></span>
-                <span class="absolute -right-3.5 -top-3.5 w-7 h-7 rounded-full bg-bg"></span>
-              </div>
-              <div class="px-[26px] pt-5 pb-6 flex items-center justify-between gap-4">
-                <div class="barcode" aria-hidden="true">
-                  <i style="width:3px"></i><i style="width:1px"></i><i style="width:2px"></i><i style="width:4px"></i><i style="width:1px"></i><i style="width:3px"></i><i style="width:1px"></i><i style="width:2px"></i><i style="width:1px"></i><i style="width:4px"></i><i style="width:2px"></i><i style="width:1px"></i><i style="width:3px"></i>
-                </div>
-                <button id="create-btn"
-                  class="h-[52px] px-6 rounded-xl bg-paper-ink text-paper text-[15px] font-bold hover:opacity-90 transition">
-                  발권하고 탑승구로
-                </button>
-              </div>
-            </section>
+              <a href="#/departures" class="text-[13px] font-semibold text-accent hover:underline">전체 출발 안내 보기 →</a>
+            </div>
+            <div id="featured-flight"></div>
+          </section>
 
-            <!-- 내 비행 기록 -->
-            <section class="p-6 rounded-[18px] bg-card border border-line flex flex-col gap-[18px]">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-baseline gap-3">
-                  <h3 class="text-lg font-bold">내 비행 기록</h3>
-                  <span class="font-mono text-[11px] tracking-[0.16em] text-subtext">LOGBOOK</span>
+          <!-- 이용 원칙 -->
+          <section class="flex flex-col gap-6" aria-label="이용 원칙">
+            <div class="text-center max-w-2xl mx-auto">
+              <div class="eyebrow">Airport Wayfinding Architecture</div>
+              <h2 class="text-[26px] leading-8 md:text-[32px] md:leading-[38px] font-semibold tracking-[-0.02em] mt-1">터미널처럼 설계한 3가지 몰입 원칙</h2>
+              <p class="text-[15px] text-subtext mt-2 break-keep">복잡한 절차와 산만한 알림을 빼고, 탑승과 집중에만 신경 쓰도록 만들었어요.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="card p-6 flex flex-col group hover:border-accent transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="w-10 h-10 rounded-lg bg-card-2 group-hover:bg-band group-hover:text-white flex items-center justify-center transition-colors"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></span>
+                  <span class="font-mono text-[11px] text-muted">01 // RAPID GATE</span>
                 </div>
-                <button id="refresh-history" class="btn-icon" title="기록 새로고침" aria-label="기록 새로고침">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-                </button>
+                <h3 class="text-lg font-semibold mb-2">가입 없이 바로 탑승</h3>
+                <p class="text-[15px] leading-[22px] text-subtext flex-1">닉네임만 적으면 방을 만들거나 편명으로 바로 들어가요. 초대 링크 한 번이면 친구도 같은 편에 타요.</p>
+                <div class="pt-4 mt-4 border-t border-line text-[11px] font-semibold tracking-wider text-accent">NO SIGN-UP REQUIRED</div>
               </div>
-              <div id="history-stats" class="grid grid-cols-3 gap-2.5"></div>
-              <div id="history-list" class="flex flex-col max-h-80 overflow-y-auto">
-                <p class="text-sm text-subtext">불러오는 중…</p>
+              <div class="card p-6 flex flex-col group hover:border-accent transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="w-10 h-10 rounded-lg bg-card-2 group-hover:bg-band group-hover:text-white flex items-center justify-center transition-colors"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg></span>
+                  <span class="font-mono text-[11px] text-muted">02 // SILENT CRUISE</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">소리 없는 순항</h3>
+                <p class="text-[15px] leading-[22px] text-subtext flex-1">마이크와 스피커는 늘 꺼져 있고 카메라만 켜져요. 할 말은 채팅, 주목이 필요하면 띵동.</p>
+                <div class="pt-4 mt-4 border-t border-line text-[11px] font-semibold tracking-wider text-accent">STRICT CABIN SILENCE</div>
               </div>
-            </section>
+              <div class="card p-6 flex flex-col group hover:border-accent transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="w-10 h-10 rounded-lg bg-card-2 group-hover:bg-band group-hover:text-white flex items-center justify-center transition-colors"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
+                  <span class="font-mono text-[11px] text-muted">03 // SYNCED ROUTE</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">같은 항로, 같은 시계</h3>
+                <p class="text-[15px] leading-[22px] text-subtext flex-1">모두 같은 타이머로 이륙하고 도착해요. 완주·중도 하차 여부와 집중 시간은 비행 기록에 남아요.</p>
+                <div class="pt-4 mt-4 border-t border-line text-[11px] font-semibold tracking-wider text-accent">SYNCED CABIN TIMER</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ═════════ 출발 안내 ═════════ -->
+        <div data-page="departures" class="hidden flex-col gap-5">
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
+            <div>
+              <div class="eyebrow flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
+                International Study Departures
+              </div>
+              <div class="flex items-center gap-3 mt-1">
+                <h1 class="text-[26px] leading-8 md:text-[32px] md:leading-[38px] font-semibold tracking-[-0.02em]">출발 안내 <span class="text-lg font-normal text-muted">(Departures)</span></h1>
+                <span class="px-2 py-0.5 rounded bg-card-2 border border-line text-[11px] font-semibold tracking-wider">LIVE FEED</span>
+              </div>
+              <p class="text-[15px] text-subtext mt-1">실시간 스터디 방 출발 현황이에요. 집중할 편을 골라 탑승하세요.</p>
+            </div>
+            <div class="card flex items-center gap-4 px-4 py-2.5 self-start md:self-auto">
+              <div class="flex flex-col">
+                <span class="caption">Station Time (KST)</span>
+                <div class="flex items-baseline gap-1.5">
+                  <span id="station-clock" class="text-[22px] font-bold tabular-nums">--:--:--</span>
+                  <span class="text-xs font-semibold text-accent">UTC+9</span>
+                </div>
+              </div>
+              <div class="h-8 w-px bg-line"></div>
+              <div class="flex flex-col">
+                <span class="caption">Active Study Crews</span>
+                <span class="text-lg font-semibold tabular-nums"><span id="active-crews">0</span> Pax</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="seg max-w-full" role="tablist" aria-label="운항 상태 필터">
+              <button class="seg-btn is-active" data-fids-filter="all" role="tab">전체 운항 <span class="seg-count" id="cnt-all">0</span></button>
+              <button class="seg-btn" data-fids-filter="boarding" role="tab"><span class="dot bg-ok-dot"></span>탑승 중 <span class="seg-count" id="cnt-boarding">0</span></button>
+              <button class="seg-btn" data-fids-filter="flying" role="tab"><span class="dot bg-warn-dot"></span>운항 중 <span class="seg-count" id="cnt-flying">0</span></button>
+              <button class="seg-btn" data-fids-filter="full" role="tab"><span class="dot bg-muted"></span>만석 <span class="seg-count" id="cnt-full">0</span></button>
+            </div>
+            <div class="flex items-center gap-2 flex-1 lg:max-w-md">
+              <label class="relative w-full">
+                <span class="sr-only">편 검색</span>
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input id="fids-search" type="text" placeholder="목적지, 편명, 방 이름 검색…" class="field w-full pl-10" />
+              </label>
+              <button id="refresh-rooms" class="btn-secondary shrink-0" title="새로고침">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+                <span class="hidden sm:inline">새로고침</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card overflow-hidden">
+            <div class="px-6 py-3.5 bg-band text-white flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <svg class="text-accent-soft shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="18" height="7" rx="1"/></svg>
+                <h2 class="text-sm font-semibold tracking-wide uppercase truncate">Departures Board / 실시간 출발 안내</h2>
+              </div>
+              <div class="flex items-center gap-4 text-[11px] font-semibold tracking-wider text-white/60 shrink-0">
+                <span class="hidden md:inline">열려있는 편 <span id="room-count" class="tabular-nums text-white">0</span></span>
+                <span class="flex items-center gap-1.5 text-ok-dot"><span class="w-1.5 h-1.5 rounded-full bg-ok-dot animate-ping"></span>DATA SYNCHRONIZED</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <div class="min-w-[880px]">
+                <div class="fids-grid fids-head" aria-hidden="true">
+                  <span>시각 (TIME)</span><span>편명 (FLIGHT)</span><span>목적지 (DEST)</span><span>스터디 룸 (ROOM)</span><span>탑승 인원 (PAX)</span><span>상태 (STATUS)</span><span class="text-right">액션 (ACTION)</span>
+                </div>
+                <div id="room-list" class="divide-y divide-line">
+                  <p class="px-6 py-10 text-center text-sm text-subtext">불러오는 중…</p>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 py-3 bg-bg border-t border-line flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px] text-subtext">
+              <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-ok-dot"></span>방이 생기거나 바뀌면 바로 갱신돼요</span>
+              <span>편명을 알고 있다면 <a href="#/checkin" class="font-semibold text-accent hover:underline">셀프 체크인 → 편명으로 탑승</a></span>
+            </div>
           </div>
         </div>
 
-        <div class="text-center text-[13px] text-muted space-y-2">
-          <!-- <div class="flex items-center justify-center gap-2 flex-wrap">
-            <span>백엔드 서버</span>
-            <input id="server-url" type="text" placeholder="http://localhost:8080" class="field text-xs w-64" />
-            <button id="save-server" class="btn-ghost">저장</button>
-          </div> -->
-          <p>카메라만 켜지고, 마이크와 스피커는 항상 꺼져 있어요.</p>
+        <!-- ═════════ 셀프 체크인 ═════════ -->
+        <div data-page="checkin" class="hidden flex-col gap-6">
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
+            <div>
+              <div class="eyebrow">Self Check-in Kiosk</div>
+              <h1 class="text-[26px] leading-8 md:text-[32px] md:leading-[38px] font-semibold tracking-[-0.02em] mt-1">셀프 체크인</h1>
+              <p class="text-[15px] text-subtext mt-1">탑승하는 방법은 세 가지예요. 새 편을 띄우거나, 친구 편명으로 타거나, 혼자 날아요.</p>
+            </div>
+            <div class="card flex items-center gap-3 pl-3 pr-2 py-2 self-start md:self-auto">
+              <span class="w-8 h-8 rounded bg-band text-white flex items-center justify-center text-[10px] font-bold tracking-wider">PAX</span>
+              <div class="flex flex-col min-w-0">
+                <span class="caption">탑승객</span>
+                <span class="pax-name text-sm font-semibold truncate max-w-[160px]">이름 입력</span>
+              </div>
+              <button data-open-pax class="btn-secondary h-9 px-3 text-[13px]">변경</button>
+            </div>
+          </div>
+
+          <section class="relative overflow-hidden rounded-lg bg-band text-white p-5 md:p-8">
+            <div class="dot-grid absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+            <div class="relative grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <!-- 1. 방 만들기 -->
+              <div class="card p-6 text-text flex flex-col gap-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <span class="font-mono text-[11px] text-muted">01</span>
+                    <h2 class="text-lg font-semibold tracking-tight">방 만들기</h2>
+                    <p class="caption">Captain · 새 편 발권</p>
+                  </div>
+                  <span class="chip chip-accent">GROUP</span>
+                </div>
+                <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2">
+                  <label class="field-label">출발지
+                    <input id="r-from" type="text" maxlength="16" placeholder="인천" class="field w-full" /></label>
+                  <svg class="mb-3 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <label class="field-label">목적지
+                    <input id="r-to" type="text" maxlength="16" placeholder="파리" class="field w-full" /></label>
+                </div>
+                <label class="field-label">방 이름
+                  <input id="r-title" type="text" maxlength="20" placeholder="새벽 집중 비행" class="field w-full" /></label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="field-label">비행 시간 (분)
+                    <input id="r-duration" type="number" min="1" max="600" value="50" class="field w-full tabular-nums font-semibold" /></label>
+                  <label class="field-label"><span>비밀번호 <span class="font-normal text-muted">(선택)</span></span>
+                    <input id="r-password" type="text" maxlength="30" placeholder="비우면 공개방" class="field w-full" /></label>
+                </div>
+                <button id="create-btn" class="btn-primary w-full h-12 mt-auto">
+                  탑승권 발권하고 탑승구로
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+              </div>
+
+              <!-- 2. 편명으로 탑승 (Gate Finder) -->
+              <div class="card p-6 text-text flex flex-col gap-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <span class="font-mono text-[11px] text-muted">02</span>
+                    <h2 class="text-lg font-semibold tracking-tight">편명으로 탑승</h2>
+                    <p class="caption">Gate Finder · 친구 편에 합류</p>
+                  </div>
+                  <span class="chip chip-ok">JOIN</span>
+                </div>
+                <label class="field-label">편명 (방 코드) 또는 초대 코드
+                  <input id="join-code" type="text" maxlength="6" placeholder="KR7Q2A" autocomplete="off" class="field w-full font-mono font-semibold uppercase tracking-[0.12em]" />
+                </label>
+                <div class="rounded-lg bg-band text-white p-4">
+                  <div class="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-white/15">
+                    <div class="min-w-0">
+                      <span class="block text-[11px] font-semibold tracking-wider text-white/60">ASSIGNED STUDY GATE</span>
+                      <span id="gate-preview" class="block font-mono text-[28px] leading-9 font-semibold tracking-[0.08em] truncate">------</span>
+                    </div>
+                    <span class="chip chip-ok shrink-0">탑승 수속</span>
+                  </div>
+                  <p class="text-[13px] text-white/70">비밀번호 방이면 탑승할 때 물어봐요.</p>
+                </div>
+                <button id="join-btn" class="btn-accent w-full h-12 mt-auto">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
+                  탑승구로 바로 이동
+                </button>
+              </div>
+
+              <!-- 3. 혼자 비행 -->
+              <div class="card p-6 text-text flex flex-col gap-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <span class="font-mono text-[11px] text-muted">03</span>
+                    <h2 class="text-lg font-semibold tracking-tight">혼자 비행</h2>
+                    <p class="caption">Solo · 싱글 타이머</p>
+                  </div>
+                  <span class="chip chip-warn">SOLO</span>
+                </div>
+                <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2">
+                  <label class="field-label">출발지
+                    <input id="s-from" type="text" maxlength="16" placeholder="서울" class="field w-full" /></label>
+                  <svg class="mb-3 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <label class="field-label">목적지
+                    <input id="s-to" type="text" maxlength="16" placeholder="도쿄" class="field w-full" /></label>
+                </div>
+                <div class="field-label">비행 시간
+                  <div class="flex gap-2">
+                    <div class="seg flex-1">
+                      <button type="button" data-solo-min="25" class="seg-btn solo-preset">25분</button>
+                      <button type="button" data-solo-min="50" class="seg-btn solo-preset">50분</button>
+                      <button type="button" data-solo-min="90" class="seg-btn solo-preset">90분</button>
+                    </div>
+                    <label class="relative w-20 sm:w-24 shrink-0"><span class="sr-only">공부 시간 (분)</span>
+                      <input id="s-duration" type="number" min="1" max="600" value="25" class="field w-full h-[46px] pr-8 tabular-nums font-semibold" />
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">분</span></label>
+                  </div>
+                </div>
+                <p class="text-[13px] text-subtext">방 없이 혼자 날아요. 도착하거나 중도 하차하면 기록에 남아요.</p>
+                <button id="solo-start-btn" class="btn-accent w-full h-12 mt-auto">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
+                  혼자 이륙
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
+
+        <!-- ═════════ 탑승 기록 ═════════ -->
+        <div data-page="log" class="hidden flex-col gap-6">
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
+            <div>
+              <div class="eyebrow">Frequent Study Flyer</div>
+              <h1 class="text-[26px] leading-8 md:text-[32px] md:leading-[38px] font-semibold tracking-[-0.02em] mt-1">나의 탑승 기록 <span class="text-lg font-normal text-muted">(Flight Log)</span></h1>
+              <p class="text-[15px] text-subtext mt-1">이 브라우저에서 탄 혼자·같이 비행 기록이에요. 같이 탄 편은 탑승객별 참가 여부도 남아요.</p>
+            </div>
+            <button id="refresh-history" class="btn-secondary self-start md:self-auto">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              기록 새로고침
+            </button>
+          </div>
+          <div id="history-stats" class="card grid grid-cols-3 gap-4 p-5"></div>
+          <div class="card p-6">
+            <h2 class="caption mb-3">최근 탑승 항로 이력</h2>
+            <div id="history-list" class="flex flex-col gap-2">
+              <p class="text-sm text-subtext">불러오는 중…</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 푸터 (로비 공통) -->
+        <footer class="pt-8 border-t border-line flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="flex flex-col items-center md:items-start">
+            <span class="text-lg font-semibold tracking-tight">같이 공부</span>
+            <p class="text-[13px] text-subtext mt-1 text-center md:text-left">Study Together Terminal · 카메라만 켜고 함께 집중하는 스터디 비행</p>
+          </div>
+          <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-subtext">
+            <a href="#/departures" class="hover:text-text transition-colors">출발 안내</a>
+            <a href="#/checkin" class="hover:text-text transition-colors">셀프 체크인</a>
+            <a href="#/log" class="hover:text-text transition-colors">탑승 기록</a>
+            <a href="guide.html" class="hover:text-text transition-colors">사용법</a>
+            <a href="../index.html" class="hover:text-text transition-colors">포트폴리오</a>
+          </nav>
+        </footer>
+        <!-- <div class="flex items-center justify-center gap-2 flex-wrap">
+          <span>백엔드 서버</span>
+          <input id="server-url" type="text" placeholder="http://localhost:8080" class="field text-xs w-64" />
+          <button id="save-server" class="btn-ghost">저장</button>
+        </div> -->
       </section>
 
       <!-- ════════════════ 혼자 비행 뷰 (싱글 타이머) ════════════════ -->
@@ -309,7 +552,7 @@
         <div class="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 lg:py-14 flex flex-col items-center gap-9">
           <div class="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <button id="solo-back-btn"
-              class="justify-self-start h-11 pl-2 pr-3.5 rounded-[10px] text-sm text-text/80 hover:bg-card flex items-center gap-1.5 transition">
+              class="justify-self-start h-11 pl-2 pr-3.5 rounded-lg text-sm text-text/80 hover:bg-card flex items-center gap-1.5 transition">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
               터미널로
             </button>
@@ -372,11 +615,11 @@
           <div class="flex flex-col items-center gap-3">
             <div class="flex flex-wrap justify-center gap-2">
               <button id="solo-abort-btn"
-                class="h-[52px] px-7 rounded-xl border border-danger text-danger-fg text-[15px] font-bold hover:bg-danger-soft transition">중도 하차</button>
+                class="h-[52px] px-7 rounded-lg border border-danger text-danger-fg text-[15px] font-bold hover:bg-danger-soft transition">중도 하차</button>
               <button id="solo-again-btn"
-                class="hidden h-[52px] px-7 rounded-xl bg-accent text-accent-ink text-[15px] font-bold hover:opacity-90 transition">한 번 더 비행</button>
+                class="hidden h-[52px] px-7 rounded-lg bg-accent text-accent-ink text-[15px] font-bold hover:opacity-90 transition">한 번 더 비행</button>
               <button id="solo-exit-btn"
-                class="hidden h-[52px] px-7 rounded-xl border border-line text-text/80 text-[15px] font-bold hover:bg-card transition">터미널로</button>
+                class="hidden h-[52px] px-7 rounded-lg border border-line text-text/80 text-[15px] font-bold hover:bg-card transition">터미널로</button>
             </div>
             <p class="text-[13px] text-muted text-center break-keep">탭을 닫으면 중도 하차로 기록돼요. 새로고침은 같은 비행으로 이어져요.</p>
           </div>
@@ -447,26 +690,26 @@
                 </div>
                 <div class="flex flex-wrap gap-2">
                   <button id="takeoff-btn"
-                    class="hidden h-11 px-4 rounded-[10px] bg-accent text-accent-ink text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
+                    class="hidden h-11 px-4 rounded-lg bg-accent text-accent-ink text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
                     이륙
                   </button>
                   <button id="restart-btn"
-                    class="hidden h-11 px-4 rounded-[10px] bg-accent text-accent-ink text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
+                    class="hidden h-11 px-4 rounded-lg bg-accent text-accent-ink text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                     다시 시작
                   </button>
                   <button id="ding-btn" title="모두에게 주목 알림(채팅 봐주세요)"
-                    class="h-11 px-3.5 rounded-[10px] bg-accent-soft text-accent text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
+                    class="h-11 px-3.5 rounded-lg bg-accent-soft text-accent text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                     띵동
                   </button>
                   <button id="cam-toggle"
-                    class="h-11 px-3.5 rounded-[10px] border border-line text-text/80 text-sm font-medium inline-flex items-center gap-2 hover:bg-card transition">
+                    class="h-11 px-3.5 rounded-lg border border-line text-text/80 text-sm font-medium inline-flex items-center gap-2 hover:bg-card transition">
                     카메라 끄기
                   </button>
                   <button id="leave-btn"
-                    class="h-11 px-4 rounded-[10px] bg-danger text-white text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
+                    class="h-11 px-4 rounded-lg bg-danger text-white text-sm font-bold inline-flex items-center gap-2 hover:opacity-90 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
                     하차
                   </button>
@@ -477,7 +720,7 @@
               <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"></div>
 
               <!-- ═══ 기내 라디오 (함께 듣기) — 이륙 후 ═══ -->
-              <section id="music-panel" class="hidden shrink-0 p-5 rounded-[18px] bg-card border border-line">
+              <section id="music-panel" class="hidden shrink-0 p-5 rounded-lg bg-card border border-line">
                 <div class="flex flex-col lg:grid lg:grid-cols-[300px_minmax(0,1fr)] gap-6">
                   <!-- 현재 곡 + 컨트롤 -->
                   <div class="flex flex-col gap-3.5 min-w-0">
@@ -486,7 +729,7 @@
                       <span class="font-mono text-[11px] tracking-[0.14em] text-subtext">LOOP</span>
                     </div>
                     <div class="flex gap-3 items-center">
-                      <div class="relative w-16 h-16 shrink-0 rounded-[10px] bg-bg border border-dashed border-line overflow-hidden flex items-center justify-center text-muted">
+                      <div class="relative w-16 h-16 shrink-0 rounded-lg bg-bg border border-dashed border-line overflow-hidden flex items-center justify-center text-muted">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                         <img id="yt-thumb" class="absolute inset-0 w-full h-full object-cover" alt="" />
                       </div>
@@ -503,7 +746,7 @@
                       <button id="music-mute" class="btn-icon" title="내 소리 켜짐" aria-label="내 소리 켜짐">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                       </button>
-                      <button id="music-skip" class="w-11 h-11 rounded-[10px] bg-accent text-accent-ink flex items-center justify-center hover:opacity-90 transition" title="다음 곡" aria-label="다음 곡">
+                      <button id="music-skip" class="w-11 h-11 rounded-lg bg-accent text-accent-ink flex items-center justify-center hover:opacity-90 transition" title="다음 곡" aria-label="다음 곡">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>
                       </button>
                     </div>
@@ -511,7 +754,7 @@
                       <label class="flex-1 min-w-0 flex"><span class="sr-only">유튜브 링크</span>
                         <input id="music-url" type="text" placeholder="유튜브 링크 붙여넣기" class="field flex-1 min-w-0 text-[13px]" /></label>
                       <button id="music-add"
-                        class="h-11 px-3.5 rounded-[10px] bg-text text-bg text-sm font-bold shrink-0 hover:opacity-90 transition">신청</button>
+                        class="h-11 px-3.5 rounded-lg bg-text text-bg text-sm font-bold shrink-0 hover:opacity-90 transition">신청</button>
                     </div>
                   </div>
 
@@ -522,7 +765,7 @@
                     </p>
 
                     <!-- 유튜브 재생목록 일괄 가져오기 -->
-                    <details class="mb-2 rounded-[10px] border border-line-soft bg-bg">
+                    <details class="mb-2 rounded-lg border border-line-soft bg-bg">
                       <summary class="cursor-pointer select-none px-3 min-h-11 flex items-center text-xs font-semibold text-accent">
                         재생목록 한 번에 가져오기
                       </summary>
@@ -532,7 +775,7 @@
                         </p>
                         <textarea id="playlist-source" rows="5"
                           placeholder="여기에 유튜브 재생목록 페이지 내용 또는 페이지 소스를 붙여넣으세요"
-                          class="w-full resize-y px-3 py-2 rounded-[10px] bg-card border border-line focus:border-accent outline-none text-xs text-text"></textarea>
+                          class="w-full resize-y px-3 py-2 rounded-lg bg-card border border-line focus:border-accent outline-none text-xs text-text"></textarea>
                         <div class="flex items-center gap-2">
                           <button id="playlist-analyze" class="btn-ghost">노래 추출</button>
                           <span id="playlist-import-status" class="text-[11px] text-subtext"></span>
@@ -544,7 +787,7 @@
                               <button id="playlist-select-none" class="min-h-11 px-2 text-[11px] text-subtext hover:underline">전체 해제</button>
                             </div>
                             <button id="playlist-add-selected"
-                              class="h-11 px-3 rounded-[10px] bg-accent text-accent-ink text-xs font-bold hover:opacity-90 transition">선택 곡 신청</button>
+                              class="h-11 px-3 rounded-lg bg-accent text-accent-ink text-xs font-bold hover:opacity-90 transition">선택 곡 신청</button>
                           </div>
                           <div id="playlist-import-list"
                             class="max-h-56 overflow-y-auto space-y-1 pr-1 border-t border-line-soft pt-1.5"></div>
@@ -566,16 +809,16 @@
             </div>
 
             <!-- 오른쪽: 기내 채팅 -->
-            <aside class="h-[60vh] lg:h-auto lg:min-h-0 rounded-[18px] bg-card border border-line flex flex-col overflow-hidden">
+            <aside class="h-[60vh] lg:h-auto lg:min-h-0 rounded-lg bg-card border border-line flex flex-col overflow-hidden">
               <div class="h-14 shrink-0 px-5 flex items-center justify-between border-b border-line-soft">
                 <h3 class="text-base font-bold">기내 채팅</h3>
-                <button id="ding-mute" class="w-11 h-11 rounded-[10px] text-subtext flex items-center justify-center hover:bg-card-2 transition" title="띵동 알림 받기 ON/OFF" aria-label="띵동 알림 받기"></button>
+                <button id="ding-mute" class="w-11 h-11 rounded-lg text-subtext flex items-center justify-center hover:bg-card-2 transition" title="띵동 알림 받기 ON/OFF" aria-label="띵동 알림 받기"></button>
               </div>
               <div id="chat-log" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 flex flex-col gap-3"></div>
               <div class="p-3.5 border-t border-line-soft flex gap-2 shrink-0">
                 <label class="flex-1 min-w-0 flex"><span class="sr-only">메시지</span>
                   <input id="chat-input" type="text" maxlength="500" placeholder="메시지 입력…" class="field flex-1 min-w-0" /></label>
-                <button id="chat-send" class="w-11 h-11 shrink-0 rounded-[10px] bg-accent text-accent-ink flex items-center justify-center hover:opacity-90 transition" title="전송" aria-label="전송">
+                <button id="chat-send" class="w-11 h-11 shrink-0 rounded-lg bg-accent text-accent-ink flex items-center justify-center hover:opacity-90 transition" title="전송" aria-label="전송">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                 </button>
               </div>
@@ -586,7 +829,7 @@
     </main>
 
     <!-- 토스트 -->
-    <div id="toast" role="status" class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] px-4 py-2.5 rounded-[10px] bg-card-2 text-text border border-line text-sm shadow-lg opacity-0 pointer-events-none transition-opacity z-50"></div>
+    <div id="toast" role="status" class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] px-4 py-2.5 rounded-lg bg-band text-white text-sm font-medium shadow-lg opacity-0 pointer-events-none transition-opacity z-50"></div>
 
     <script src="app.js"></script>
     <!-- 함께 듣기: YouTube IFrame API는 음악 재생이 필요할 때 app.js가 동적으로 로드 (성능 최적화) -->

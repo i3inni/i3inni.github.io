@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- 같이 공부 — 사용법 가이드 (study-together 기능의 일부) · "Night Departure" 테마 -->
-<html lang="ko" class="dark scroll-smooth">
+<html lang="ko" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -38,9 +38,8 @@
           },
           extend: {
             fontFamily: {
-              // 메이플스토리체(Light 1종) — 한글·영문 전부 포함, 로드 전엔 IBM Plex Sans KR
-              sans: ["Maplestory", "IBM Plex Sans KR", "sans-serif"],
-              mono: ["IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", "ui-monospace", "monospace"],
+              sans: ["Inter", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "system-ui", "sans-serif"],
+              mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
             },
           },
         },
@@ -48,13 +47,13 @@
     </script>
     <!-- 다크모드 (localStorage 'theme' 공유, 기본값 dark) -->
     <script>
-      if (localStorage.theme === "light") document.documentElement.classList.remove("dark");
-      else document.documentElement.classList.add("dark");
+      if (localStorage.theme === "dark") document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />

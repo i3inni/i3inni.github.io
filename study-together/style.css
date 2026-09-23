@@ -1,68 +1,76 @@
 /* ════════════════════════════════════════════════
-   같이 공부 (Study Flight) — "Night Departure" 테마
-   색 토큰(CSS 변수, RGB 채널) + Tailwind로 표현하기 번거로운
-   탑승권 / 안내판 / 항로 / 창문 좌석 컴포넌트만.
+   같이 공부 (Study Flight) — "Modern Airport Signage & Wayfinding"
+   Swiss 공항 사인 체계: 밝은 터미널 바탕 + 네이비 사인 + 블루(경로) · 에메랄드(정상) · 앰버(시간/운항)
+   색 토큰(CSS 변수, RGB 채널) + Tailwind로 표현하기 번거로운 컴포넌트만.
    ════════════════════════════════════════════════ */
 
-/* ── 폰트: 메이플스토리 Light (넥슨 무료 서체, woff2로 변환해 257KB) ── */
-@font-face {
-  font-family: "Maplestory";
-  src: url("fonts/maplestory-light.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ── 디자인 토큰 (라이트) ── */
 :root {
-  --bg: 244 241 234;
-  --board: 236 231 220;
+  --font-sans: "Inter", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* ── 라이트 (기본) ── */
+  --bg: 249 250 251; /* surface-architectural */
+  --board: 243 244 246; /* surface-concourse */
   --card: 255 255 255;
-  --card-2: 230 224 210;
-  --line: 216 208 191;
-  --line-soft: 230 224 210;
-  --text: 20 27 43;
-  --subtext: 90 100 120;
-  --muted: 125 133 151;
-  --accent: 183 121 31;
+  --card-2: 243 244 246;
+  --line: 229 231 235; /* border-hairline */
+  --line-soft: 229 231 235;
+  --text: 15 23 42; /* signage navy */
+  --subtext: 69 70 77;
+  --muted: 118 119 125;
+  --primary: 15 23 42; /* 주 버튼 */
+  --primary-ink: 255 255 255;
+  --band: 15 23 42; /* 네이비 사인 띠 (FIDS 헤더 · 키오스크) */
+  --accent: 37 99 235; /* signage blue — 경로·링크·강조 */
   --accent-ink: 255 255 255;
-  --accent-soft: 251 235 200;
-  --ok: 30 122 74;
-  --ok-soft: 221 243 230;
-  --danger: 201 54 59;
-  --danger-soft: 251 227 228;
-  --danger-fg: 201 54 59; /* danger-soft 위 글자 */
-  --flip-hi: 239 234 224; /* 플립 칸 윗절반 */
+  --accent-soft: 219 225 255;
+  --ok: 4 120 87;
+  --ok-dot: 16 185 129; /* clearway emerald */
+  --ok-soft: 231 248 241;
+  --warn: 180 83 9;
+  --warn-dot: 245 158 11; /* flight amber — 시간·운항 */
+  --warn-soft: 254 243 199;
+  --danger: 186 26 26;
+  --danger-soft: 255 218 214;
+  --danger-fg: 147 0 10;
   color-scheme: light;
 }
-/* ── 디자인 토큰 (다크, 기본) ── */
+/* ── 다크 (토글 유지) ── */
 .dark {
-  --bg: 12 20 36;
-  --board: 10 17 30;
-  --card: 20 31 51;
-  --card-2: 27 40 66;
-  --line: 38 52 79;
-  --line-soft: 31 43 67;
-  --text: 232 228 216;
-  --subtext: 151 163 184;
-  --muted: 107 120 145;
-  --accent: 245 185 66;
-  --accent-ink: 26 18 6;
-  --accent-soft: 58 46 18;
-  --ok: 111 211 154;
-  --ok-soft: 22 53 42;
-  --danger: 201 54 59;
-  --danger-soft: 58 26 28;
-  --danger-fg: 240 138 141;
-  --flip-hi: 32 47 76;
+  --bg: 11 17 32;
+  --board: 22 31 50;
+  --card: 17 24 39;
+  --card-2: 30 41 59;
+  --line: 45 55 72;
+  --line-soft: 38 48 64;
+  --text: 237 240 255;
+  --subtext: 176 186 205;
+  --muted: 128 140 160;
+  --primary: 226 232 240;
+  --primary-ink: 15 23 42;
+  --band: 2 6 23;
+  --accent: 110 150 255;
+  --accent-ink: 255 255 255;
+  --accent-soft: 30 48 94;
+  --ok: 52 211 153;
+  --ok-dot: 16 185 129;
+  --ok-soft: 6 60 45;
+  --warn: 251 191 36;
+  --warn-dot: 245 158 11;
+  --warn-soft: 66 46 8;
+  --danger: 255 138 128;
+  --danger-soft: 72 22 22;
+  --danger-fg: 255 180 171;
   color-scheme: dark;
 }
 
 html {
   background: rgb(var(--bg));
+  scroll-behavior: smooth;
 }
 body {
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
 }
 input::placeholder,
 textarea::placeholder {
@@ -77,61 +85,356 @@ summary {
 summary::-webkit-details-marker {
   display: none;
 }
+/* 방·혼자 비행 화면에선 로비 전용 내비 숨김 */
+body[data-view="room"] .lobby-only,
+body[data-view="solo"] .lobby-only {
+  display: none !important;
+}
 
-/* ── 공통 컨트롤 ── */
-.btn-icon {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 10px;
+/* ════════ 타이포 · 표면 (Level 1 카드 = 흰 바탕 + 헤어라인 + 아주 옅은 그림자) ════════ */
+.eyebrow {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--accent));
+}
+.caption {
+  display: block;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgb(var(--muted));
+}
+.card {
+  background: rgb(var(--card));
   border: 1px solid rgb(var(--line));
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+.shadow-card {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+.icon-box {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--card-2));
+  color: rgb(var(--text));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-link {
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  color: rgb(var(--subtext));
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-link:hover {
+  color: rgb(var(--text));
+}
+.nav-link.is-active {
+  color: rgb(var(--accent));
+  border-color: rgb(var(--accent));
+  font-weight: 600;
+}
+
+/* ════════ 버튼 ════════ */
+.btn-primary,
+.btn-accent,
+.btn-secondary {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.btn-primary:active,
+.btn-accent:active,
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+.btn-primary {
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-ink));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+.btn-primary:hover {
+  background: rgb(var(--primary) / 0.88);
+}
+.btn-accent {
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-ink));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+.btn-accent:hover {
+  background: rgb(var(--accent) / 0.88);
+}
+.btn-secondary {
+  background: rgb(var(--card));
+  color: rgb(var(--text));
+  border: 1px solid rgb(var(--line));
+}
+.btn-secondary:hover {
+  background: rgb(var(--card-2));
+}
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
   background: transparent;
-  color: rgb(var(--text) / 0.8);
+  color: rgb(var(--subtext));
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 .btn-icon:hover {
-  background: rgb(var(--card));
+  background: rgb(var(--card-2));
+  color: rgb(var(--text));
 }
 .btn-icon.is-on {
-  background: rgb(var(--accent));
-  border-color: rgb(var(--accent));
-  color: rgb(var(--accent-ink));
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-ink));
 }
+/* 예전 이름 호환 (방 화면 등) */
 .btn-ghost {
-  height: 44px;
+  height: 40px;
   padding: 0 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid rgb(var(--line));
-  background: transparent;
-  color: rgb(var(--text) / 0.8);
+  background: rgb(var(--card));
+  color: rgb(var(--text));
   font-size: 13px;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: background-color 0.15s;
 }
 .btn-ghost:hover {
-  background: rgb(var(--card));
+  background: rgb(var(--card-2));
 }
+
+/* ════════ 입력 (44px, 포커스 = 블루 테두리 + 선명한 헤일로) ════════ */
 .field {
   height: 44px;
-  padding: 0 12px;
-  border-radius: 10px;
+  padding: 0 14px;
+  border-radius: 8px;
   border: 1px solid rgb(var(--line));
-  background: rgb(var(--bg));
+  background: rgb(var(--card));
   color: rgb(var(--text));
-  font-size: 14px;
+  font-size: 15px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .field:focus {
   border-color: rgb(var(--accent));
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.15);
+}
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(var(--text));
 }
 
-/* ── 플립 칸 (편명/방 코드) ── */
+/* ════════ 칩 (상태 표시) ════════ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.chip > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.chip-ok {
+  background: rgb(var(--ok-dot) / 0.12);
+  border-color: rgb(var(--ok-dot) / 0.25);
+  color: rgb(var(--ok));
+}
+.chip-ok > i {
+  background: rgb(var(--ok-dot));
+}
+.chip-warn {
+  background: rgb(var(--warn-dot) / 0.12);
+  border-color: rgb(var(--warn-dot) / 0.3);
+  color: rgb(var(--warn));
+}
+.chip-warn > i {
+  background: rgb(var(--warn-dot));
+}
+.chip-muted {
+  background: rgb(var(--card-2));
+  border-color: rgb(var(--line));
+  color: rgb(var(--muted));
+}
+.chip-accent {
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+}
+.chip-danger {
+  background: rgb(var(--danger-soft));
+  color: rgb(var(--danger-fg));
+}
+.code-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--card-2));
+  color: rgb(var(--text));
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+/* ════════ 세그먼트 (필터 탭 · 비행 시간 프리셋) ════════ */
+.seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--card-2));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.seg-btn {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgb(var(--subtext));
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.seg-btn:hover {
+  color: rgb(var(--text));
+}
+.seg-btn.is-active {
+  background: rgb(var(--card));
+  color: rgb(var(--text));
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+.seg-btn .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.seg-count {
+  font-size: 12px;
+  color: rgb(var(--muted));
+  font-variant-numeric: tabular-nums;
+}
+.seg-btn.is-active .seg-count {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgb(var(--card-2));
+  color: rgb(var(--text));
+}
+/* 혼자 비행 프리셋 (세그먼트 버튼 재사용) */
+.seg-btn {
+  white-space: nowrap;
+}
+.solo-preset {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 6px;
+}
+.solo-preset.is-active {
+  background: rgb(var(--card));
+  color: rgb(var(--text));
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* ════════ 출발 안내 표 (FIDS) ════════ */
+.fids-grid {
+  display: grid;
+  grid-template-columns: 76px 104px 150px minmax(0, 1fr) 140px 118px 118px;
+  gap: 16px;
+  align-items: center;
+  padding: 0 24px;
+}
+.fids-head {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(var(--line));
+  background: rgb(var(--card-2) / 0.5);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 14px;
+  color: rgb(var(--muted));
+}
+.fids-row {
+  min-height: 72px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 15px;
+  color: rgb(var(--text));
+  transition: background-color 0.15s;
+}
+.fids-row:hover {
+  background: rgb(var(--card-2) / 0.6);
+}
+.fids-row.is-featured {
+  background: rgb(var(--accent-soft) / 0.35);
+}
+.fids-row.is-featured:hover {
+  background: rgb(var(--accent-soft) / 0.6);
+}
+.pax-bar {
+  width: 48px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(var(--line));
+  overflow: hidden;
+}
+.pax-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* 편명 배지 (방 화면 헤더 — 네이비 사인) */
 .flip {
   width: 24px;
   height: 32px;
@@ -139,12 +442,11 @@ summary::-webkit-details-marker {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom, rgb(var(--flip-hi)) 0 47%, rgb(var(--card-2)) 47% 100%);
-  box-shadow: inset 0 -1px 0 rgb(var(--board));
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  background: rgb(var(--band));
+  color: #fff;
+  font-family: var(--font-mono);
   font-size: 17px;
   font-weight: 600;
-  color: rgb(var(--accent));
 }
 .flip-sm {
   width: 22px;
@@ -152,43 +454,22 @@ summary::-webkit-details-marker {
   font-size: 16px;
 }
 
-/* ── 출발 안내판 행 (xl↑ 표, 그 아래는 카드형) ── */
-.board-head {
-  display: none;
-}
-.board-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-}
-@media (min-width: 1280px) {
-  .board-head,
-  .board-row {
-    display: grid;
-    grid-template-columns: 168px minmax(0, 1fr) minmax(0, 1.3fr) 64px 56px 112px;
-    gap: 16px;
-    align-items: center;
-  }
-}
-
-/* ── 탑승할 때 카메라 스위치 ── */
+/* ════════ 탑승할 때 카메라 스위치 ════════ */
 .cam-switch {
   height: 44px;
-  padding: 0 8px;
-  border-radius: 10px;
+  padding: 0 4px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   color: rgb(var(--muted));
 }
 .cam-switch:focus-visible {
   outline: 2px solid rgb(var(--accent));
   outline-offset: 2px;
+  border-radius: 8px;
 }
 .cam-switch-text {
   width: 26px;
@@ -209,91 +490,25 @@ summary::-webkit-details-marker {
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: rgb(var(--subtext));
-  transition: transform 0.15s, background-color 0.15s;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  transition: transform 0.15s;
 }
 .cam-switch[aria-checked="true"] {
-  color: rgb(var(--accent));
+  color: rgb(var(--text));
 }
 .cam-switch[aria-checked="true"] .cam-switch-track {
-  background: rgb(var(--accent-soft));
+  background: rgb(var(--primary));
 }
 .cam-switch[aria-checked="true"] .cam-switch-track i {
   transform: translateX(16px);
-  background: rgb(var(--accent));
 }
 
-/* ── 혼자 비행 프리셋 ── */
-.solo-preset {
-  flex: 1 1 0;
-  height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgb(var(--line));
-  background: transparent;
-  color: rgb(var(--text) / 0.8);
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
-  font-size: 15px;
-  font-weight: 600;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-.solo-preset:hover {
-  border-color: rgb(var(--accent) / 0.6);
-}
-.solo-preset.is-active {
-  border-color: rgb(var(--accent));
-  background: rgb(var(--accent-soft));
-  color: rgb(var(--accent));
-}
-
-/* ── 탑승권 (종이 — 테마와 무관하게 고정색) ── */
-.pass-label {
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: #5b5548;
-}
-.pass-big {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  border-bottom: 2px solid #1a1a1a;
-  background: transparent;
-  outline: none;
-  padding: 4px 0;
-  font-size: 30px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-.pass-big::placeholder {
-  color: #a79e8a;
-}
-.pass-big:focus {
-  border-bottom-color: #b7791f;
-}
-.pass-field {
-  width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid #cfc6b3;
-  background: #fbf8f1;
-  outline: none;
-  font-size: 15px;
-  color: #1a1a1a;
-}
-.pass-field::placeholder {
-  color: #8c846f;
-}
-.pass-field:focus {
-  border-color: #1a1a1a;
-}
-.barcode {
-  display: flex;
-  gap: 2px;
-  height: 40px;
-}
-.barcode i {
-  background: #1a1a1a;
+/* 키오스크 띠 배경의 점 격자 */
+.dot-grid {
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.05;
 }
 
 /* ── 방: 비행 스트립 항로 ── */
@@ -362,13 +577,13 @@ summary::-webkit-details-marker {
   min-width: 0;
 }
 .gauge-label {
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   color: rgb(var(--subtext));
 }
 .gauge-value {
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 24px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -384,7 +599,9 @@ summary::-webkit-details-marker {
 
 /* ── 방: 창문형 영상 타일 ── */
 .seat-window {
-  height: 170px;
+  /* 고정 높이 대신 16:9 비율 — 화면이 넓어도 납작해지지 않고 폭에 맞춰 커짐 */
+  aspect-ratio: 16 / 9;
+  min-height: 170px;
   padding: 8px;
   border-radius: 52px;
   background: rgb(var(--card-2));
@@ -456,7 +673,7 @@ summary::-webkit-details-marker {
   align-items: center;
 }
 .seat-label .seat-no {
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   color: rgb(var(--accent));
 }
 .seat-badge {
@@ -468,14 +685,15 @@ summary::-webkit-details-marker {
   border-radius: 6px;
   background: rgb(var(--accent));
   color: rgb(var(--accent-ink));
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.12em;
 }
 @media (max-width: 639px) {
   .seat-window {
-    height: 150px;
+    aspect-ratio: 1 / 1; /* 2열이라 폭이 좁음 → 정사각형으로 세로 확보 */
+    min-height: 0;
     border-radius: 44px;
   }
   .seat-pane {
@@ -539,7 +757,7 @@ summary::-webkit-details-marker {
   height: 100vh;
   background: rgb(var(--bg));
   color: rgb(var(--text));
-  font-family: "Maplestory", "IBM Plex Sans KR", sans-serif;
+  font-family: var(--font-sans);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -636,13 +854,13 @@ summary::-webkit-details-marker {
   white-space: nowrap;
 }
 .pip-ends small span {
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-weight: 500;
 }
 .pip-timer {
   margin-top: calc(var(--u) * 0.6);
   text-align: center;
-  font-family: "IBM Plex Mono", "Maplestory", "IBM Plex Sans KR", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: calc(var(--u) * 11.5);
   line-height: 1;

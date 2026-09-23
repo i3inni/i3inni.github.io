@@ -146,6 +146,10 @@
     volumeX: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
     x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     play: '<path d="M6 3l14 9-14 9V3z"/>',
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    timer: '<path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
+    plane:
+      '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
   };
   function icon(name, size = 16, cls = "") {
     return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -222,41 +226,254 @@
   // ════════════════ 로비 (공개 방 목록) ════════════════
   let lobbyWs = null;
 
+  // 인원 상한: 서버 설정 ROOM_MAX_PARTICIPANTS 기본값(8)과 같게 — API로 내려오지 않아 표시용으로 프론트에 둠
+  const PAX_CAPACITY = 8;
+  let lastRooms = [];
+  let fidsFilter = "all"; // all | boarding | flying | full
+  function toMs(v) {
+    if (v == null) return null;
+    const t = typeof v === "number" ? v : Date.parse(v);
+    return isNaN(t) ? null : t;
+  }
+  function roomState(r) {
+    if (r.participantCount >= PAX_CAPACITY) return "full";
+    return r.status === "FLYING" ? "flying" : "boarding";
+  }
+  function minutesLeft(r) {
+    const st = toMs(r.startedAt);
+    return st ? Math.max(0, Math.ceil((st + r.durationMinutes * 60000 - Date.now()) / 60000)) : null;
+  }
+  const STATE_CHIP = {
+    boarding: ["탑승 중", "chip chip-ok", "bg-ok-dot"],
+    flying: ["운항 중", "chip chip-warn", "bg-warn-dot"],
+    full: ["만석", "chip chip-muted", "bg-muted"],
+  };
+  // ── 페이지 (해시 라우팅: #/ · #/departures · #/checkin · #/log) — 한 HTML 안에서 전환해 연결 상태 유지 ──
+  const PAGES = ["home", "departures", "checkin", "log"];
+  function currentPage() {
+    const h = location.hash.replace(/^#\/?/, "");
+    return PAGES.includes(h) ? h : "home";
+  }
+  function renderRoute() {
+    const page = currentPage();
+    document.querySelectorAll("[data-page]").forEach((el) => {
+      const on = el.dataset.page === page;
+      el.classList.toggle("hidden", !on);
+      el.classList.toggle("flex", on);
+    });
+    document.querySelectorAll("[data-route]").forEach((a) => {
+      const on = a.dataset.route === page;
+      a.classList.toggle("is-active", on);
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    const main = document.querySelector("main");
+    if (main) main.scrollTop = 0;
+    window.scrollTo(0, 0);
+    if (page === "log") loadHistory();
+  }
+
+  // ── 탑승객 패널 (닉네임 · 탑승할 때 카메라) — 모든 페이지 공통, 이름은 이 브라우저에 기억 ──
+  function setPaxOpen(open) {
+    $("pax-panel").classList.toggle("hidden", !open);
+    $("pax-btn").setAttribute("aria-expanded", String(open));
+    if (open) setTimeout(() => $("nickname").focus(), 30);
+  }
+  function syncPaxName() {
+    const v = $("nickname").value.trim();
+    document.querySelectorAll(".pax-name").forEach((el) => (el.textContent = v || "이름 입력"));
+    try {
+      localStorage.setItem("sf_name", v);
+    } catch {}
+  }
+  function requireName() {
+    if ($("nickname").value.trim()) return true;
+    // 다음 틱에 열기 — 지금 클릭이 문서까지 올라가 "바깥 클릭 = 닫기"에 걸리지 않게
+    setTimeout(() => setPaxOpen(true), 0);
+    toast("탑승객 이름(닉네임)을 먼저 입력해주세요");
+    return false;
+  }
+  // 목록/편명에서 탑승: 이름이 없으면 탑승객 패널을 열어 안내
+  function joinFromList(code) {
+    if (!requireName()) return;
+    joinRoom(code);
+  }
+
   function renderRooms(rooms) {
-    const box = $("room-list");
+    lastRooms = rooms || [];
     const count = $("room-count");
-    if (count) count.textContent = rooms ? rooms.length : 0;
-    if (!rooms || !rooms.length) {
+    if (count) count.textContent = lastRooms.length;
+    // 필터 개수 · 탑승 인원 · 안내 방송 · 추천 편
+    const by = { boarding: 0, flying: 0, full: 0 };
+    let pax = 0;
+    lastRooms.forEach((r) => {
+      by[roomState(r)]++;
+      pax += r.participantCount || 0;
+    });
+    const setText = (id, v) => {
+      const el = $(id);
+      if (el) el.textContent = v;
+    };
+    setText("cnt-all", lastRooms.length);
+    setText("cnt-boarding", by.boarding);
+    setText("cnt-flying", by.flying);
+    setText("cnt-full", by.full);
+    setText("live-pax", pax.toLocaleString());
+    setText("home-boarding", by.boarding);
+    setText("home-flying", by.flying);
+    setText("home-pax", pax);
+    setText("active-crews", pax);
+    renderAnnouncement(lastRooms);
+    const featured = renderFeatured(lastRooms);
+    renderFidsRows(featured);
+  }
+
+  function renderFidsRows(featured) {
+    const box = $("room-list");
+    if (!lastRooms.length) {
       box.innerHTML =
-        '<p class="px-6 py-8 text-sm text-subtext text-center">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
+        '<p class="px-6 py-10 text-center text-sm text-subtext">열려있는 방이 없어요. 셀프 체크인에서 첫 편을 띄워보세요!</p>';
+      return;
+    }
+    const q = ($("fids-search") && $("fids-search").value.trim().toLowerCase()) || "";
+    const rows = lastRooms.filter((r) => {
+      if (fidsFilter !== "all" && roomState(r) !== fidsFilter) return false;
+      if (!q) return true;
+      return [r.code, r.destination, r.departure, r.title].some((v) => String(v || "").toLowerCase().includes(q));
+    });
+    if (!rows.length) {
+      box.innerHTML = '<p class="px-6 py-10 text-center text-sm text-subtext">조건에 맞는 편이 없어요.</p>';
       return;
     }
     box.innerHTML = "";
-    rooms.forEach((r) => {
-      const flying = r.status === "FLYING";
-      const [status, statusCls] = flying
-        ? ["IN FLIGHT", "bg-accent-soft text-accent"]
-        : r.locked
-          ? ["PRIVATE", "bg-card-2 text-subtext"]
-          : ["BOARDING", "bg-ok-soft text-ok"];
-      // 행 전체가 탑승 버튼 (xl↑ 표 / 그 아래 카드형 — style.css .board-row)
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className =
-        "join-room board-row w-full text-left px-4 sm:px-6 py-3.5 border-t border-line-soft first:border-t-0 hover:bg-card/60 transition";
+    rows.forEach((r) => {
+      const st = roomState(r);
+      const [label, chipCls, barCls] = STATE_CHIP[st];
+      const t = toMs(r.startedAt) || toMs(r.createdAt);
+      const left = st === "flying" ? minutesLeft(r) : null;
+      const pct = Math.min(100, Math.round((r.participantCount / PAX_CAPACITY) * 100));
+      const isFeatured = featured && featured.code === r.code;
+      const row = document.createElement("div");
+      row.className = "fids-grid fids-row" + (isFeatured ? " is-featured" : "");
       row.innerHTML = `
-          <span class="order-1 xl:order-none flex gap-[3px]">${flipChars(r.code)}</span>
-          <span class="order-3 xl:order-none basis-full xl:basis-auto text-[15px] font-medium truncate">${escapeHtml(r.departure)} → ${escapeHtml(r.destination)}</span>
-          <span class="order-4 xl:order-none flex-1 min-w-0 flex items-center gap-2 text-[15px] text-text/80">${
-            r.locked ? icon("lock", 14, "shrink-0 text-subtext") : ""
+        <span class="font-semibold tabular-nums ${isFeatured ? "text-accent" : ""}">${t ? clock(t) : "--:--"}</span>
+        <span><span class="code-badge ${isFeatured ? "!bg-accent-soft !text-accent !border-accent/30" : ""}">${escapeHtml(r.code)}</span></span>
+        <span class="min-w-0">
+          <span class="block text-lg font-bold truncate">${escapeHtml(r.destination)}</span>
+          <span class="block text-[13px] text-subtext truncate">${escapeHtml(r.departure)} 출발</span>
+        </span>
+        <span class="min-w-0">
+          <span class="flex items-center gap-1.5 font-semibold min-w-0">${
+            r.locked ? icon("lock", 14, "shrink-0 text-muted") : ""
           }<span class="truncate">${escapeHtml(r.title)}</span></span>
-          <span class="order-5 xl:order-none font-mono text-[15px] text-text/80">${r.durationMinutes}분</span>
-          <span class="order-6 xl:order-none font-mono text-[15px] text-text/80">${r.participantCount}명</span>
-          <span class="order-2 xl:order-none ml-auto xl:ml-0 justify-self-start inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-md font-mono text-xs font-semibold tracking-[0.08em] ${statusCls}">${
-            r.locked && !flying ? icon("lock", 12) : ""
-          }${status}</span>`;
-      row.onclick = () => joinRoom(r.code);
+          <span class="block text-[12px] text-subtext truncate">${r.durationMinutes}분 비행${left != null ? ` · ${left}분 남음` : ""}${r.locked ? " · 비밀번호" : ""}</span>
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="tabular-nums font-semibold ${st === "full" ? "text-muted" : ""}">${r.participantCount}/${PAX_CAPACITY}명</span>
+          <span class="pax-bar"><i class="${barCls}" style="width:${pct}%"></i></span>
+        </span>
+        <span><span class="${chipCls}"><i></i>${label}</span></span>
+        <span class="text-right"></span>`;
+      const btn = document.createElement("button");
+      btn.className = st === "boarding" ? "join-room btn-primary h-9 px-4 text-[13px]" : "join-room btn-secondary h-9 px-3.5 text-[13px]";
+      btn.innerHTML = st === "boarding" ? `탑승하기 ${icon("arrow", 14)}` : st === "flying" ? "입장" : "대기";
+      btn.setAttribute("aria-label", `${r.destination}행 ${r.code}편 ${st === "boarding" ? "탑승하기" : "입장"}`);
+      btn.onclick = () => joinFromList(r.code);
+      row.lastElementChild.appendChild(btn);
       box.appendChild(row);
+    });
+  }
+
+  // 추천 편: 탑승 중(자리 남은) 편 중 사람이 가장 많은 편 → 없으면 운항 중 편
+  function renderFeatured(rooms) {
+    const wrap = $("featured-wrap");
+    const box = $("featured-flight");
+    if (!wrap || !box) return null;
+    const pick =
+      rooms.filter((r) => roomState(r) === "boarding").sort((a, b) => b.participantCount - a.participantCount)[0] ||
+      rooms.filter((r) => roomState(r) === "flying")[0];
+    wrap.classList.toggle("hidden", !pick);
+    wrap.classList.toggle("flex", !!pick);
+    if (!pick) return null;
+    const st = roomState(pick);
+    const [label, chipCls] = STATE_CHIP[st];
+    const start = toMs(pick.startedAt);
+    const total = pick.durationMinutes * 60000;
+    const pct = st === "flying" && start ? Math.min(100, Math.max(0, ((Date.now() - start) / total) * 100)) : 0;
+    const seatsLeft = Math.max(0, PAX_CAPACITY - pick.participantCount);
+    box.innerHTML = `
+      <div class="card p-6 overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-line">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="px-3 py-1.5 rounded-lg bg-band text-white font-mono font-bold text-lg tracking-[0.15em]">${escapeHtml(pick.code)}</span>
+            <div class="flex flex-col min-w-0">
+              <span class="caption">Flight Designator</span>
+              <span class="text-sm font-medium truncate">${pick.locked ? icon("lock", 13, "inline -mt-0.5 mr-1 text-muted") : ""}${escapeHtml(pick.title)}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="${chipCls} rounded-full"><i class="${st === "boarding" ? "animate-pulse" : ""}"></i>${st === "boarding" ? "BOARDING NOW" : "IN FLIGHT"}</span>
+            <span class="chip chip-muted rounded-full !text-text">${label}</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 py-6 items-center">
+          <div class="md:col-span-3 flex flex-col min-w-0">
+            <span class="caption">Origin / 출발지</span>
+            <span class="text-[36px] leading-[42px] font-bold tracking-[-0.025em] truncate mt-1">${escapeHtml(pick.departure)}</span>
+            <span class="text-[13px] text-subtext mt-1">${start ? `${clock(start)} 이륙` : "이륙 대기 중"}</span>
+          </div>
+          <div class="md:col-span-6 flex flex-col items-center px-2">
+            <div class="w-full flex items-center justify-between font-mono text-[11px] text-muted mb-1">
+              <span>${start ? clock(start) : "00:00"} KST</span>
+              <span class="text-accent font-semibold flex items-center gap-1">${icon("timer", 13)} ${pick.durationMinutes}분 집중 비행</span>
+              <span>${pick.durationMinutes}:00 MIN</span>
+            </div>
+            <div class="w-full relative flex items-center py-3">
+              <div class="h-0.5 w-full bg-line rounded-full"></div>
+              <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-accent rounded-full" style="width:${pct}%"></div>
+              <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-band text-white flex items-center justify-center shadow-md" style="left:${Math.max(2, pct)}%">${icon("plane", 14, "rotate-45")}</div>
+            </div>
+            <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-subtext mt-1">
+              <span>${st === "flying" ? `${Math.round(pct)}% 순항 중 · ${minutesLeft(pick)}분 남음` : "탑승 수속 중"}</span>
+              <span>·</span>
+              <span class="text-text">현재 ${pick.participantCount} / ${PAX_CAPACITY}명 탑승 (잔여 ${seatsLeft}석)</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 flex flex-col md:items-end md:text-right min-w-0">
+            <span class="caption">Destination / 목적지</span>
+            <span class="text-[36px] leading-[42px] font-bold tracking-[-0.025em] text-accent truncate max-w-full mt-1">${escapeHtml(pick.destination)}</span>
+            <span class="text-[13px] text-subtext mt-1">${start ? `${clock(start + total)} 도착 예정` : `${pick.durationMinutes}분 비행 예정`}</span>
+          </div>
+        </div>
+        <div class="-mx-6 -mb-6 px-6 py-4 bg-bg border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-[13px] text-subtext">현재 <strong class="text-text font-semibold">${pick.participantCount}명의 승객</strong>이 무음 모드로 ${st === "flying" ? "순항" : "탑승 대기"} 중이에요.</p>
+          <button id="featured-join" class="btn-accent h-10 px-5 text-[13px]">즉시 탑승 ${icon("arrow", 15)}</button>
+        </div>
+      </div>`;
+    $("featured-join").onclick = () => joinFromList(pick.code);
+    return pick;
+  }
+
+  // 안내 방송 (PA) — 실제 방 상태로 문구 생성
+  function renderAnnouncement(rooms) {
+    const el = $("pa-text");
+    if (!el) return;
+    const boarding = rooms.find((r) => roomState(r) === "boarding");
+    const flying = rooms.find((r) => roomState(r) === "flying");
+    el.textContent = boarding
+      ? `[탑승 안내] ${boarding.code} ${boarding.destination}행 (${boarding.title} · ${boarding.durationMinutes}분) 탑승이 시작되었습니다. 편명으로 탑승하세요.`
+      : flying
+        ? `[운항 안내] ${flying.code} ${flying.destination}행은 순항 중이며 ${minutesLeft(flying)}분 뒤 도착 예정입니다.`
+        : "[안내] 지금은 출발 예정인 편이 없습니다. 셀프 체크인에서 첫 편을 띄워보세요.";
+  }
+
+  // 터미널 시계 (KST)
+  function tickTerminalClock() {
+    const d = new Date();
+    const t = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, "0")).join(":");
+    ["pa-clock", "station-clock"].forEach((id) => {
+      const el = $(id);
+      if (el) el.textContent = t;
     });
   }
 
@@ -274,7 +491,7 @@
     return !serverUp && Date.now() - pageLoadedAt < WAKE_GRACE_MS;
   }
   const WAKING_HTML = (cls) =>
-    `<p class="${cls} text-sm text-subtext"><span class="text-accent font-semibold">서버를 깨우는 중이에요…</span><br />무료 서버라 첫 접속에 최대 1분 정도 걸려요.</p>`;
+    `<p class="${cls} text-sm text-subtext"><span class="text-warn font-semibold">서버를 깨우는 중이에요…</span><br />무료 서버라 첫 접속에 최대 1분 정도 걸려요.</p>`;
 
   async function refreshLobby() {
     const box = $("room-list");
@@ -288,8 +505,8 @@
       markServerUp();
     } catch (e) {
       box.innerHTML = stillWaking()
-        ? WAKING_HTML("px-6 py-8 text-center")
-        : `<p class="px-6 py-8 text-sm text-danger-fg text-center">서버에 연결할 수 없어요. (${escapeHtml(apiBase())})</p>`;
+        ? WAKING_HTML("px-6 py-10 text-center")
+        : `<p class="px-6 py-10 text-sm text-danger text-center">서버에 연결할 수 없어요. (${escapeHtml(apiBase())})</p>`;
     }
   }
 
@@ -813,19 +1030,18 @@
     if (dur) dur.textContent = meta.durationMinutes || 0;
 
     const badge = $("room-status");
-    const pill = "px-2.5 py-1 rounded-md font-mono text-xs font-semibold tracking-[0.1em] ";
     roomView.classList.remove("flying", "arrived");
     if (meta.status === "FLYING") {
       badge.textContent = "IN FLIGHT · 집중!";
-      badge.className = pill + "bg-accent-soft text-accent";
+      badge.className = "chip chip-warn";
       roomView.classList.add("flying");
     } else if (meta.status === "FINISHED") {
       badge.textContent = "LANDED · 수고했어요";
-      badge.className = pill + "bg-card-2 text-text";
+      badge.className = "chip bg-band text-white";
       roomView.classList.add("arrived");
     } else {
-      badge.textContent = "BOARDING · 대기 중";
-      badge.className = pill + "bg-ok-soft text-ok";
+      badge.textContent = "BOARDING · 탑승 중";
+      badge.className = "chip chip-ok";
     }
     // 이륙 버튼: 방장 + 대기 중 / 다시 시작 버튼: 방장 + 도착
     $("takeoff-btn").classList.toggle("hidden", !(isHost && meta.status === "WAITING"));
@@ -898,6 +1114,7 @@
     myName = s.name;
     const n = $("nickname");
     if (n) n.value = s.name;
+    syncPaxName();
     await prepareMedia(true);
     isHost = false;
     roomCode = s.roomCode;
@@ -912,6 +1129,7 @@
     stopLobbyPolling();
     lobbyView.classList.add("hidden");
     roomView.classList.remove("hidden");
+    document.body.dataset.view = "room";
     $("room-code").innerHTML = flipChars(roomCode, true);
     updateCamBtn();
     updateDingMuteBtn();
@@ -972,6 +1190,7 @@
 
     roomView.classList.add("hidden");
     lobbyView.classList.remove("hidden");
+    document.body.dataset.view = "lobby";
     startLobbyPolling();
   }
 
@@ -1044,6 +1263,7 @@
     stopLobbyPolling();
     lobbyView.classList.add("hidden");
     soloView.classList.remove("hidden");
+    document.body.dataset.view = "solo";
     $("solo-from").textContent = solo.departure;
     $("solo-to").textContent = solo.destination;
     $("solo-planned").textContent = solo.plannedMinutes;
@@ -1067,16 +1287,16 @@
     const badge = $("solo-status");
     soloView.classList.toggle("arrived", solo.status === "COMPLETED");
     soloView.classList.toggle("aborted", solo.status === "LEFT");
-    const pill = "col-start-3 justify-self-end px-3 py-1.5 rounded-md font-mono text-xs font-semibold tracking-[0.1em] ";
+    const pill = "col-start-3 justify-self-end chip ";
     if (flying) {
       badge.textContent = "IN FLIGHT";
-      badge.className = pill + "bg-accent-soft text-accent";
+      badge.className = pill + "chip-warn";
     } else if (solo.status === "COMPLETED") {
       badge.textContent = "LANDED · 도착";
-      badge.className = pill + "bg-ok-soft text-ok";
+      badge.className = pill + "chip-ok";
     } else {
       badge.textContent = `중도 하차 · ${fmtDuration(solo.focusedSeconds)} 집중`;
-      badge.className = pill + "bg-danger-soft text-danger-fg";
+      badge.className = pill + "chip-danger";
     }
     $("solo-timer-label").textContent = flying
       ? "도착까지 남은 시간"
@@ -1393,13 +1613,13 @@
     const nameY = top + PIP_ARC.h * s + 5.2 * u;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = col("text");
-    ctx.font = `700 ${4.2 * u}px Maplestory, 'IBM Plex Sans KR', sans-serif`;
+    ctx.font = `700 ${4.2 * u}px Inter, 'Apple SD Gothic Neo', sans-serif`;
     ctx.textAlign = "left";
     ctx.fillText(solo.departure, padX, nameY);
     ctx.textAlign = "right";
     ctx.fillText(solo.destination, W - padX, nameY);
     ctx.fillStyle = col("subtext");
-    ctx.font = `500 ${2.3 * u}px 'IBM Plex Mono', Maplestory, 'IBM Plex Sans KR', monospace`;
+    ctx.font = `500 ${2.3 * u}px 'IBM Plex Mono', 'Apple SD Gothic Neo', monospace`;
     ctx.textAlign = "left";
     ctx.fillText(`${clock(solo.startedAt)} 출발`, padX, nameY + 3.2 * u);
     ctx.textAlign = "right";
@@ -1423,6 +1643,7 @@
     document.title = baseTitle;
     soloView.classList.add("hidden");
     lobbyView.classList.remove("hidden");
+    document.body.dataset.view = "lobby";
     startLobbyPolling();
   }
 
@@ -1448,15 +1669,15 @@
 
   // ════════════════ 내 비행 기록 ════════════════
   const STATUS_LABEL = {
-    FLYING: ["비행 중", "bg-accent-soft text-accent"],
-    COMPLETED: ["도착", "bg-ok-soft text-ok"],
-    LEFT: ["중도 하차", "bg-danger-soft text-danger-fg"],
+    FLYING: ["운항 중", "chip chip-warn"],
+    COMPLETED: ["완료", "chip chip-ok"],
+    LEFT: ["중도 하차", "chip chip-danger"],
   };
   // 탑승객 참가 여부 칩 색
   const CREW_CLS = {
-    FLYING: "bg-accent-soft text-accent",
-    COMPLETED: "bg-ok-soft text-ok",
-    LEFT: "bg-danger-soft text-danger-fg",
+    FLYING: "chip chip-warn",
+    COMPLETED: "chip chip-ok",
+    LEFT: "chip chip-danger",
   };
 
   function fmtDuration(sec) {
@@ -1493,52 +1714,58 @@
     const stats = $("history-stats");
     const box = $("history-list");
     if (!stats || !box) return;
-    const stat = (label, value, cls = "") => `
-      <div class="p-3 rounded-[10px] bg-bg flex flex-col gap-1 min-w-0">
-        <span class="text-xs text-subtext">${label}</span>
-        <span class="font-mono text-lg sm:text-[22px] font-semibold truncate ${cls}">${value}</span>
+    const stat = (label, value, sub, subCls = "text-muted") => `
+      <div class="min-w-0">
+        <span class="caption">${label}</span>
+        <span class="block text-[22px] leading-7 font-bold tabular-nums truncate">${value}</span>
+        <span class="block text-[11px] font-semibold ${subCls} mt-0.5 truncate">${sub}</span>
       </div>`;
-    const rate = h.totalFlights ? Math.round((h.completed / h.totalFlights) * 100) + "%" : "—";
+    const rate = h.totalFlights ? Math.round((h.completed / h.totalFlights) * 1000) / 10 + "%" : "—";
     stats.innerHTML =
-      stat("총 비행", `${h.totalFlights}회`) +
-      stat("누적 시간", fmtHours(h.totalFocusedSeconds)) +
-      stat("완주율", rate, "text-ok");
+      stat("누적 집중 시간", fmtHours(h.totalFocusedSeconds), "도착·중도 하차 모두 포함") +
+      stat("완주율", rate, `도착 ${h.completed}회`, "text-ok") +
+      stat("총 비행", `${h.totalFlights}회`, `중도 하차 ${h.left}회`);
 
     if (!h.flights || !h.flights.length) {
-      box.innerHTML = '<p class="text-sm text-subtext">아직 비행 기록이 없어요. 첫 비행을 떠나보세요!</p>';
+      box.innerHTML = '<p class="text-sm text-subtext py-2">아직 비행 기록이 없어요. 첫 비행을 떠나보세요!</p>';
       return;
     }
     box.innerHTML = h.flights
       .map((f) => {
         const [label, cls] = STATUS_LABEL[f.status] || STATUS_LABEL.LEFT;
         const group = f.mode === "GROUP";
-        const mins =
-          f.status === "COMPLETED" ? `${f.plannedMinutes}분` : `${Math.floor(f.focusedSeconds / 60)}/${f.plannedMinutes}분`;
-        const who = group ? `함께 ${f.crew ? f.crew.length : 1}명` : "혼자";
+        const mins = f.status === "COMPLETED" ? `${f.plannedMinutes}분` : `${Math.floor(f.focusedSeconds / 60)}/${f.plannedMinutes}분`;
+        // 같이 탄 편은 탑승객별 참가 여부(도착/중도 하차/늦은 탑승)
         const crew =
           group && f.crew && f.crew.length
-            ? `<div class="flex flex-wrap gap-1 mt-1.5">${f.crew
+            ? `<span class="flex flex-wrap gap-1 mt-1.5">${f.crew
                 .map(
                   (c) =>
-                    `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium ${CREW_CLS[c.status] || CREW_CLS.LEFT}" title="${
+                    `<span class="${CREW_CLS[c.status] || CREW_CLS.LEFT} !px-1.5 !py-0 text-[11px]" title="${
                       (STATUS_LABEL[c.status] || STATUS_LABEL.LEFT)[0]
                     }">${escapeHtml(c.nickname)}${c.lateBoarding ? " · 늦은 탑승" : ""}</span>`
                 )
-                .join("")}</div>`
+                .join("")}</span>`
             : "";
         return `
-          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center py-3 border-t border-line-soft first:border-t-0">
-            <div class="flex flex-col gap-0.5 min-w-0">
-              <span class="text-[15px] font-medium truncate">${escapeHtml(f.departure || "")} → ${escapeHtml(f.destination || "")}${
-                group ? ` <span class="text-sm font-normal text-subtext">· ${escapeHtml(f.title)}</span>` : ""
-              }</span>
-              <span class="font-mono text-xs text-subtext truncate">${fmtDate(f.startedAt)} · ${mins} · ${who}</span>${crew}
+          <div class="flex items-start justify-between gap-3 p-2.5 rounded-lg border border-line hover:bg-card-2/50 transition-colors">
+            <div class="flex items-start gap-3 min-w-0">
+              <span class="font-mono text-[12px] font-bold text-accent pt-0.5 w-14 shrink-0">${group ? escapeHtml(f.roomCode || "") : "SOLO"}</span>
+              <div class="min-w-0">
+                <span class="block text-[13px] font-medium truncate">${escapeHtml(f.destination || "")} · ${
+                  group ? escapeHtml(f.title) : "혼자 비행"
+                } <span class="text-subtext font-normal">(${escapeHtml(f.departure || "")} 출발 · ${mins}${group ? ` · ${f.crew ? f.crew.length : 1}명` : ""})</span></span>${crew}
+              </div>
             </div>
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${cls}">${label}</span>
+            <div class="flex items-center gap-3 shrink-0 text-[11px] font-semibold text-muted">
+              <span class="tabular-nums hidden sm:inline">${fmtDate(f.startedAt)}</span>
+              <span class="${cls}">${label}</span>
+            </div>
           </div>`;
       })
       .join("");
   }
+
 
   // ════════════════ 카메라 on/off ════════════════
   function updateCamBtn() {
@@ -2021,10 +2248,53 @@
     if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) fn();
   };
 
-  on("create-btn", "click", () => createRoom());
-  on("join-btn", "click", () => joinRoom($("join-code") && $("join-code").value));
-  on("join-code", "keydown", enterKey(() => joinRoom($("join-code").value)));
+  on("create-btn", "click", () => requireName() && createRoom());
+  // 페이지 · 탑승객 패널
+  window.addEventListener("hashchange", renderRoute);
+  on("pax-btn", "click", (e) => {
+    e.stopPropagation();
+    setPaxOpen($("pax-panel").classList.contains("hidden"));
+  });
+  on("pax-close", "click", () => setPaxOpen(false));
+  document.querySelectorAll("[data-open-pax]").forEach((b) =>
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setPaxOpen(true);
+    })
+  );
+  document.addEventListener("click", (e) => {
+    if (!$("pax-panel").classList.contains("hidden") && !e.target.closest("#pax-panel, #pax-btn")) setPaxOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("pax-panel").classList.contains("hidden")) {
+      setPaxOpen(false);
+      $("pax-btn").focus();
+    }
+  });
+  on("nickname", "input", () => syncPaxName());
+  on("nickname", "keydown", enterKey(() => setPaxOpen(false)));
+  try {
+    $("nickname").value = localStorage.getItem("sf_name") || "";
+  } catch {}
+  syncPaxName();
+  renderRoute();
+  on("join-btn", "click", () => joinFromList($("join-code") && $("join-code").value));
+  on("join-code", "keydown", enterKey(() => joinFromList($("join-code").value)));
   on("refresh-rooms", "click", () => refreshLobby());
+  document.querySelectorAll("[data-fids-filter]").forEach((b) =>
+    b.addEventListener("click", () => {
+      fidsFilter = b.dataset.fidsFilter;
+      document.querySelectorAll("[data-fids-filter]").forEach((x) => x.classList.toggle("is-active", x === b));
+      renderFidsRows(renderFeatured(lastRooms));
+    })
+  );
+  on("fids-search", "input", () => renderFidsRows(renderFeatured(lastRooms)));
+  on("join-code", "input", () => {
+    const v = $("join-code").value.trim().toUpperCase();
+    $("gate-preview").textContent = v || "------";
+  });
+  tickTerminalClock();
+  setInterval(tickTerminalClock, 1000);
   on("vp-prev", "click", () => {
     if (videoPage > 0) {
       videoPage--;
@@ -2127,11 +2397,14 @@
   if (invited) {
     const _jc = $("join-code");
     if (_jc) _jc.value = invited.toUpperCase();
+    $("gate-preview").textContent = invited.toUpperCase();
+    if (currentPage() !== "checkin") location.hash = "#/checkin";
+    if (!$("nickname").value.trim()) setTimeout(() => setPaxOpen(true), 300);
     setTimeout(() => {
       const n = $("nickname");
       if (n) n.focus();
     }, 100);
-    toast("초대받은 방이에요! 닉네임 입력 후 입장하세요");
+    toast("초대받은 편이에요! 이름을 확인하고 탑승구로 이동하세요");
   }
 
   // 혼자 비행 중 탭을 닫으면 착륙(=중도 하차) 기록. 새로고침이면 resume으로 재탑승.
