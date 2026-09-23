@@ -29,6 +29,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean blocked = "POST".equalsIgnoreCase(req.getMethod())
                 && "/api/rooms".equals(path)
                 && !limiter.allow("create:" + clientIp(req), 15, 60_000L);
+        // 혼자 비행 이륙도 IP당 분 20회
+        blocked = blocked || ("POST".equalsIgnoreCase(req.getMethod())
+                && "/api/flights/solo".equals(path)
+                && !limiter.allow("solo:" + clientIp(req), 20, 60_000L));
 
         if (blocked) {
             res.setStatus(429);

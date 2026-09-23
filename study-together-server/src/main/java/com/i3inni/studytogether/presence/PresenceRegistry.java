@@ -3,7 +3,9 @@ package com.i3inni.studytogether.presence;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,11 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class PresenceRegistry {
 
-    // roomCode -> (sessionId -> 닉네임)
+    // roomCode -> (sessionId -> 닉네임). 입장 순서 유지(= 좌석 순서)를 위해 LinkedHashMap
     private final Map<String, Map<String, String>> rooms = new ConcurrentHashMap<>();
 
     public void add(String roomCode, String sessionId, String name) {
-        rooms.computeIfAbsent(roomCode, k -> new ConcurrentHashMap<>()).put(sessionId, name);
+        rooms.computeIfAbsent(roomCode, k -> Collections.synchronizedMap(new LinkedHashMap<>())).put(sessionId, name);
     }
 
     /** 세션 제거 후 방에 남은 인원 수 반환 */
@@ -45,13 +47,18 @@ public class PresenceRegistry {
         Map<String, String> members = rooms.get(roomCode);
         List<Map<String, String>> out = new ArrayList<>();
         if (members != null) {
-            members.forEach((id, name) -> out.add(Map.of("id", id, "name", name)));
+            synchronized (members) { // synchronizedMap 순회는 직접 잠가야 함
+                members.forEach((id, name) -> out.add(Map.of("id", id, "name", name)));
+            }
         }
         return out;
     }
 
     public Set<String> sessionIds(String roomCode) {
         Map<String, String> members = rooms.get(roomCode);
-        return members == null ? Set.of() : new HashSet<>(members.keySet());
+        if (members == null) return Set.of();
+        synchronized (members) {
+            return new HashSet<>(members.keySet());
+        }
     }
 }

@@ -1,108 +1,482 @@
 /* ════════════════════════════════════════════════
-   같이 공부 (Study Flight) — 전용 스타일
-   Tailwind로 커버 안 되는 비행 트랙/비디오 타일만.
+   같이 공부 (Study Flight) — "Night Departure" 테마
+   색 토큰(CSS 변수, RGB 채널) + Tailwind로 표현하기 번거로운
+   탑승권 / 안내판 / 항로 / 창문 좌석 컴포넌트만.
    ════════════════════════════════════════════════ */
 
+/* ── 디자인 토큰 (라이트) ── */
+:root {
+  --bg: 244 241 234;
+  --board: 236 231 220;
+  --card: 255 255 255;
+  --card-2: 230 224 210;
+  --line: 216 208 191;
+  --line-soft: 230 224 210;
+  --text: 20 27 43;
+  --subtext: 90 100 120;
+  --muted: 125 133 151;
+  --accent: 183 121 31;
+  --accent-ink: 255 255 255;
+  --accent-soft: 251 235 200;
+  --ok: 30 122 74;
+  --ok-soft: 221 243 230;
+  --danger: 201 54 59;
+  --danger-soft: 251 227 228;
+  --danger-fg: 201 54 59; /* danger-soft 위 글자 */
+  --flip-hi: 239 234 224; /* 플립 칸 윗절반 */
+  color-scheme: light;
+}
+/* ── 디자인 토큰 (다크, 기본) ── */
+.dark {
+  --bg: 12 20 36;
+  --board: 10 17 30;
+  --card: 20 31 51;
+  --card-2: 27 40 66;
+  --line: 38 52 79;
+  --line-soft: 31 43 67;
+  --text: 232 228 216;
+  --subtext: 151 163 184;
+  --muted: 107 120 145;
+  --accent: 245 185 66;
+  --accent-ink: 26 18 6;
+  --accent-soft: 58 46 18;
+  --ok: 111 211 154;
+  --ok-soft: 22 53 42;
+  --danger: 201 54 59;
+  --danger-soft: 58 26 28;
+  --danger-fg: 240 138 141;
+  --flip-hi: 32 47 76;
+  color-scheme: dark;
+}
+
+html {
+  background: rgb(var(--bg));
+}
+body {
+  -webkit-font-smoothing: antialiased;
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgb(var(--muted));
+}
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
 
-/* ── 비행 트랙 ── */
-.flight-track {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.flight-dot {
-  font-size: 20px;
+/* ── 공통 컨트롤 ── */
+.btn-icon {
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--line));
+  background: transparent;
+  color: rgb(var(--text) / 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
-.flight-line {
+.btn-icon:hover {
+  background: rgb(var(--card));
+}
+.btn-icon.is-on {
+  background: rgb(var(--accent));
+  border-color: rgb(var(--accent));
+  color: rgb(var(--accent-ink));
+}
+.btn-ghost {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--line));
+  background: transparent;
+  color: rgb(var(--text) / 0.8);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.15s;
+}
+.btn-ghost:hover {
+  background: rgb(var(--card));
+}
+.field {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field:focus {
+  border-color: rgb(var(--accent));
+}
+
+/* ── 플립 칸 (편명/방 코드) ── */
+.flip {
+  width: 24px;
+  height: 32px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, rgb(var(--flip-hi)) 0 47%, rgb(var(--card-2)) 47% 100%);
+  box-shadow: inset 0 -1px 0 rgb(var(--board));
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgb(var(--accent));
+}
+.flip-sm {
+  width: 22px;
+  height: 30px;
+  font-size: 16px;
+}
+
+/* ── 출발 안내판 행 (xl↑ 표, 그 아래는 카드형) ── */
+.board-head {
+  display: none;
+}
+.board-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+@media (min-width: 1280px) {
+  .board-head,
+  .board-row {
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr) minmax(0, 1.3fr) 64px 56px 112px;
+    gap: 16px;
+    align-items: center;
+  }
+}
+
+/* ── 탑승할 때 카메라 스위치 ── */
+.cam-switch {
+  height: 44px;
+  padding: 0 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgb(var(--muted));
+}
+.cam-switch:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}
+.cam-switch-text {
+  width: 26px;
+  text-align: right;
+}
+.cam-switch-track {
   position: relative;
-  flex: 1;
-  height: 4px;
+  width: 40px;
+  height: 24px;
   border-radius: 999px;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(99, 102, 241, 0.25) 0 8px,
-    transparent 8px 16px
-  );
+  background: rgb(var(--line));
+  transition: background-color 0.15s;
 }
+.cam-switch-track i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgb(var(--subtext));
+  transition: transform 0.15s, background-color 0.15s;
+}
+.cam-switch[aria-checked="true"] {
+  color: rgb(var(--accent));
+}
+.cam-switch[aria-checked="true"] .cam-switch-track {
+  background: rgb(var(--accent-soft));
+}
+.cam-switch[aria-checked="true"] .cam-switch-track i {
+  transform: translateX(16px);
+  background: rgb(var(--accent));
+}
+
+/* ── 혼자 비행 프리셋 ── */
+.solo-preset {
+  flex: 1 1 0;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--line));
+  background: transparent;
+  color: rgb(var(--text) / 0.8);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.solo-preset:hover {
+  border-color: rgb(var(--accent) / 0.6);
+}
+.solo-preset.is-active {
+  border-color: rgb(var(--accent));
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+}
+
+/* ── 탑승권 (종이 — 테마와 무관하게 고정색) ── */
+.pass-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #5b5548;
+}
+.pass-big {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-bottom: 2px solid #1a1a1a;
+  background: transparent;
+  outline: none;
+  padding: 4px 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.pass-big::placeholder {
+  color: #a79e8a;
+}
+.pass-big:focus {
+  border-bottom-color: #b7791f;
+}
+.pass-field {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #cfc6b3;
+  background: #fbf8f1;
+  outline: none;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+.pass-field::placeholder {
+  color: #8c846f;
+}
+.pass-field:focus {
+  border-color: #1a1a1a;
+}
+.barcode {
+  display: flex;
+  gap: 2px;
+  height: 40px;
+}
+.barcode i {
+  background: #1a1a1a;
+}
+
+/* ── 방: 비행 스트립 항로 ── */
 .flight-progress {
   position: absolute;
   left: 0;
-  top: 0;
-  height: 100%;
+  top: 10px;
+  height: 2px;
   width: 0%;
-  border-radius: 999px;
-  background: #6366f1;
+  background: rgb(var(--accent));
   transition: width 0.9s linear;
 }
 .flight-plane {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 0%;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  color: rgb(var(--accent));
   transition: left 0.9s linear;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
 }
-/* 도착 시 깜빡임 정지 */
+.flight-plane svg {
+  transform: rotate(45deg);
+  fill: rgb(var(--board));
+}
 #room-view.arrived .flight-progress {
-  background: #22c55e;
+  background: rgb(var(--ok));
+}
+#room-view.arrived .flight-plane {
+  color: rgb(var(--ok));
 }
 
-/* ── 비디오 타일 ── */
-.video-tile {
-  position: relative;
-  aspect-ratio: 1 / 1; /* 정사각형 고정 */
+/* ── 혼자 비행: 아크 항로 ── */
+#solo-progress {
+  stroke: rgb(var(--accent));
+  transition: stroke-dasharray 0.9s linear;
+}
+#solo-plane {
+  transition: left 0.9s linear, top 0.9s linear;
+}
+#solo-plane svg {
+  transition: transform 0.9s linear;
+}
+#solo-view.arrived #solo-progress {
+  stroke: rgb(var(--ok));
+}
+#solo-view.arrived #solo-plane {
+  background: rgb(var(--ok));
+}
+#solo-view.aborted #solo-progress {
+  stroke: rgb(var(--danger));
+}
+#solo-view.aborted #solo-plane {
+  background: rgb(var(--danger));
+  color: #fff;
+}
+.gauge {
+  padding: 16px 20px;
   border-radius: 14px;
-  overflow: hidden;
-  background: #0b0d12;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.video-tile video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* 셀카 느낌으로 좌우 반전 */
-  transform: scaleX(-1);
-  background: #0b0d12;
-}
-.video-tile .tile-label {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.62);
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--line));
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
-.video-tile .tile-badge {
-  position: absolute;
-  right: 8px;
-  top: 8px;
+.gauge-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #6366f1;
-  color: #fff;
+  letter-spacing: 0.14em;
+  color: rgb(var(--subtext));
 }
-/* 카메라 로딩/꺼짐 상태 */
-.video-tile .tile-empty {
-  position: absolute;
-  inset: 0;
+.gauge-value {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 639px) {
+  .gauge {
+    padding: 12px;
+  }
+  .gauge-value {
+    font-size: 18px;
+  }
+}
+
+/* ── 방: 창문형 영상 타일 ── */
+.seat-window {
+  height: 170px;
+  padding: 8px;
+  border-radius: 52px;
+  background: rgb(var(--card-2));
+  display: flex;
+}
+.seat-pane {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border-radius: 44px;
+  overflow: hidden;
+  background: rgb(var(--line));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.4);
+}
+.seat-pane.is-empty {
+  background: rgb(var(--bg));
+  border: 1px dashed rgb(var(--line));
+}
+.seat-pane video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* 셀카 느낌으로 좌우 반전 */
+}
+/* 카메라 꺼짐/연결 중: 이니셜 + 상태 */
+.seat-initial {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 22px;
+}
+.seat-initial b {
+  font-size: 34px;
+  font-weight: 700;
+  color: rgb(var(--text) / 0.8);
+}
+.seat-initial.is-me b {
+  color: rgb(var(--accent));
+}
+.seat-initial small {
+  font-size: 11px;
+  color: rgb(var(--subtext));
+}
+.seat-label {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgb(var(--board) / 0.8);
+  color: rgb(var(--text));
   font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.seat-label .seat-no {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  color: rgb(var(--accent));
+}
+.seat-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-ink));
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+@media (max-width: 639px) {
+  .seat-window {
+    height: 150px;
+    border-radius: 44px;
+  }
+  .seat-pane {
+    border-radius: 36px;
+  }
+}
+
+/* ── 채팅: 메시지는 아래부터 쌓임 ── */
+#chat-log > :first-child {
+  margin-top: auto;
 }
 
 /* 토스트 */
@@ -124,7 +498,7 @@
   width: 3px;
   height: 14px; /* 고정 높이 + transform으로만 애니메이트(레이아웃 X) */
   border-radius: 1px;
-  background: #6366f1;
+  background: rgb(var(--accent));
   transform-origin: bottom;
   transform: scaleY(0.28);
   animation: eq-bounce 0.9s ease-in-out infinite;

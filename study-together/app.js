@@ -4,15 +4,14 @@
      · REST  : 로비(공개 방 목록), 방 생성
      · WS    : /ws/signal — WebRTC 시그널링 + presence
      · WebRTC: 네이티브 RTCPeerConnection 풀메시 (카메라만)
-   백엔드 주소는 화면 하단에서 설정(기본 http://localhost:8080).
+   백엔드 주소: localhost에서 열면 로컬(:8080), 배포 사이트에선 Railway.
    ════════════════════════════════════════════════════════════════ */
 (() => {
   "use strict";
 
   // ── 백엔드 주소 ──
-  // Railway 배포 후 아래에 도메인을 붙여넣으면 GitHub Pages에서 자동으로 사용됨.
-  //   예: "https://study-together-server-production.up.railway.app"
-  // 비워두면 localhost:8080 (로컬 개발). 화면 하단 입력칸으로 언제든 덮어쓸 수 있음.
+  // 우선순위: localStorage.sf_api(직접 지정) → localhost면 로컬 백엔드(:8080) → Railway.
+  // 배포(GitHub Pages)에서는 아래 Railway 도메인을 사용.
   const RAILWAY_API = "https://i3innigithubio-production.up.railway.app";
 
   function apiBase() {
@@ -21,6 +20,8 @@
     // 라이브 사이트인데 저장된 주소가 localhost면 무시(예전 로컬 테스트 잔재 자동 치유)
     const savedIsLocal = saved && /localhost|127\.0\.0\.1/.test(saved);
     if (saved && !(savedIsLocal && !onLocalhost)) return saved.replace(/\/+$/, "");
+    // 로컬에서 열면 로컬 백엔드 (배포 서버를 쓰고 싶으면 localStorage.sf_api로 덮어쓰기)
+    if (onLocalhost) return `http://${location.hostname}:8080`;
     if (RAILWAY_API) return RAILWAY_API.replace(/\/+$/, "");
     return "http://localhost:8080";
   }
@@ -79,7 +80,7 @@
   try {
     bc = new BroadcastChannel("sf_tabs");
     bc.onmessage = (e) => {
-      if (e.data === "in-room?" && inRoom) bc.postMessage("in-room!");
+      if (e.data === "in-room?" && (inRoom || soloFlying())) bc.postMessage("in-room!");
     };
   } catch {}
   function anotherTabInRoom() {
@@ -111,15 +112,59 @@
   const peerNames = {}; // peerId → name
   const remoteStreams = {}; // peerId → MediaStream
   const pendingIce = {}; // peerId → [candidate,...] (remoteDescription 전 버퍼)
-  const tileEls = {}; // id → {root, video, label, badge, empty}
+  const peerCam = {}; // peerId → false 이면 카메라 꺼짐 (꺼진 트랙은 검은 화면이라 상태를 따로 받음)
+  const tileEls = {}; // id → {root, pane, video, label, badge, empty}
+  // 좌석 배정용 입장 순서 (id → 순번). 좌석번호 12A,12B,12C,13A…
+  const joinSeq = {};
+  let joinSeqN = 0;
+  function seatOrder(id) {
+    if (!(id in joinSeq)) joinSeq[id] = joinSeqN++;
+    return joinSeq[id];
+  }
+  function resetSeats() {
+    for (const k in joinSeq) delete joinSeq[k];
+    joinSeqN = 0;
+  }
+  function seatLabel(i) {
+    return `${12 + Math.floor(i / 3)}${"ABC"[i % 3]}`;
+  }
 
   let timerInt = null;
   let lobbyInt = null;
 
   // ════════════════ 유틸 ════════════════
+  // lucide 아이콘 (stroke SVG) — 템플릿 문자열에서 사용
+  const ICONS = {
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    bellOff:
+      '<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/>',
+    video: '<path d="m16 13 5.2 3.1a.5.5 0 0 0 .8-.4V8.3a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+    videoOff:
+      '<path d="M10.66 6H14a2 2 0 0 1 2 2v2.5l5.25-3.06A.5.5 0 0 1 22 7.87v8.2"/><path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="m2 2 20 20"/>',
+    volume: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+    volumeX: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    play: '<path d="M6 3l14 9-14 9V3z"/>',
+  };
+  function icon(name, size = 16, cls = "") {
+    return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+  }
+  // 편명/방 코드 → 플립 칸
+  function flipChars(code, small) {
+    return String(code || "")
+      .split("")
+      .map((c) => `<span class="flip${small ? " flip-sm" : ""}">${escapeHtml(c)}</span>`)
+      .join("");
+  }
+
   let toastT;
   function toast(msg) {
-    toastEl.textContent = msg;
+    // 서버/기존 문구의 이모지는 걸러서 표시 (아이콘은 SVG만 사용)
+    toastEl.textContent = String(msg)
+      .replace(/\p{Extended_Pictographic}\uFE0F?/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
     toastEl.classList.add("show");
     clearTimeout(toastT);
     toastT = setTimeout(() => toastEl.classList.remove("show"), 2600);
@@ -150,37 +195,67 @@
     }
   }
 
+  // ── 탑승할 때 카메라 (로비 스위치, 이 브라우저에 기억) ──
+  let camPref = localStorage.getItem("sf_cam_pref") !== "off";
+  function updateCamPref() {
+    const b = $("cam-pref");
+    if (!b) return;
+    b.setAttribute("aria-checked", String(camPref));
+    b.querySelector(".cam-switch-text").textContent = camPref ? "ON" : "OFF";
+  }
+  function toggleCamPref() {
+    camPref = !camPref;
+    localStorage.setItem("sf_cam_pref", camPref ? "on" : "off");
+    updateCamPref();
+  }
+  // 입장 직전 카메라 준비: OFF를 골랐으면 권한 요청 없이 꺼진 채 탑승 (방 안에서 언제든 켤 수 있음)
+  async function prepareMedia(rejoin) {
+    if (!camPref) {
+      localStream = null;
+      camOn = false;
+      return;
+    }
+    if (!(await getMedia()))
+      toast(rejoin ? "카메라 없이 다시 입장해요" : "카메라 없이 입장해요 (나중에 켤 수 있어요)");
+  }
+
   // ════════════════ 로비 (공개 방 목록) ════════════════
   let lobbyWs = null;
 
   function renderRooms(rooms) {
     const box = $("room-list");
+    const count = $("room-count");
+    if (count) count.textContent = rooms ? rooms.length : 0;
     if (!rooms || !rooms.length) {
       box.innerHTML =
-        '<p class="text-sm text-light-subtext dark:text-dark-subtext">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
+        '<p class="px-6 py-8 text-sm text-subtext text-center">열려있는 방이 없어요. 먼저 만들어보세요!</p>';
       return;
     }
     box.innerHTML = "";
     rooms.forEach((r) => {
       const flying = r.status === "FLYING";
-      const row = document.createElement("div");
+      const [status, statusCls] = flying
+        ? ["IN FLIGHT", "bg-accent-soft text-accent"]
+        : r.locked
+          ? ["PRIVATE", "bg-card-2 text-subtext"]
+          : ["BOARDING", "bg-ok-soft text-ok"];
+      // 행 전체가 탑승 버튼 (xl↑ 표 / 그 아래 카드형 — style.css .board-row)
+      const row = document.createElement("button");
+      row.type = "button";
       row.className =
-        "flex items-center justify-between gap-2 p-3 rounded-xl bg-light-bg dark:bg-dark-bg border border-gray-200 dark:border-gray-700";
+        "join-room board-row w-full text-left px-4 sm:px-6 py-3.5 border-t border-line-soft first:border-t-0 hover:bg-card/60 transition";
       row.innerHTML = `
-          <div class="min-w-0">
-            <p class="font-semibold text-sm truncate">${r.locked ? "🔒 " : ""}${escapeHtml(r.title)}
-              <span class="ml-1 align-middle inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                flying
-                  ? "bg-primary/15 text-primary"
-                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-              }">${flying ? "비행중" : "대기중"}</span>
-            </p>
-            <p class="text-xs text-light-subtext dark:text-dark-subtext truncate">
-              ${escapeHtml(r.departure)} → ${escapeHtml(r.destination)} · ${r.durationMinutes}분 · 👤 ${r.participantCount} · <span class="font-mono text-primary">${r.code}</span>
-            </p>
-          </div>
-          <button class="join-room px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition flex-shrink-0">입장</button>`;
-      row.querySelector(".join-room").onclick = () => joinRoom(r.code);
+          <span class="order-1 xl:order-none flex gap-[3px]">${flipChars(r.code)}</span>
+          <span class="order-3 xl:order-none basis-full xl:basis-auto text-[15px] font-medium truncate">${escapeHtml(r.departure)} → ${escapeHtml(r.destination)}</span>
+          <span class="order-4 xl:order-none flex-1 min-w-0 flex items-center gap-2 text-[15px] text-text/80">${
+            r.locked ? icon("lock", 14, "shrink-0 text-subtext") : ""
+          }<span class="truncate">${escapeHtml(r.title)}</span></span>
+          <span class="order-5 xl:order-none font-mono text-[15px] text-text/80">${r.durationMinutes}분</span>
+          <span class="order-6 xl:order-none font-mono text-[15px] text-text/80">${r.participantCount}명</span>
+          <span class="order-2 xl:order-none ml-auto xl:ml-0 justify-self-start inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-md font-mono text-xs font-semibold tracking-[0.08em] ${statusCls}">${
+            r.locked && !flying ? icon("lock", 12) : ""
+          }${status}</span>`;
+      row.onclick = () => joinRoom(r.code);
       box.appendChild(row);
     });
   }
@@ -195,7 +270,7 @@
       if (!res.ok) throw new Error("bad status");
       renderRooms(await res.json());
     } catch (e) {
-      box.innerHTML = `<p class="text-sm text-red-500">서버에 연결할 수 없어요. 하단의 백엔드 주소를 확인해주세요. (${escapeHtml(apiBase())})</p>`;
+      box.innerHTML = `<p class="px-6 py-8 text-sm text-danger-fg text-center">서버에 연결할 수 없어요. (${escapeHtml(apiBase())})</p>`;
     }
   }
 
@@ -220,6 +295,7 @@
   }
 
   function startLobbyPolling() {
+    loadHistory();
     refreshLobby(); // 즉시 1회 = "새로고침" 동작
     connectLobbyWs(); // 실시간 푸시
     // 콜드스타트/첫 호출 누락 대비 여러 번 확실히 재시도
@@ -264,7 +340,7 @@
       };
 
       // 카메라 시도 (거부/없어도 입장은 진행 — 카메라 꺼진 채)
-      if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
+      await prepareMedia(false);
 
       let created;
       try {
@@ -316,11 +392,11 @@
 
       let password = "";
       if (info && info.locked) {
-        password = prompt("🔒 비밀번호를 입력하세요");
+        password = prompt("비밀번호를 입력하세요");
         if (password === null) return; // 취소
       }
 
-      if (!(await getMedia())) toast("카메라 없이 입장해요 📷 (나중에 켤 수 있어요)");
+      await prepareMedia(false);
       isHost = false;
       roomCode = code;
       joinPassword = password;
@@ -349,7 +425,14 @@
     ws = new WebSocket(wsUrl());
     ws.onopen = () => {
       reconnectAttempts = 0;
-      wsSend({ type: "join", roomCode, name: myName, password: joinPassword || "", clientId: clientId() });
+      wsSend({
+        type: "join",
+        roomCode,
+        name: myName,
+        password: joinPassword || "",
+        clientId: clientId(),
+        camOn: camOn && !!localStream,
+      });
       // 유휴 연결이 프록시에 끊기지 않도록 주기적 핑
       clearInterval(pingInt);
       pingInt = setInterval(() => wsSend({ type: "ping" }), 25000);
@@ -389,6 +472,8 @@
     for (const k in remoteStreams) delete remoteStreams[k];
     for (const k in peerNames) delete peerNames[k];
     for (const k in pendingIce) delete pendingIce[k];
+    for (const k in peerCam) delete peerCam[k];
+    resetSeats();
     renderTiles();
     const delay = Math.min(1000 + reconnectAttempts * 400, 5000); // 백오프(최대 5s)
     setTimeout(() => {
@@ -400,41 +485,53 @@
     switch (msg.type) {
       case "joined":
         selfId = msg.selfId;
+        (msg.peers || []).forEach((p) => seatOrder(p.id));
+        seatOrder(selfId);
         meta = msg.meta;
         isHost = msg.hostSessionId === selfId; // 서버가 정한 방장
-        toast("방에 입장했어요 ✅");
+        toast("방에 입장했어요");
         applyMeta();
         renderTiles();
         // 내가 새로 들어왔으니 기존 참가자들에게 내가 offer를 건다
         (msg.peers || []).forEach((p) => {
           peerNames[p.id] = p.name;
+          peerCam[p.id] = p.camOn !== false;
           callPeer(p.id);
         });
+        renderTiles(); // 영상이 오기 전에도 기존 탑승객 창문 표시
         applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
         break;
       case "host":
         // 방장 위임됨
         isHost = msg.sessionId === selfId;
         if (meta) meta.hostName = msg.name;
-        if (isHost) toast("👑 방장이 되었어요");
+        if (isHost) toast("방장이 되었어요");
         applyMeta();
         renderTiles();
         break;
       case "music-state":
         applyMusic(msg.nowPlaying, msg.playlist, msg.shuffle);
         break;
+      case "cam":
+        peerCam[msg.id] = !!msg.on;
+        renderTiles();
+        break;
       case "chat":
         appendChat(msg.name, msg.text);
         break;
       case "ding":
+        appendSystem(`${msg.name}님이 띵동을 울렸어요`, "ding");
         if (dingMuted) break; // 이 참여자가 띵동 알림을 끔
-        toast(`🔔 ${msg.name}님이 띵동! 채팅 확인해보세요`);
+        toast(`${msg.name}님이 띵동! 채팅 확인해보세요`);
         playDing();
         break;
       case "peer-join":
         // 새 사람이 들어옴 → 그가 나에게 offer 할 것. 이름만 기록.
         peerNames[msg.id] = msg.name;
-        toast(`${msg.name}님이 입장했어요 👋`);
+        peerCam[msg.id] = msg.camOn !== false;
+        seatOrder(msg.id);
+        toast(`${msg.name}님이 입장했어요`);
+        appendSystem(`${msg.name}님이 탑승했어요`);
         renderTiles();
         break;
       case "offer":
@@ -449,10 +546,13 @@
       case "peer-leave":
         removePeer(msg.id);
         break;
-      case "state":
+      case "state": {
+        const wasFlying = meta && meta.status === "FLYING";
         meta = msg.meta;
+        if (meta.status === "FLYING" && !wasFlying) appendSystem("이륙했어요. 좋은 비행 되세요");
         applyMeta();
         break;
+      }
       case "error":
         inRoom = false; // 에러로 종료 → 자동 재접속 막기(강제 퇴장 핑퐁 방지)
         toast(msg.message || "오류가 발생했어요");
@@ -470,6 +570,9 @@
 
     // 카메라가 있으면 트랙 추가, 없으면(권한 거부) 수신만
     if (localStream) localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+    // 카메라 없이 탑승해도 상대 영상은 받아야 함 — 수신 전용 video를 협상에 포함
+    // (나중에 카메라를 켜면 addTrack이 이 transceiver를 재사용해 송수신으로 바뀜)
+    else pc.addTransceiver("video", { direction: "recvonly" });
 
     pc.onicecandidate = (ev) => {
       if (ev.candidate) wsSend({ type: "ice", to: peerId, payload: ev.candidate });
@@ -483,7 +586,7 @@
       console.log(`[pc ${peerId}] ${st}`);
       if (st === "failed") {
         const tile = tileEls[peerId];
-        if (tile && !remoteStreams[peerId]) tile.empty.textContent = "연결 실패 ✕";
+        if (tile && !remoteStreams[peerId]) setSeatPane(tile, peerNames[peerId] || "친구", "연결 실패", false);
       }
     };
     return pc;
@@ -561,6 +664,7 @@
     delete remoteStreams[id];
     delete peerNames[id];
     delete pendingIce[id];
+    delete peerCam[id];
     renderTiles();
   }
 
@@ -572,27 +676,45 @@
     peers.forEach((id) => {
       if (id !== selfId) ids.push(id);
     });
-    return ids;
+    return ids.sort((a, b) => seatOrder(a) - seatOrder(b)); // 입장 순서 = 좌석 순서
   }
 
+  // 창문형 좌석: 바깥 창틀(.seat-window) + 안쪽 유리(.seat-pane)
   function createTile() {
     const root = document.createElement("div");
-    root.className = "video-tile";
+    root.className = "seat-window";
+    const pane = document.createElement("div");
+    pane.className = "seat-pane";
     const video = document.createElement("video");
     video.autoplay = true;
     video.playsInline = true;
     video.muted = true; // 스피커 OFF
     const empty = document.createElement("div");
-    empty.className = "tile-empty";
-    empty.textContent = "연결 중…";
+    empty.className = "seat-initial";
     const label = document.createElement("div");
-    label.className = "tile-label";
+    label.className = "seat-label";
     const badge = document.createElement("div");
-    badge.className = "tile-badge";
-    badge.textContent = "방장";
+    badge.className = "seat-badge";
+    badge.textContent = "CAPTAIN";
     badge.style.display = "none";
-    root.append(video, empty, label, badge);
-    return { root, video, label, badge, empty };
+    pane.append(video, empty, label, badge);
+    root.append(pane);
+    return { root, pane, video, label, badge, empty };
+  }
+
+  // 영상이 없을 때 창문 안: 이니셜 + 상태 문구
+  function setSeatPane(tile, name, caption, isMe) {
+    tile.empty.className = "seat-initial" + (isMe ? " is-me" : "");
+    tile.empty.innerHTML = `<b>${escapeHtml(Array.from(name || "?")[0] || "?")}</b><small>${escapeHtml(caption)}</small>`;
+    tile.empty.style.display = "flex";
+    tile.video.style.visibility = "hidden";
+  }
+
+  function emptySeat(index) {
+    const root = document.createElement("div");
+    root.className = "seat-window seat-filler";
+    root.innerHTML = `<div class="seat-pane is-empty"><span class="seat-label"><span class="seat-no">${seatLabel(index)}</span>빈 좌석</span></div>`;
+    return root;
   }
 
   const VIDEO_PAGE_SIZE = 6;
@@ -616,7 +738,8 @@
       }
     });
     const hostName = meta ? meta.hostName : null;
-    visible.forEach((id) => {
+    grid.querySelectorAll(".seat-filler").forEach((el) => el.remove());
+    visible.forEach((id, i) => {
       let tile = tileEls[id];
       if (!tile) {
         tile = createTile();
@@ -626,21 +749,25 @@
 
       const isMe = id === selfId;
       const name = isMe ? myName : peerNames[id] || "친구";
-      tile.label.innerHTML = `📷 ${escapeHtml(isMe ? "나" : name)}`;
+      const seat = seatLabel(videoPage * VIDEO_PAGE_SIZE + i);
+      tile.label.innerHTML = `<span class="seat-no">${seat}</span>${escapeHtml(isMe ? `${name} (나)` : name)}`;
       tile.badge.style.display = hostName && name === hostName ? "block" : "none";
 
       const stream = isMe ? localStream : remoteStreams[id];
       if (stream && tile.video.srcObject !== stream) tile.video.srcObject = stream;
-      if (isMe && (!camOn || !localStream)) {
-        tile.empty.textContent = "📷 꺼짐";
-        tile.empty.style.display = "flex";
+      if (isMe ? !camOn || !localStream : peerCam[id] === false) {
+        setSeatPane(tile, name, "카메라 꺼짐", isMe);
       } else if (stream) {
         tile.empty.style.display = "none";
+        tile.video.style.visibility = "visible";
       } else {
-        tile.empty.textContent = "연결 중…";
-        tile.empty.style.display = "flex";
+        setSeatPane(tile, name, "연결 중…", isMe);
       }
     });
+    // 남는 자리는 빈 좌석으로 채움 (한 페이지 6석)
+    for (let k = visible.length; k < VIDEO_PAGE_SIZE; k++) {
+      grid.appendChild(emptySeat(videoPage * VIDEO_PAGE_SIZE + k));
+    }
     $("people-count").textContent = ids.length;
 
     // 페이지네이션 표시 (6명 초과 시)
@@ -660,20 +787,23 @@
     $("room-title").textContent = meta.title;
     $("room-from").textContent = meta.departure;
     $("room-to").textContent = meta.destination;
+    const dur = $("room-duration");
+    if (dur) dur.textContent = meta.durationMinutes || 0;
 
     const badge = $("room-status");
+    const pill = "px-2.5 py-1 rounded-md font-mono text-xs font-semibold tracking-[0.1em] ";
     roomView.classList.remove("flying", "arrived");
     if (meta.status === "FLYING") {
-      badge.textContent = "✈️ 비행 중 (집중!)";
-      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary";
+      badge.textContent = "IN FLIGHT · 집중!";
+      badge.className = pill + "bg-accent-soft text-accent";
       roomView.classList.add("flying");
     } else if (meta.status === "FINISHED") {
-      badge.textContent = "🛬 도착! 수고했어요";
-      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+      badge.textContent = "LANDED · 수고했어요";
+      badge.className = pill + "bg-card-2 text-text";
       roomView.classList.add("arrived");
     } else {
-      badge.textContent = "🕒 대기 중";
-      badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+      badge.textContent = "BOARDING · 대기 중";
+      badge.className = pill + "bg-ok-soft text-ok";
     }
     // 이륙 버튼: 방장 + 대기 중 / 다시 시작 버튼: 방장 + 도착
     $("takeoff-btn").classList.toggle("hidden", !(isHost && meta.status === "WAITING"));
@@ -704,6 +834,10 @@
       remain = 0;
       pct = 100;
     }
+    const pl = $("room-progress-label");
+    if (pl)
+      pl.textContent =
+        meta.status === "FLYING" ? `${Math.floor(pct)}% · 순항 중` : meta.status === "FINISHED" ? "100% · 착륙" : "이륙 대기";
     $("room-timer").textContent = fmt(remain);
     $("flight-progress").style.width = pct + "%";
     $("flight-plane").style.left = pct + "%";
@@ -742,7 +876,7 @@
     myName = s.name;
     const n = $("nickname");
     if (n) n.value = s.name;
-    if (!(await getMedia())) toast("카메라 없이 다시 입장해요 📷");
+    await prepareMedia(true);
     isHost = false;
     roomCode = s.roomCode;
     joinPassword = s.password || "";
@@ -756,7 +890,7 @@
     stopLobbyPolling();
     lobbyView.classList.add("hidden");
     roomView.classList.remove("hidden");
-    $("room-code").textContent = roomCode;
+    $("room-code").innerHTML = flipChars(roomCode, true);
     updateCamBtn();
     updateDingMuteBtn();
     applyMeta();
@@ -803,11 +937,12 @@
     try {
       if (ytPlayer && ytReady) ytPlayer.stopVideo();
     } catch {}
-    $("cam-toggle").textContent = "📷 카메라 끄기";
+    resetSeats();
     for (const k in pcs) delete pcs[k];
     for (const k in peerNames) delete peerNames[k];
     for (const k in remoteStreams) delete remoteStreams[k];
     for (const k in pendingIce) delete pendingIce[k];
+    for (const k in peerCam) delete peerCam[k];
     Object.values(tileEls).forEach((t) => t.root.remove());
     for (const k in tileEls) delete tileEls[k];
     grid.innerHTML = "";
@@ -818,14 +953,334 @@
     startLobbyPolling();
   }
 
+  // ════════════════ 혼자 비행 (싱글 타이머) ════════════════
+  // 서버에 비행 기록(FLYING)을 만들고 타이머는 클라이언트에서. 도착/중도 하차 시 착륙 기록.
+  // 탭을 닫으면 sendBeacon으로 착륙(=중도 하차), 새로고침하면 같은 비행에 재탑승.
+  const SOLO_KEY = "sf_solo";
+  const soloView = $("solo-view");
+  let solo = null; // 서버 FlightLogResponse {id,status,departure,destination,plannedMinutes,focusedSeconds,startedAt,plannedEndAt}
+  let soloInt = null;
+  let soloHeartbeatInt = null;
+  const baseTitle = document.title;
+
+  function soloFlying() {
+    return !!solo && solo.status === "FLYING";
+  }
+  function flightUrl(id, action) {
+    return `${apiBase()}/api/flights/${id}/${action}?clientId=${encodeURIComponent(clientId())}`;
+  }
+  async function postFlight(id, action) {
+    const res = await fetch(flightUrl(id, action), { method: "POST" });
+    if (!res.ok) throw new Error(action + " failed");
+    return res.json();
+  }
+  function saveSolo() {
+    try {
+      sessionStorage.setItem(SOLO_KEY, JSON.stringify(solo));
+    } catch {}
+  }
+  function clearSolo() {
+    try {
+      sessionStorage.removeItem(SOLO_KEY);
+    } catch {}
+  }
+
+  async function startSolo(again) {
+    if (busy || inRoom || soloFlying()) return;
+    const prev = again && solo ? solo : null;
+    const body = {
+      clientId: clientId(),
+      nickname: $("nickname").value.trim() || "나",
+      departure: prev ? prev.departure : $("s-from").value.trim() || "출발지",
+      destination: prev ? prev.destination : $("s-to").value.trim() || "목적지",
+      durationMinutes: prev
+        ? prev.plannedMinutes
+        : Math.min(600, Math.max(1, parseInt($("s-duration").value || "25", 10) || 25)),
+    };
+    busy = true;
+    try {
+      if (!prev && (await anotherTabInRoom()))
+        return toast("이미 다른 탭/창에서 비행 중이에요. 그 창을 쓰거나 닫아주세요.");
+      const res = await fetch(apiBase() + "/api/flights/solo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("solo failed");
+      solo = await res.json();
+    } catch (e) {
+      return toast("이륙 실패 — 서버에 연결할 수 없어요");
+    } finally {
+      busy = false;
+    }
+    saveSolo();
+    enterSolo();
+    toast("이륙! 지금부터 집중 시작");
+  }
+
+  function enterSolo() {
+    stopLobbyPolling();
+    lobbyView.classList.add("hidden");
+    soloView.classList.remove("hidden");
+    $("solo-from").textContent = solo.departure;
+    $("solo-to").textContent = solo.destination;
+    $("solo-planned").textContent = solo.plannedMinutes;
+    $("solo-dep-time").textContent = clock(solo.startedAt);
+    $("solo-arr-time").textContent = clock(solo.plannedEndAt);
+    $("solo-eta").textContent = clock(solo.plannedEndAt);
+    clearInterval(soloInt);
+    soloInt = setInterval(soloTick, 1000);
+    // 재탑승 하트비트 — 새로고침 시 착륙 비콘과 재탑승 요청 순서가 꼬여도 1분 안에 복구
+    clearInterval(soloHeartbeatInt);
+    soloHeartbeatInt = setInterval(() => {
+      if (soloFlying()) postFlight(solo.id, "resume").catch(() => {});
+    }, 60000);
+    applySoloView();
+    window.scrollTo(0, 0);
+  }
+
+  function applySoloView() {
+    if (!solo) return;
+    const flying = solo.status === "FLYING";
+    const badge = $("solo-status");
+    soloView.classList.toggle("arrived", solo.status === "COMPLETED");
+    soloView.classList.toggle("aborted", solo.status === "LEFT");
+    const pill = "col-start-3 justify-self-end px-3 py-1.5 rounded-md font-mono text-xs font-semibold tracking-[0.1em] ";
+    if (flying) {
+      badge.textContent = "IN FLIGHT";
+      badge.className = pill + "bg-accent-soft text-accent";
+    } else if (solo.status === "COMPLETED") {
+      badge.textContent = "LANDED · 도착";
+      badge.className = pill + "bg-ok-soft text-ok";
+    } else {
+      badge.textContent = `중도 하차 · ${fmtDuration(solo.focusedSeconds)} 집중`;
+      badge.className = pill + "bg-danger-soft text-danger-fg";
+    }
+    $("solo-timer-label").textContent = flying
+      ? "도착까지 남은 시간"
+      : solo.status === "COMPLETED"
+        ? "도착 완료"
+        : "남은 비행 시간";
+    $("solo-abort-btn").classList.toggle("hidden", !flying);
+    $("solo-again-btn").classList.toggle("hidden", flying);
+    $("solo-exit-btn").classList.toggle("hidden", flying);
+    soloTick();
+  }
+
+  function soloTick() {
+    if (!solo) return;
+    const total = Math.max(1, solo.plannedEndAt - solo.startedAt);
+    let remain = 0;
+    let pct = 100;
+    let elapsed = total / 1000;
+    if (solo.status === "FLYING") {
+      const now = Date.now();
+      remain = (solo.plannedEndAt - now) / 1000;
+      elapsed = (now - solo.startedAt) / 1000;
+      pct = Math.min(100, Math.max(0, ((now - solo.startedAt) / total) * 100));
+      if (remain <= 0) return arriveSolo();
+      document.title = `${fmt(remain)} · 혼자 비행`;
+    } else if (solo.status === "LEFT") {
+      pct = Math.min(100, ((solo.focusedSeconds * 1000) / total) * 100);
+      remain = (solo.plannedEndAt - solo.startedAt) / 1000 - solo.focusedSeconds;
+      elapsed = solo.focusedSeconds;
+    }
+    $("solo-timer").textContent = fmt(remain);
+    $("solo-pct").textContent = Math.floor(pct) + "%";
+    $("solo-elapsed").textContent = fmt(elapsed);
+    placeSoloPlane(pct);
+  }
+
+  // 아크(Q 곡선) 위 진행률 → 진행선(dasharray) + 비행기 위치/방향
+  function placeSoloPlane(pct) {
+    const path = $("solo-progress");
+    const plane = $("solo-plane");
+    path.setAttribute("stroke-dasharray", `${pct} 100`); // pathLength="100"
+    try {
+      const len = path.getTotalLength();
+      const at = (len * pct) / 100;
+      const p = path.getPointAtLength(at);
+      const a = path.getPointAtLength(Math.max(0, at - 1));
+      const b = path.getPointAtLength(Math.min(len, at + 1));
+      const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+      plane.style.left = p.x / 10 + "%"; // viewBox 1000 × 250
+      plane.style.top = p.y / 2.5 + "%";
+      plane.firstElementChild.style.transform = `rotate(${deg + 45}deg)`; // 아이콘 기본 방향 = 45°
+    } catch {}
+  }
+  function clock(ms) {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  async function arriveSolo() {
+    if (!soloFlying()) return;
+    solo.status = "COMPLETED";
+    solo.focusedSeconds = Math.round((solo.plannedEndAt - solo.startedAt) / 1000);
+    clearSolo();
+    document.title = "도착! · 혼자 비행";
+    applySoloView();
+    playDing();
+    toast(`${solo.destination} 도착! 수고했어요`);
+    try {
+      solo = await postFlight(solo.id, "land");
+      applySoloView();
+    } catch {} // 실패해도 서버 정리 작업이 도착 처리함
+  }
+
+  async function abortSolo() {
+    if (!soloFlying()) return;
+    if (!confirm("중도 하차할까요? 기록에 중도 하차로 남아요.")) return;
+    const id = solo.id;
+    solo.status = "LEFT";
+    solo.focusedSeconds = Math.round((Date.now() - solo.startedAt) / 1000);
+    clearSolo();
+    document.title = baseTitle;
+    applySoloView();
+    try {
+      solo = await postFlight(id, "land");
+      applySoloView();
+    } catch {
+      toast("착륙 기록 전송 실패 — 잠시 후 기록을 확인해주세요");
+    }
+  }
+
+  function exitSolo() {
+    if (soloFlying()) return;
+    clearInterval(soloInt);
+    clearInterval(soloHeartbeatInt);
+    soloInt = soloHeartbeatInt = null;
+    solo = null;
+    clearSolo();
+    document.title = baseTitle;
+    soloView.classList.add("hidden");
+    lobbyView.classList.remove("hidden");
+    startLobbyPolling();
+  }
+
+  // 새로고침 → 저장된 혼자 비행에 재탑승 (서버 상태가 최종)
+  async function resumeSavedSolo() {
+    let s = null;
+    try {
+      s = JSON.parse(sessionStorage.getItem(SOLO_KEY) || "null");
+    } catch {}
+    if (!s || !s.id) {
+      clearSolo();
+      return startLobbyPolling();
+    }
+    solo = s;
+    try {
+      solo = await postFlight(s.id, "resume");
+    } catch {
+      if (Date.now() >= s.plannedEndAt) solo.status = "COMPLETED";
+    }
+    if (!soloFlying()) clearSolo();
+    enterSolo();
+  }
+
+  // ════════════════ 내 비행 기록 ════════════════
+  const STATUS_LABEL = {
+    FLYING: ["비행 중", "bg-accent-soft text-accent"],
+    COMPLETED: ["도착", "bg-ok-soft text-ok"],
+    LEFT: ["중도 하차", "bg-danger-soft text-danger-fg"],
+  };
+  // 탑승객 참가 여부 칩 색
+  const CREW_CLS = {
+    FLYING: "bg-accent-soft text-accent",
+    COMPLETED: "bg-ok-soft text-ok",
+    LEFT: "bg-danger-soft text-danger-fg",
+  };
+
+  function fmtDuration(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    if (sec < 60) return `${sec}초`;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return h ? `${h}시간 ${m}분` : `${m}분`;
+  }
+  function fmtDate(ms) {
+    const d = new Date(ms);
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  async function loadHistory() {
+    try {
+      const res = await fetch(`${apiBase()}/api/flights?clientId=${encodeURIComponent(clientId())}&limit=30`);
+      if (!res.ok) throw new Error("bad status");
+      renderHistory(await res.json());
+    } catch {
+      const box = $("history-list");
+      if (box) box.innerHTML = '<p class="text-sm text-danger-fg">기록을 불러올 수 없어요.</p>';
+    }
+  }
+
+  // 통계 칸용 짧은 시간 (12h 30m / 45m)
+  function fmtHours(sec) {
+    const m = Math.floor((sec || 0) / 60);
+    const h = Math.floor(m / 60);
+    return h ? `${h}h ${m % 60}m` : `${m}m`;
+  }
+
+  function renderHistory(h) {
+    const stats = $("history-stats");
+    const box = $("history-list");
+    if (!stats || !box) return;
+    const stat = (label, value, cls = "") => `
+      <div class="p-3 rounded-[10px] bg-bg flex flex-col gap-1 min-w-0">
+        <span class="text-xs text-subtext">${label}</span>
+        <span class="font-mono text-lg sm:text-[22px] font-semibold truncate ${cls}">${value}</span>
+      </div>`;
+    const rate = h.totalFlights ? Math.round((h.completed / h.totalFlights) * 100) + "%" : "—";
+    stats.innerHTML =
+      stat("총 비행", `${h.totalFlights}회`) +
+      stat("누적 시간", fmtHours(h.totalFocusedSeconds)) +
+      stat("완주율", rate, "text-ok");
+
+    if (!h.flights || !h.flights.length) {
+      box.innerHTML = '<p class="text-sm text-subtext">아직 비행 기록이 없어요. 첫 비행을 떠나보세요!</p>';
+      return;
+    }
+    box.innerHTML = h.flights
+      .map((f) => {
+        const [label, cls] = STATUS_LABEL[f.status] || STATUS_LABEL.LEFT;
+        const group = f.mode === "GROUP";
+        const mins =
+          f.status === "COMPLETED" ? `${f.plannedMinutes}분` : `${Math.floor(f.focusedSeconds / 60)}/${f.plannedMinutes}분`;
+        const who = group ? `함께 ${f.crew ? f.crew.length : 1}명` : "혼자";
+        const crew =
+          group && f.crew && f.crew.length
+            ? `<div class="flex flex-wrap gap-1 mt-1.5">${f.crew
+                .map(
+                  (c) =>
+                    `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium ${CREW_CLS[c.status] || CREW_CLS.LEFT}" title="${
+                      (STATUS_LABEL[c.status] || STATUS_LABEL.LEFT)[0]
+                    }">${escapeHtml(c.nickname)}${c.lateBoarding ? " · 늦은 탑승" : ""}</span>`
+                )
+                .join("")}</div>`
+            : "";
+        return `
+          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center py-3 border-t border-line-soft first:border-t-0">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-[15px] font-medium truncate">${escapeHtml(f.departure || "")} → ${escapeHtml(f.destination || "")}${
+                group ? ` <span class="text-sm font-normal text-subtext">· ${escapeHtml(f.title)}</span>` : ""
+              }</span>
+              <span class="font-mono text-xs text-subtext truncate">${fmtDate(f.startedAt)} · ${mins} · ${who}</span>${crew}
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${cls}">${label}</span>
+          </div>`;
+      })
+      .join("");
+  }
+
   // ════════════════ 카메라 on/off ════════════════
   function updateCamBtn() {
     const btn = $("cam-toggle");
     const on = camOn && !!localStream;
-    btn.textContent = on ? "📷 카메라 끄기" : "📷 카메라 켜기";
-    btn.classList.toggle("bg-red-100", !on);
-    btn.classList.toggle("dark:bg-red-900/40", !on);
-    btn.classList.toggle("text-red-600", !on);
+    btn.innerHTML = `${icon(on ? "video" : "videoOff")}<span>${on ? "카메라 끄기" : "카메라 켜기"}</span>`;
+    btn.classList.toggle("text-text/80", on);
+    btn.classList.toggle("text-danger-fg", !on);
+    btn.classList.toggle("border-line", on);
+    btn.classList.toggle("border-danger", !on);
   }
 
   async function toggleCamera() {
@@ -840,12 +1295,14 @@
       updateCamBtn();
       await addLocalTracksAndRenegotiate();
       renderTiles();
+      wsSend({ type: "cam", on: true });
       return;
     }
     camOn = !camOn;
     localStream.getVideoTracks().forEach((t) => (t.enabled = camOn));
     updateCamBtn();
     renderTiles();
+    wsSend({ type: "cam", on: camOn }); // 상대 화면에 이니셜/영상 전환
   }
 
   // 늦게 카메라를 켰을 때: 모든 피어에 트랙 추가 후 새 offer로 재협상
@@ -899,7 +1356,8 @@
   function sendDing() {
     if (!inRoom) return;
     wsSend({ type: "ding", name: myName });
-    toast("🔔 띵동! 모두에게 알렸어요");
+    toast("띵동! 모두에게 알렸어요");
+    appendSystem("띵동을 울렸어요", "ding");
     playDing();
   }
 
@@ -908,31 +1366,58 @@
   function updateDingMuteBtn() {
     const b = $("ding-mute");
     if (!b) return;
-    b.textContent = dingMuted ? "🔕" : "🔔";
+    b.innerHTML = icon(dingMuted ? "bellOff" : "bell");
     b.title = dingMuted ? "띵동 알림 꺼짐 (클릭해 켜기)" : "띵동 알림 켜짐 (클릭해 끄기)";
-    b.classList.toggle("bg-red-100", dingMuted);
-    b.classList.toggle("dark:bg-red-900/40", dingMuted);
-    b.classList.toggle("text-red-600", dingMuted);
+    b.setAttribute("aria-label", b.title);
+    b.classList.toggle("text-subtext", !dingMuted);
+    b.classList.toggle("text-danger-fg", dingMuted);
   }
   function toggleDingMute() {
     dingMuted = !dingMuted;
     localStorage.setItem("sf_ding_muted", dingMuted ? "1" : "0");
     updateDingMuteBtn();
-    toast(dingMuted ? "🔕 띵동 알림을 껐어요" : "🔔 띵동 알림을 켰어요");
+    toast(dingMuted ? "띵동 알림을 껐어요" : "띵동 알림을 켰어요");
+  }
+
+  // 이름 → 현재 좌석번호 (나간 사람이면 "")
+  function seatOfName(name) {
+    const ids = participantIds();
+    const i = ids.findIndex((id) => (id === selfId ? myName : peerNames[id]) === name);
+    return i < 0 ? "" : seatLabel(i);
   }
 
   function appendChat(name, text) {
     const log = $("chat-log");
     const isMe = name === myName;
+    const seat = isMe ? "" : seatOfName(name);
     const row = document.createElement("div");
-    row.className = (isMe ? "self-end text-right" : "self-start") + " max-w-[80%]";
+    row.className =
+      (isMe ? "self-end items-end" : "self-start items-start") + " flex flex-col gap-1 max-w-[85%] sm:max-w-[280px]";
     row.innerHTML =
       (isMe
         ? ""
-        : `<p class="text-[11px] text-light-subtext dark:text-dark-subtext mb-0.5 px-1">${escapeHtml(name)}</p>`) +
-      `<span class="inline-block px-3 py-1.5 rounded-2xl text-sm break-words whitespace-pre-wrap ${
-        isMe ? "bg-primary text-white" : "bg-light-bg dark:bg-dark-bg"
+        : `<span class="text-xs text-subtext">${escapeHtml(name)}${seat ? ` · <span class="font-mono">${seat}</span>` : ""}</span>`) +
+      `<span class="px-3.5 py-2.5 text-sm leading-normal break-words whitespace-pre-wrap ${
+        isMe ? "rounded-[14px_4px_14px_14px] bg-accent text-accent-ink" : "rounded-[4px_14px_14px_14px] bg-card-2"
       }">${escapeHtml(text)}</span>`;
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // 시스템 메시지(입장·이륙·띵동) — 가운데 정렬 pill
+  function appendSystem(text, kind) {
+    const log = $("chat-log");
+    if (!log) return;
+    const row = document.createElement("div");
+    if (kind === "ding") {
+      row.className =
+        "self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-soft text-accent text-xs font-bold";
+      row.innerHTML = `${icon("bell", 12)}${escapeHtml(text)}`;
+    } else {
+      row.className =
+        "self-center text-center px-3 py-1.5 rounded-full bg-bg font-mono text-[11px] tracking-[0.08em] text-subtext";
+      row.textContent = `— ${text} —`;
+    }
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
   }
@@ -1035,9 +1520,9 @@
     songs.forEach((song, index) => {
       if (song.title && song.title !== "제목을 불러오는 중") titleCache[song.videoId] = song.title;
       const row = document.createElement("label");
-      row.className = "flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/60 cursor-pointer";
+      row.className = "flex items-center gap-2 p-1.5 rounded-lg hover:bg-card-2 cursor-pointer";
       row.innerHTML = `
-        <input type="checkbox" class="playlist-import-check accent-primary shrink-0" data-index="${index}" checked />
+        <input type="checkbox" class="playlist-import-check accent-accent w-4 h-4 shrink-0" data-index="${index}" checked />
         <img src="https://img.youtube.com/vi/${song.videoId}/default.jpg" class="w-12 h-9 object-cover rounded shrink-0" alt="" />
         <span class="playlist-import-title min-w-0 text-xs truncate" data-video-id="${song.videoId}">${escapeHtml(song.title)}</span>`;
       list.appendChild(row);
@@ -1090,8 +1575,9 @@
     musicMuted = !musicMuted;
     applyMusicMute();
     const b = $("music-mute");
-    b.textContent = musicMuted ? "🔇" : "🔊";
+    b.innerHTML = icon(musicMuted ? "volumeX" : "volume");
     b.title = musicMuted ? "내 소리 꺼짐" : "내 소리 켜짐";
+    b.setAttribute("aria-label", b.title);
   }
   function applyMusicMute() {
     if (!ytReady) return;
@@ -1190,33 +1676,32 @@
     if (mc) mc.textContent = mine;
     const sb = $("music-shuffle");
     if (sb) {
-      sb.classList.toggle("bg-primary", !!shuffle);
-      sb.classList.toggle("text-white", !!shuffle);
+      sb.classList.toggle("is-on", !!shuffle);
       sb.title = shuffle ? "셔플 ON (다시 누르면 OFF)" : "셔플 OFF";
     }
     const box = $("music-queue");
     if (!playlist.length) {
       box.innerHTML =
-        '<p class="text-sm text-light-subtext dark:text-dark-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요!</p>';
+        '<p class="py-3 text-sm text-subtext">아직 곡이 없어요. 유튜브 링크로 신청해보세요!</p>';
       return;
     }
     const curId = nowPlaying ? nowPlaying.videoId : null;
     box.innerHTML = "";
-    playlist.forEach((it) => {
+    playlist.forEach((it, n) => {
       const isCur = it.videoId === curId;
       const title = getTitle(it.videoId);
       const row = document.createElement("div");
-      row.className = "flex items-center gap-2 p-1 rounded-lg " + (isCur ? "bg-primary/10" : "");
+      row.className = "grid grid-cols-[28px_minmax(0,1fr)_auto_auto] gap-2.5 items-center py-1 border-t border-line-soft first:border-t-0";
       row.innerHTML = `
-        <img src="https://img.youtube.com/vi/${it.videoId}/default.jpg" class="w-10 h-7 object-cover rounded flex-shrink-0" alt="" />
-        <span class="text-xs flex-1 truncate ${isCur ? "text-primary font-semibold" : ""}">${
-          isCur ? "▶ " : ""
-        }${title ? escapeHtml(title) : "🎵"} <span class="font-normal text-light-subtext dark:text-dark-subtext">· ${escapeHtml(it.addedBy || "게스트")} 님</span></span>`;
+        <span class="font-mono text-xs ${isCur ? "text-accent" : "text-muted"}">${isCur ? icon("play", 12) : String(n + 1).padStart(2, "0")}</span>
+        <span class="text-sm truncate ${isCur ? "text-accent font-semibold" : ""}">${title ? escapeHtml(title) : "제목 불러오는 중…"}</span>
+        <span class="text-xs text-subtext">${escapeHtml(it.addedBy || "게스트")}</span>`;
       const del = document.createElement("button");
       del.className =
-        "text-xs text-light-subtext dark:text-dark-subtext hover:text-red-500 px-1 shrink-0";
-      del.textContent = "✕";
+        "w-11 h-11 rounded-[10px] flex items-center justify-center text-muted hover:text-danger-fg hover:bg-card-2 transition";
+      del.innerHTML = icon("x", 14);
       del.title = "삭제";
+      del.setAttribute("aria-label", "삭제");
       del.onclick = () => removeSong(it.videoId);
       row.appendChild(del);
       box.appendChild(row);
@@ -1285,6 +1770,8 @@
     }
   });
   on("cam-toggle", "click", () => toggleCamera());
+  on("cam-pref", "click", () => toggleCamPref());
+  updateCamPref();
   on("ding-btn", "click", () => sendDing());
   on("ding-mute", "click", () => toggleDingMute());
   on("music-add", "click", () => addSong());
@@ -1307,7 +1794,7 @@
   on("takeoff-btn", "click", () => {
     if (!isHost) return;
     wsSend({ type: "start" });
-    toast("🛫 이륙! 지금부터 집중 시작");
+    toast("이륙! 지금부터 집중 시작");
   });
   on("restart-btn", "click", () => {
     if (!isHost) return;
@@ -1317,7 +1804,7 @@
     const m = Math.min(600, Math.max(1, parseInt(v, 10) || 0));
     if (!m) return toast("올바른 시간(분)을 입력해주세요");
     wsSend({ type: "restart", durationMinutes: m });
-    toast(`🔄 ${m}분으로 다시 시작!`);
+    toast(`${m}분으로 다시 시작!`);
   });
   on("copy-code", "click", () => {
     navigator.clipboard?.writeText(roomCode);
@@ -1328,6 +1815,26 @@
     navigator.clipboard?.writeText(link);
     toast("초대 링크를 복사했어요");
   });
+  on("solo-start-btn", "click", () => startSolo(false));
+  on("solo-again-btn", "click", () => startSolo(true));
+  on("solo-abort-btn", "click", () => abortSolo());
+  on("solo-exit-btn", "click", () => exitSolo());
+  on("refresh-history", "click", () => loadHistory());
+  // 프리셋 선택 표시 (입력값과 같은 프리셋 강조)
+  function syncSoloPresets() {
+    const v = String(parseInt($("s-duration").value, 10));
+    document.querySelectorAll(".solo-preset").forEach((b) => b.classList.toggle("is-active", b.dataset.soloMin === v));
+  }
+  document.querySelectorAll(".solo-preset").forEach((b) =>
+    b.addEventListener("click", () => {
+      $("s-duration").value = b.dataset.soloMin;
+      syncSoloPresets();
+    })
+  );
+  on("s-duration", "input", () => syncSoloPresets());
+  syncSoloPresets();
+  // 상단 "터미널로": 비행 중이면 중도 하차 확인, 착륙 후면 로비로
+  on("solo-back-btn", "click", () => (soloFlying() ? abortSolo() : exitSolo()));
   on("theme-toggle", "click", () => {
     const dark = document.documentElement.classList.toggle("dark");
     localStorage.theme = dark ? "dark" : "light";
@@ -1357,6 +1864,11 @@
     toast("초대받은 방이에요! 닉네임 입력 후 입장하세요");
   }
 
+  // 혼자 비행 중 탭을 닫으면 착륙(=중도 하차) 기록. 새로고침이면 resume으로 재탑승.
+  window.addEventListener("pagehide", () => {
+    if (soloFlying() && navigator.sendBeacon) navigator.sendBeacon(flightUrl(solo.id, "land"));
+  });
+
   window.addEventListener("beforeunload", () => {
     try {
       if (ws) ws.close();
@@ -1367,6 +1879,8 @@
   // 새로고침 시 저장된 방이 있으면 자동 재입장, 없으면 로비
   if (sessionStorage.getItem(SESSION_KEY)) {
     rejoinSaved();
+  } else if (sessionStorage.getItem(SOLO_KEY)) {
+    resumeSavedSolo();
   } else {
     startLobbyPolling();
   }

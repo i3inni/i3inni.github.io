@@ -7,6 +7,8 @@ build/
 
 # IDE
 .idea/
+# VS Code Java 확장이 만드는 빌드 출력
+bin/
 *.iml
 .vscode/
 

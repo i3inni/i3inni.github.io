@@ -3,10 +3,12 @@ package com.i3inni.studytogether.signaling;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.i3inni.studytogether.flight.FlightLogService;
 import com.i3inni.studytogether.lobby.LobbyHub;
 import com.i3inni.studytogether.presence.PresenceRegistry;
 import com.i3inni.studytogether.room.Room;
 import com.i3inni.studytogether.room.RoomService;
+import com.i3inni.studytogether.room.RoomStatus;
 import com.i3inni.studytogether.security.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,14 +34,16 @@ import java.util.concurrent.TimeUnit;
  * WebRTC 시그널링 + 방 presence 중계.
  *
  * 클라이언트 → 서버:
- *   {type:"join", roomCode, name}
+ *   {type:"join", roomCode, name, camOn}
+ *   {type:"cam", on}          // 내 카메라 켜짐/꺼짐 (꺼지면 상대 화면에 이니셜 표시)
  *   {type:"offer"|"answer"|"ice", to, payload}
- *   {type:"start"}            // 방장 이륙
+ *   {type:"start"}            // 방장 이륙 (탑승객 전원 비행 기록 생성)
  *   {type:"leave"}
  *
  * 서버 → 클라이언트:
- *   {type:"joined", selfId, peers:[{id,name}], meta}
- *   {type:"peer-join", id, name}
+ *   {type:"joined", selfId, peers:[{id,name,camOn}], meta}
+ *   {type:"peer-join", id, name, camOn}
+ *   {type:"cam", id, on}
  *   {type:"peer-leave", id}
  *   {type:"offer"|"answer"|"ice", from, payload}   // 상대에게 그대로 전달
  *   {type:"state", meta}                            // 방 상태 변경(이륙 등)
@@ -52,12 +57,15 @@ import java.util.concurrent.TimeUnit;
 public class SignalingHandler extends TextWebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(SignalingHandler.class);
+    /** 연결만 끊겨 빈 방이 됐을 때 삭제까지 기다리는 시간(초) — 새로고침 재입장 여유 */
+    private static final long EMPTY_ROOM_GRACE_SECONDS = 5;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final RoomService roomService;
     private final PresenceRegistry presence;
     private final RateLimiter rateLimiter;
     private final LobbyHub lobbyHub;
+    private final FlightLogService flightLogs;
 
     // sessionId -> WebSocketSession
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -66,6 +74,8 @@ public class SignalingHandler extends TextWebSocketHandler {
     // 중복 입장 방지: "room|clientId" -> sessionId, sessionId -> key
     private final Map<String, String> clientKeyToSession = new ConcurrentHashMap<>();
     private final Map<String, String> sessionClientKey = new ConcurrentHashMap<>();
+    // sessionId -> 카메라 켜짐 여부 (영상 트랙이 꺼져도 검은 화면만 오므로 상태를 따로 알린다)
+    private final Map<String, Boolean> sessionCam = new ConcurrentHashMap<>();
     // 방별 현재 방장 세션
     private final Map<String, String> roomHost = new ConcurrentHashMap<>();
     // 빈 방 지연 삭제용 (새로고침 유예)
@@ -140,10 +150,11 @@ public class SignalingHandler extends TextWebSocketHandler {
                 case "music-skip" -> handleMusicSkip(session);
                 case "music-shuffle" -> handleMusicShuffle(session);
                 case "music-remove" -> handleMusicRemove(session, node);
+                case "cam" -> handleCam(session, node);
                 case "chat" -> handleChat(session, node);
                 case "ding" -> handleDing(session, node);
                 case "ping" -> send(session, Map.of("type", "pong")); // keepalive
-                case "leave" -> cleanup(session);
+                case "leave" -> cleanup(session, true); // 나가기 버튼
                 default -> log.debug("unknown message type: {}", type);
             }
         } catch (Exception e) {
@@ -174,8 +185,15 @@ public class SignalingHandler extends TextWebSocketHandler {
             return;
         }
 
-        // 나를 추가하기 전의 기존 참가자 목록 (이들에게 내가 offer를 건다)
-        List<Map<String, String>> existingPeers = presence.peers(roomCode);
+        // 나를 추가하기 전의 기존 참가자 목록 (이들에게 내가 offer를 건다) + 카메라 상태
+        List<Map<String, Object>> existingPeers = new ArrayList<>();
+        for (Map<String, String> p : presence.peers(roomCode)) {
+            Map<String, Object> peer = new HashMap<>(p);
+            peer.put("camOn", sessionCam.getOrDefault(p.get("id"), true));
+            existingPeers.add(peer);
+        }
+        boolean camOn = node.path("camOn").asBoolean(true);
+        sessionCam.put(session.getId(), camOn);
 
         presence.add(roomCode, session.getId(), name);
         sessionRoom.put(session.getId(), roomCode);
@@ -204,8 +222,12 @@ public class SignalingHandler extends TextWebSocketHandler {
         broadcast(roomCode, session.getId(), Map.of(
                 "type", "peer-join",
                 "id", session.getId(),
-                "name", name
+                "name", name,
+                "camOn", camOn
         ));
+        // 비행 중에 들어오면 늦은 탑승(또는 새로고침 후 재탑승)으로 기록
+        if (meta.getStatus() == RoomStatus.FLYING) boardFlight(meta, session.getId(), name);
+
         log.info("join room={} session={} name={} (now {} people)",
                 roomCode, session.getId(), name, presence.count(roomCode));
         lobbyHub.publish(); // 인원수 변경 → 로비 갱신
@@ -229,7 +251,9 @@ public class SignalingHandler extends TextWebSocketHandler {
         String roomCode = sessionRoom.get(session.getId());
         if (roomCode == null) return;
         if (!session.getId().equals(roomHost.get(roomCode))) return; // 방장만 이륙 가능
+        if (roomService.get(roomCode).getStatus() != RoomStatus.WAITING) return; // 중복 이륙 방지
         Room updated = roomService.start(roomCode);
+        boardAll(updated);
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("takeoff room={}", roomCode);
         lobbyHub.publish(); // 상태(비행중) 변경 → 로비 갱신
@@ -241,10 +265,23 @@ public class SignalingHandler extends TextWebSocketHandler {
         if (!session.getId().equals(roomHost.get(roomCode))) return; // 방장만
         int minutes = node.path("durationMinutes").asInt(0);
         if (minutes < 1) return;
+        closeFlight(roomService.get(roomCode)); // 이전 비행 기록 마감
         Room updated = roomService.restart(roomCode, minutes);
+        boardAll(updated);
         broadcastAll(roomCode, Map.of("type", "state", "meta", metaOf(updated)));
         log.info("restart room={} minutes={}", roomCode, minutes);
         lobbyHub.publish();
+    }
+
+    // ── 카메라 상태 ──
+
+    private void handleCam(WebSocketSession session, JsonNode node) {
+        String roomCode = sessionRoom.get(session.getId());
+        if (roomCode == null) return;
+        if (!rateLimiter.allow("cam:" + session.getId(), 20, 10_000L)) return;
+        boolean on = node.path("on").asBoolean(true);
+        sessionCam.put(session.getId(), on);
+        broadcast(roomCode, session.getId(), Map.of("type", "cam", "id", session.getId(), "on", on)); // 나 제외
     }
 
     // ── 채팅 ──
@@ -425,16 +462,22 @@ public class SignalingHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        cleanup(session);
+        cleanup(session, false); // 새로고침·탭 닫기·네트워크 끊김 (leave 후 닫힌 경우는 이미 정리돼 no-op)
     }
 
-    private void cleanup(WebSocketSession session) {
+    /**
+     * @param explicitLeave true = 나가기 버튼으로 직접 나감 → 빈 방이면 즉시 삭제.
+     *                      false = 연결만 끊김(새로고침 등) → 5초 유예 후에도 비어있으면 삭제.
+     */
+    private void cleanup(WebSocketSession session, boolean explicitLeave) {
         sessions.remove(session.getId());
+        sessionCam.remove(session.getId());
         String ck = sessionClientKey.remove(session.getId());
         if (ck != null) clientKeyToSession.remove(ck, session.getId());
         String roomCode = sessionRoom.remove(session.getId());
         if (roomCode == null) return;
 
+        alightFlight(roomCode, ck);
         int remaining = presence.remove(roomCode, session.getId());
         broadcastAll(roomCode, Map.of("type", "peer-leave", "id", session.getId()));
 
@@ -457,22 +500,73 @@ public class SignalingHandler extends TextWebSocketHandler {
         }
 
         if (remaining == 0) {
-            // 새로고침 등으로 잠깐 빈 경우 대비 — 45초 후에도 비어있으면 삭제
             final String rc = roomCode;
-            roomCleaner.schedule(() -> {
-                if (presence.count(rc) == 0) {
-                    roomMusic.remove(rc);
-                    roomHost.remove(rc);
-                    try {
-                        roomService.deleteIfExists(rc);
-                        log.info("room {} stayed empty → removed", rc);
-                    } catch (Exception ignored) {
-                    }
-                    lobbyHub.publish();
-                }
-            }, 45, TimeUnit.SECONDS);
+            if (explicitLeave) {
+                removeIfEmpty(rc, "last passenger left");
+            } else {
+                // 새로고침 등으로 잠깐 빈 경우 대비 — 유예 후에도 비어있으면 삭제
+                roomCleaner.schedule(() -> removeIfEmpty(rc, "stayed empty"),
+                        EMPTY_ROOM_GRACE_SECONDS, TimeUnit.SECONDS);
+            }
         }
         lobbyHub.publish(); // 퇴장 → 로비 갱신
+    }
+
+    /** 방이 비어 있으면 방·음악·방장 상태를 지우고 로비에 알림 */
+    private void removeIfEmpty(String roomCode, String reason) {
+        if (presence.count(roomCode) != 0) return;
+        roomMusic.remove(roomCode);
+        roomHost.remove(roomCode);
+        try {
+            if (roomService.deleteIfExists(roomCode)) log.info("room {} {} → removed", roomCode, reason);
+        } catch (Exception ignored) {
+        }
+        lobbyHub.publish();
+    }
+
+    // ── 비행 기록 (참가 여부) — 실패해도 시그널링은 계속 ──
+
+    private void boardAll(Room room) {
+        for (Map<String, String> p : presence.peers(room.getCode())) {
+            boardFlight(room, p.get("id"), p.get("name"));
+        }
+    }
+
+    private void boardFlight(Room room, String sessionId, String name) {
+        try {
+            flightLogs.boardGroup(room, clientIdOf(sessionClientKey.get(sessionId)), name, Instant.now());
+        } catch (Exception e) {
+            log.warn("flight board fail room={}: {}", room.getCode(), e.getMessage());
+        }
+    }
+
+    private void alightFlight(String roomCode, String clientKey) {
+        String clientId = clientIdOf(clientKey);
+        if (clientId == null) return;
+        try {
+            Room room = roomService.get(roomCode);
+            if (room.getStatus() == RoomStatus.FLYING && room.getStartedAt() != null) {
+                flightLogs.alightGroup(FlightLogService.flightKey(room), clientId, Instant.now());
+            }
+        } catch (Exception e) {
+            log.debug("flight alight skip room={}: {}", roomCode, e.getMessage());
+        }
+    }
+
+    private void closeFlight(Room room) {
+        if (room.getStatus() != RoomStatus.FLYING || room.getStartedAt() == null) return;
+        try {
+            flightLogs.closeFlight(FlightLogService.flightKey(room), Instant.now());
+        } catch (Exception e) {
+            log.warn("flight close fail room={}: {}", room.getCode(), e.getMessage());
+        }
+    }
+
+    /** "방코드|clientId" → clientId */
+    private String clientIdOf(String clientKey) {
+        if (clientKey == null) return null;
+        int i = clientKey.indexOf('|');
+        return i < 0 ? null : clientKey.substring(i + 1);
     }
 
     // ── helpers ──
