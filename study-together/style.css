@@ -521,3 +521,135 @@ summary::-webkit-details-marker {
     transform: scaleY(1);
   }
 }
+
+/* ── 혼자 비행 PiP 창 (Document PiP에 스타일째 복사됨) ──
+   창 느낌 없이 배경째 꽉 채움. --u = 가로·세로 중 빡빡한 쪽 기준 단위
+   (가로 100u × 세로 40u 안에 아크·라벨·타이머가 다 들어가도록 설계, 남는 쪽은 가운데 정렬) */
+.pip-body {
+  margin: 0;
+  height: 100vh;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: "IBM Plex Sans KR", sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.pip-root {
+  --u: min(1vw, 2.5vh);
+  height: 100vh;
+  box-sizing: border-box;
+  padding: calc(var(--u) * 3) calc(var(--u) * 4) calc(var(--u) * 2.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: calc(var(--u) * 100);
+  margin: 0 auto;
+}
+.pip-arc {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 115;
+  flex-shrink: 0;
+}
+.pip-arc > svg {
+  /* 아크만 (안쪽 비행기 아이콘 svg에는 적용 안 되게 자식 선택자) */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.pip-dash {
+  stroke: rgb(var(--line));
+}
+.pip-start {
+  fill: rgb(var(--accent));
+}
+.pip-end {
+  fill: rgb(var(--bg));
+  stroke: rgb(var(--subtext));
+}
+#pip-progress {
+  stroke: rgb(var(--accent));
+  transition: stroke-dasharray 0.9s linear;
+}
+.pip-plane {
+  position: absolute;
+  left: 4%;
+  top: 87%;
+  width: calc(var(--u) * 5.8);
+  height: calc(var(--u) * 5.8);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-ink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.9s linear, top 0.9s linear;
+}
+.pip-plane svg {
+  display: block;
+  width: calc(var(--u) * 3.4);
+  height: calc(var(--u) * 3.4);
+  transform-origin: 50% 50%;
+  transition: transform 0.9s linear;
+}
+.pip-ends {
+  margin-top: calc(var(--u) * 1.2);
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--u) * 4);
+}
+.pip-ends > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pip-ends > .is-end {
+  align-items: flex-end;
+  text-align: right;
+}
+.pip-ends b {
+  font-size: calc(var(--u) * 4.2);
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.pip-ends small {
+  margin-top: calc(var(--u) * 0.3);
+  font-size: calc(var(--u) * 2.3);
+  line-height: 1.2;
+  color: rgb(var(--subtext));
+  white-space: nowrap;
+}
+.pip-ends small span {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 500;
+}
+.pip-timer {
+  margin-top: calc(var(--u) * 0.6);
+  text-align: center;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 600;
+  font-size: calc(var(--u) * 11.5);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.pip-root.arrived #pip-progress {
+  stroke: rgb(var(--ok));
+}
+.pip-root.arrived .pip-plane {
+  background: rgb(var(--ok));
+}
+.pip-root.aborted #pip-progress {
+  stroke: rgb(var(--danger));
+}
+.pip-root.aborted .pip-plane {
+  background: rgb(var(--danger));
+  color: #fff;
+}

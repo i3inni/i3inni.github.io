@@ -313,7 +313,12 @@
               터미널로
             </button>
             <span class="hidden sm:inline font-mono text-xs tracking-[0.18em] text-subtext">SOLO FLIGHT · 혼자 비행</span>
-            <span id="solo-status" class="col-start-3 justify-self-end px-3 py-1.5 rounded-md bg-accent-soft text-accent font-mono text-xs font-semibold tracking-[0.1em]">IN FLIGHT</span>
+            <div class="col-start-3 justify-self-end flex items-center gap-2">
+              <button id="solo-pip-btn" class="btn-icon hidden" title="진행도 PiP로 띄우기" aria-label="진행도 PiP로 띄우기" aria-pressed="false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 9V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h4"/><rect x="12" y="13" width="10" height="7" rx="2"/></svg>
+              </button>
+              <span id="solo-status" class="col-start-3 justify-self-end px-3 py-1.5 rounded-md bg-accent-soft text-accent font-mono text-xs font-semibold tracking-[0.1em]">IN FLIGHT</span>
+            </div>
           </div>
 
           <!-- 항로 아크 -->

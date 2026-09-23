@@ -1093,8 +1093,12 @@
 
   // 아크(Q 곡선) 위 진행률 → 진행선(dasharray) + 비행기 위치/방향
   function placeSoloPlane(pct) {
-    const path = $("solo-progress");
-    const plane = $("solo-plane");
+    soloPct = pct;
+    placePlaneOnArc($("solo-progress"), $("solo-plane"), pct);
+    updateSoloPip();
+  }
+  // 아크 path 위 진행률 → 진행선 + 비행기 위치/방향 (본 화면·PiP 창 공용)
+  function placePlaneOnArc(path, plane, pct) {
     path.setAttribute("stroke-dasharray", `${pct} 100`); // pathLength="100"
     try {
       const len = path.getTotalLength();
@@ -1103,8 +1107,9 @@
       const a = path.getPointAtLength(Math.max(0, at - 1));
       const b = path.getPointAtLength(Math.min(len, at + 1));
       const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
-      plane.style.left = p.x / 10 + "%"; // viewBox 1000 × 250
-      plane.style.top = p.y / 2.5 + "%";
+      const vb = path.ownerSVGElement.viewBox.baseVal; // 본 화면 1000×250 · PiP 1000×115
+      plane.style.left = (p.x / vb.width) * 100 + "%";
+      plane.style.top = (p.y / vb.height) * 100 + "%";
       plane.firstElementChild.style.transform = `rotate(${deg + 45}deg)`; // 아이콘 기본 방향 = 45°
     } catch {}
   }
@@ -1145,8 +1150,246 @@
     }
   }
 
+  // ════════════════ 혼자 비행 PiP (진행도만 작은 창으로) ════════════════
+  // 크롬/엣지: Document PiP(실제 HTML) · 사파리 등: 캔버스 → 영상 PiP · 둘 다 없으면 버튼 숨김
+  const PLANE_PATH =
+    "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z";
+  // PiP는 낮고 넓은 창에 맞게 본 화면보다 납작한 아크 (viewBox 1000×115)
+  const PIP_ARC = { d: "M40 100 Q500 -60 960 100", w: 1000, h: 115, p0: [40, 100], p1: [500, -60], p2: [960, 100] };
+  let soloPct = 0;
+  let pipWin = null; // Document PiP 창
+  let pipVideo = null; // 영상 PiP 대체용
+  let pipCanvas = null;
+  const docPipSupported = "documentPictureInPicture" in window;
+  const videoPipSupported =
+    !!document.pictureInPictureEnabled && typeof HTMLCanvasElement.prototype.captureStream === "function";
+
+  function pipOpen() {
+    return !!(pipWin && !pipWin.closed) || !!pipVideo;
+  }
+  function updatePipBtn() {
+    const b = $("solo-pip-btn");
+    if (!b) return;
+    const open = pipOpen();
+    b.classList.toggle("is-on", open);
+    b.setAttribute("aria-pressed", String(open));
+    b.title = open ? "PiP 닫기" : "진행도 PiP로 띄우기";
+    b.setAttribute("aria-label", b.title);
+  }
+
+  async function toggleSoloPip() {
+    if (!solo) return;
+    if (pipOpen()) return closeSoloPip();
+    try {
+      if (docPipSupported) await openDocPip();
+      else if (videoPipSupported) await openVideoPip();
+    } catch (e) {
+      closeSoloPip();
+      toast("PiP를 열 수 없어요");
+    }
+    updatePipBtn();
+  }
+
+  async function openDocPip() {
+    pipWin = await window.documentPictureInPicture.requestWindow({ width: 560, height: 220 });
+    const d = pipWin.document;
+    // 본 페이지 스타일(테일윈드·style.css·폰트)과 테마를 그대로 복사
+    [...document.styleSheets].forEach((ss) => {
+      try {
+        const st = d.createElement("style");
+        st.textContent = [...ss.cssRules].map((r) => r.cssText).join("\n");
+        d.head.appendChild(st);
+      } catch {
+        if (ss.href) {
+          const l = d.createElement("link");
+          l.rel = "stylesheet";
+          l.href = ss.href;
+          d.head.appendChild(l);
+        }
+      }
+    });
+    d.documentElement.className = document.documentElement.className;
+    d.title = "혼자 비행";
+    d.body.className = "pip-body";
+    d.body.innerHTML = `
+      <div id="solo-pip" class="pip-root">
+        <div class="pip-arc">
+          <svg viewBox="0 0 ${PIP_ARC.w} ${PIP_ARC.h}" fill="none" aria-hidden="true">
+            <path d="${PIP_ARC.d}" class="pip-dash" stroke-width="4" stroke-dasharray="10 14" />
+            <path id="pip-progress" d="${PIP_ARC.d}" stroke-width="7" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" />
+            <circle cx="${PIP_ARC.p0[0]}" cy="${PIP_ARC.p0[1]}" r="12" class="pip-start" />
+            <circle cx="${PIP_ARC.p2[0]}" cy="${PIP_ARC.p2[1]}" r="12" class="pip-end" stroke-width="4" />
+          </svg>
+          <div id="pip-plane" class="pip-plane">${$("solo-plane").innerHTML}</div>
+        </div>
+        <div class="pip-ends">
+          <div><b id="pip-from"></b><small><span id="pip-dep"></span> 출발</small></div>
+          <div class="is-end"><b id="pip-to"></b><small><span id="pip-arr"></span> 도착 예정</small></div>
+        </div>
+        <div id="pip-timer" class="pip-timer">--:--</div>
+      </div>`;
+    pipWin.addEventListener("pagehide", () => {
+      pipWin = null;
+      updatePipBtn();
+    });
+    updateSoloPip();
+  }
+
+  async function openVideoPip() {
+    pipCanvas = document.createElement("canvas");
+    pipCanvas.width = 720; // PiP 창 비율(약 2.5:1)과 동일
+    pipCanvas.height = 280;
+    drawPipCanvas();
+    pipVideo = document.createElement("video");
+    pipVideo.muted = true;
+    pipVideo.playsInline = true;
+    pipVideo.style.cssText = "position:fixed;left:-9999px;top:0;width:2px;height:2px;";
+    document.body.appendChild(pipVideo);
+    pipVideo.srcObject = pipCanvas.captureStream();
+    await pipVideo.play();
+    pipVideo.addEventListener("leavepictureinpicture", () => closeSoloPip());
+    await pipVideo.requestPictureInPicture();
+  }
+
+  function closeSoloPip() {
+    if (pipWin && !pipWin.closed) pipWin.close();
+    pipWin = null;
+    if (pipVideo) {
+      const v = pipVideo;
+      pipVideo = null;
+      if (document.pictureInPictureElement === v) document.exitPictureInPicture().catch(() => {});
+      try {
+        v.srcObject && v.srcObject.getTracks().forEach((t) => t.stop());
+      } catch {}
+      v.remove();
+    }
+    pipCanvas = null;
+    updatePipBtn();
+  }
+
+  // 매 tick: PiP 창에도 같은 진행도 반영
+  function updateSoloPip() {
+    if (!solo) return;
+    if (pipWin && !pipWin.closed) {
+      const d = pipWin.document;
+      const root = d.getElementById("solo-pip");
+      if (!root) return;
+      placePlaneOnArc(d.getElementById("pip-progress"), d.getElementById("pip-plane"), soloPct);
+      d.getElementById("pip-from").textContent = solo.departure;
+      d.getElementById("pip-to").textContent = solo.destination;
+      d.getElementById("pip-dep").textContent = clock(solo.startedAt);
+      d.getElementById("pip-arr").textContent = clock(solo.plannedEndAt);
+      d.getElementById("pip-timer").textContent = $("solo-timer").textContent;
+      root.classList.toggle("arrived", solo.status === "COMPLETED");
+      root.classList.toggle("aborted", solo.status === "LEFT");
+      d.documentElement.className = document.documentElement.className; // 테마 전환 따라가기
+    }
+    if (pipVideo) drawPipCanvas();
+  }
+
+  // 영상 PiP용: Document PiP와 같은 배치(style.css .pip-*와 같은 u 단위)를 캔버스에 그림
+  function drawPipCanvas() {
+    if (!pipCanvas || !solo) return;
+    const ctx = pipCanvas.getContext("2d");
+    const css = getComputedStyle(document.documentElement);
+    const col = (n) => `rgb(${css.getPropertyValue("--" + n).trim()})`;
+    const tone = solo.status === "COMPLETED" ? col("ok") : solo.status === "LEFT" ? col("danger") : col("accent");
+    const W = pipCanvas.width;
+    const H = pipCanvas.height;
+    const u = Math.min(W / 100, (H / 100) * 2.5);
+    const padX = 4 * u;
+    ctx.fillStyle = col("bg");
+    ctx.fillRect(0, 0, W, H);
+
+    // 아크 (진행률 → 베지어 t, 선 끝과 비행기 위치가 항상 일치)
+    const s = (W - padX * 2) / PIP_ARC.w;
+    const top = 3 * u;
+    const bez = (t) => {
+      const [a, b, c] = [PIP_ARC.p0, PIP_ARC.p1, PIP_ARC.p2];
+      const m = 1 - t;
+      return [m * m * a[0] + 2 * m * t * b[0] + t * t * c[0], m * m * a[1] + 2 * m * t * b[1] + t * t * c[1]];
+    };
+    const tEnd = Math.min(1, Math.max(0, soloPct / 100));
+    ctx.save();
+    ctx.translate(padX, top);
+    ctx.scale(s, s);
+    ctx.setLineDash([10, 14]);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = col("line");
+    ctx.stroke(new Path2D(PIP_ARC.d));
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let t = 0; t <= tEnd; t += 0.01) {
+      const [x, y] = bez(t);
+      t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    const [px, py] = bez(tEnd);
+    ctx.lineTo(px, py);
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = tone;
+    ctx.stroke();
+    ctx.fillStyle = col("accent");
+    ctx.beginPath();
+    ctx.arc(...PIP_ARC.p0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = col("bg");
+    ctx.strokeStyle = col("subtext");
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(...PIP_ARC.p2, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 비행기 (원 + 진행 방향으로 회전한 아이콘)
+    const [ax, ay] = bez(Math.max(0, tEnd - 0.01));
+    const [bx, by] = bez(Math.min(1, tEnd + 0.01));
+    const deg = (Math.atan2(by - ay, bx - ax) * 180) / Math.PI;
+    const r = 2.9 * u;
+    ctx.save();
+    ctx.translate(padX + px * s, top + py * s);
+    ctx.fillStyle = tone;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.rotate(((deg + 45) * Math.PI) / 180);
+    const k = (r * 2 * (3.4 / 5.8)) / 24; // 아이콘 = 원 지름의 3.4/5.8 (Document PiP와 같은 비율)
+    ctx.scale(k, k);
+    ctx.translate(-12, -12);
+    ctx.strokeStyle = solo.status === "FLYING" ? col("accent-ink") : "#fff";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke(new Path2D(PLANE_PATH));
+    ctx.restore();
+
+    // 출발 / 도착 라벨
+    const nameY = top + PIP_ARC.h * s + 5.2 * u;
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = col("text");
+    ctx.font = `700 ${4.2 * u}px 'IBM Plex Sans KR', sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText(solo.departure, padX, nameY);
+    ctx.textAlign = "right";
+    ctx.fillText(solo.destination, W - padX, nameY);
+    ctx.fillStyle = col("subtext");
+    ctx.font = `500 ${2.3 * u}px 'IBM Plex Mono', 'IBM Plex Sans KR', monospace`;
+    ctx.textAlign = "left";
+    ctx.fillText(`${clock(solo.startedAt)} 출발`, padX, nameY + 3.2 * u);
+    ctx.textAlign = "right";
+    ctx.fillText(`${clock(solo.plannedEndAt)} 도착 예정`, W - padX, nameY + 3.2 * u);
+
+    // 큰 타이머
+    ctx.fillStyle = col("text");
+    ctx.textAlign = "center";
+    ctx.font = `600 ${11.5 * u}px 'IBM Plex Mono', monospace`;
+    ctx.fillText($("solo-timer").textContent, W / 2, H - 2.6 * u);
+  }
+
   function exitSolo() {
     if (soloFlying()) return;
+    closeSoloPip();
     clearInterval(soloInt);
     clearInterval(soloHeartbeatInt);
     soloInt = soloHeartbeatInt = null;
@@ -1835,6 +2078,8 @@
   syncSoloPresets();
   // 상단 "터미널로": 비행 중이면 중도 하차 확인, 착륙 후면 로비로
   on("solo-back-btn", "click", () => (soloFlying() ? abortSolo() : exitSolo()));
+  on("solo-pip-btn", "click", () => toggleSoloPip());
+  if (docPipSupported || videoPipSupported) $("solo-pip-btn").classList.remove("hidden");
   on("theme-toggle", "click", () => {
     const dark = document.documentElement.classList.toggle("dark");
     localStorage.theme = dark ? "dark" : "light";
