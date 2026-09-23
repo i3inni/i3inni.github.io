@@ -1215,6 +1215,9 @@
   async function openDocPip() {
     pipWin = await window.documentPictureInPicture.requestWindow({ width: 560, height: 220 });
     const d = pipWin.document;
+    const base = d.createElement("base");
+    base.href = document.baseURI; // 폰트 등 상대경로(url(fonts/…)) 해석용
+    d.head.appendChild(base);
     // 본 페이지 스타일(테일윈드·style.css·폰트)과 테마를 그대로 복사
     [...document.styleSheets].forEach((ss) => {
       try {
@@ -1390,13 +1393,13 @@
     const nameY = top + PIP_ARC.h * s + 5.2 * u;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = col("text");
-    ctx.font = `700 ${4.2 * u}px 'IBM Plex Sans KR', sans-serif`;
+    ctx.font = `700 ${4.2 * u}px Maplestory, 'IBM Plex Sans KR', sans-serif`;
     ctx.textAlign = "left";
     ctx.fillText(solo.departure, padX, nameY);
     ctx.textAlign = "right";
     ctx.fillText(solo.destination, W - padX, nameY);
     ctx.fillStyle = col("subtext");
-    ctx.font = `500 ${2.3 * u}px 'IBM Plex Mono', 'IBM Plex Sans KR', monospace`;
+    ctx.font = `500 ${2.3 * u}px 'IBM Plex Mono', Maplestory, 'IBM Plex Sans KR', monospace`;
     ctx.textAlign = "left";
     ctx.fillText(`${clock(solo.startedAt)} 출발`, padX, nameY + 3.2 * u);
     ctx.textAlign = "right";
