@@ -1,0 +1,35 @@
+# ════════════════════════════════════════════════════════════════
+#  Render Blueprint — 같이 공부 백엔드(study-together-server)
+#  Render 대시보드 → New → Blueprint → 이 레포 선택하면 아래대로 생성된다.
+#  DB는 Neon(무료 Postgres)을 쓰고, 접속 정보는 대시보드에서 직접 입력(sync: false).
+#  [study-together 기능 삭제 시 이 파일도 제거]
+# ════════════════════════════════════════════════════════════════
+services:
+  - type: web
+    name: i3inni-study-together # → https://i3inni-study-together.onrender.com
+    runtime: docker
+    plan: free
+    region: singapore # 한국에서 가장 가까운 리전 (Neon도 Singapore로 맞출 것)
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/rooms
+    autoDeploy: true
+    # 프론트(GitHub Pages)만 바뀐 푸시에는 재배포하지 않음
+    buildFilter:
+      paths:
+        - study-together-server/**
+        - Dockerfile
+        - render.yaml
+    envVars:
+      - key: DB_URL # jdbc:postgresql://<neon-host>/<db>?sslmode=require
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://i3inni.github.io
+      - key: JPA_DDL_AUTO
+        value: update
+      - key: DB_POOL_SIZE
+        value: "5"

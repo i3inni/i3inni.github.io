@@ -9,6 +9,9 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/studytogether}
     username: ${DB_USERNAME:studytogether}
     password: ${DB_PASSWORD:studytogether}
+    hikari:
+      # Neon 등 무료 Postgres는 동시 연결 수가 적음 → 배포 환경에선 DB_POOL_SIZE로 줄인다
+      maximum-pool-size: ${DB_POOL_SIZE:10}
   jpa:
     hibernate:
       # 운영에서는 validate / flyway 권장. 데모 편의상 update.

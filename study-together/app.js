@@ -10,9 +10,9 @@
   "use strict";
 
   // ── 백엔드 주소 ──
-  // 우선순위: localStorage.sf_api(직접 지정) → localhost면 로컬 백엔드(:8080) → Railway.
-  // 배포(GitHub Pages)에서는 아래 Railway 도메인을 사용.
-  const RAILWAY_API = "https://i3innigithubio-production.up.railway.app";
+  // 우선순위: localStorage.sf_api(직접 지정) → localhost면 로컬 백엔드(:8080) → 배포 서버.
+  // 배포(GitHub Pages)에서는 아래 도메인을 사용.
+  const DEPLOY_API = "https://i3innigithubio-production.up.railway.app";
 
   function apiBase() {
     const saved = localStorage.getItem("sf_api");
@@ -22,7 +22,7 @@
     if (saved && !(savedIsLocal && !onLocalhost)) return saved.replace(/\/+$/, "");
     // 로컬에서 열면 로컬 백엔드 (배포 서버를 쓰고 싶으면 localStorage.sf_api로 덮어쓰기)
     if (onLocalhost) return `http://${location.hostname}:8080`;
-    if (RAILWAY_API) return RAILWAY_API.replace(/\/+$/, "");
+    if (DEPLOY_API) return DEPLOY_API.replace(/\/+$/, "");
     return "http://localhost:8080";
   }
   // 브라우저별 고정 ID (중복 입장 방지용 — 같은 브라우저의 다른 탭과 동일)
@@ -260,6 +260,22 @@
     });
   }
 
+  // 무료 서버는 한동안 요청이 없으면 잠들고, 깨는 데 최대 1분 정도 걸림.
+  // 첫 응답 전까지는 에러 대신 "깨우는 중"을 보여주고 폴링으로 계속 재시도한다.
+  const pageLoadedAt = Date.now();
+  const WAKE_GRACE_MS = 90000;
+  let serverUp = false;
+  function markServerUp() {
+    if (serverUp) return;
+    serverUp = true;
+    loadHistory(); // 깨기 전에 실패했던 기록도 다시 불러옴
+  }
+  function stillWaking() {
+    return !serverUp && Date.now() - pageLoadedAt < WAKE_GRACE_MS;
+  }
+  const WAKING_HTML = (cls) =>
+    `<p class="${cls} text-sm text-subtext"><span class="text-accent font-semibold">서버를 깨우는 중이에요…</span><br />무료 서버라 첫 접속에 최대 1분 정도 걸려요.</p>`;
+
   async function refreshLobby() {
     const box = $("room-list");
     try {
@@ -269,8 +285,11 @@
       clearTimeout(to);
       if (!res.ok) throw new Error("bad status");
       renderRooms(await res.json());
+      markServerUp();
     } catch (e) {
-      box.innerHTML = `<p class="px-6 py-8 text-sm text-danger-fg text-center">서버에 연결할 수 없어요. (${escapeHtml(apiBase())})</p>`;
+      box.innerHTML = stillWaking()
+        ? WAKING_HTML("px-6 py-8 text-center")
+        : `<p class="px-6 py-8 text-sm text-danger-fg text-center">서버에 연결할 수 없어요. (${escapeHtml(apiBase())})</p>`;
     }
   }
 
@@ -284,7 +303,10 @@
     lobbyWs.onmessage = (e) => {
       try {
         const m = JSON.parse(e.data);
-        if (m.type === "rooms") renderRooms(m.rooms);
+        if (m.type === "rooms") {
+          renderRooms(m.rooms);
+          markServerUp();
+        }
       } catch {}
     };
     lobbyWs.onclose = () => {
@@ -1453,7 +1475,7 @@
       renderHistory(await res.json());
     } catch {
       const box = $("history-list");
-      if (box) box.innerHTML = '<p class="text-sm text-danger-fg">기록을 불러올 수 없어요.</p>';
+      if (box) box.innerHTML = stillWaking() ? WAKING_HTML("") : '<p class="text-sm text-danger-fg">기록을 불러올 수 없어요.</p>';
     }
   }
 
