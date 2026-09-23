@@ -12,7 +12,7 @@
   // ── 백엔드 주소 ──
   // 우선순위: localStorage.sf_api(직접 지정) → localhost면 로컬 백엔드(:8080) → 배포 서버.
   // 배포(GitHub Pages)에서는 아래 도메인을 사용.
-  const DEPLOY_API = "https://i3innigithubio-production.up.railway.app";
+  const DEPLOY_API = "https://i3inni-study-together.onrender.com"; // Render(무료) + Neon(Postgres)
 
   function apiBase() {
     const saved = localStorage.getItem("sf_api");
